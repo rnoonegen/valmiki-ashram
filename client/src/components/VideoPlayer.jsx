@@ -19,7 +19,7 @@ export default function VideoPlayer({ url, className, title }) {
     );
   }
 
-  const src = getEmbedUrl(String(url).trim());
+  const src = getYoutubeEmbedUrl(String(url).trim());
 
   return (
     <div
@@ -44,14 +44,15 @@ export default function VideoPlayer({ url, className, title }) {
   );
 }
 
-function getEmbedUrl(rawUrl) {
+/** Converts watch / Shorts / youtu.be links to embed URLs for iframes. */
+export function getYoutubeEmbedUrl(rawUrl) {
   try {
     const parsed = new URL(rawUrl);
     const host = parsed.hostname.replace('www.', '');
 
     if (host === 'youtu.be') {
-      const id = parsed.pathname.slice(1);
-      return `https://www.youtube.com/embed/${id}`;
+      const id = parsed.pathname.split('/').filter(Boolean)[0];
+      if (id) return `https://www.youtube.com/embed/${id}`;
     }
 
     if (host.includes('youtube.com')) {
