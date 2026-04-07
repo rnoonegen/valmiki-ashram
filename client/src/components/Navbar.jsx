@@ -1,0 +1,168 @@
+import { Menu } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { Link, NavLink } from 'react-router-dom';
+import clsx from 'clsx';
+import Container from './Container';
+import Dropdown from './Dropdown';
+import LotusMark from './LotusMark';
+import MobileMenu from './MobileMenu';
+import ThemeToggle from './ThemeToggle';
+
+const aboutItems = [
+  { to: '/about', label: 'Overview', end: true },
+  { to: '/founders', label: 'Founders' },
+  { to: '/valmiki-ashram', label: 'Valmiki Ashram' },
+];
+
+const programItems = [
+  { to: '/programs', label: 'Our Programs', end: true },
+  { to: '/winter-camp', label: 'Winter Camp' },
+  { to: '/summer-camp', label: 'Summer Camp' },
+  { to: '/online-programs', label: 'Online Programs' },
+];
+
+const registrationItems = [
+  { to: '/register/winter-camp', label: 'Winter Camp Registration' },
+  { to: '/register/summer-camp', label: 'Summer Camp Registration' },
+  { to: '/register/online-course', label: 'Online Course Registration' },
+];
+
+const morePool = [
+  { to: '/admission', label: 'Admission' },
+  { to: '/contests', label: 'Contests' },
+  { to: '/contact', label: 'Contact Us' },
+];
+
+function useCompactNav() {
+  const [compact, setCompact] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      window.matchMedia('(max-width: 1279px)').matches
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1279px)');
+    const onChange = () => setCompact(mq.matches);
+    onChange();
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
+  return compact;
+}
+
+export default function Navbar() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const compact = useCompactNav();
+
+  return (
+    <>
+      <motion.header
+        className="sticky top-0 z-30 border-b border-neutral-200/40 bg-neutral-50/85 py-3 backdrop-blur-md dark:border-emerald-950/50 dark:bg-neutral-950/90 dark:backdrop-blur-xl"
+        initial={false}
+      >
+        <Container>
+          <div className="flex items-center justify-between gap-3 rounded-full border border-neutral-200/80 bg-primary/90 px-3 py-2 shadow-nav backdrop-blur-md dark:border-emerald-800/45 dark:bg-emerald-950/75 dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)] dark:backdrop-blur-md">
+            <Link
+              to="/"
+              className="flex shrink-0 items-center gap-2 rounded-full px-2 py-1 text-accent dark:text-emerald-200"
+            >
+              <LotusMark className="h-9 w-9 text-accent dark:text-emerald-200" />
+              <span className="text-sm font-semibold tracking-tight sm:text-base">
+                Valmiki Ashram
+              </span>
+            </Link>
+
+            <nav
+              className="hidden items-center gap-1 lg:flex"
+              aria-label="Primary"
+            >
+              <NavLink
+                to="/"
+                end
+                className={({ isActive }) =>
+                  clsx(
+                    'rounded-full px-3 py-2 text-sm font-medium transition-colors',
+                    isActive
+                      ? 'bg-white/80 text-accent shadow-sm dark:bg-emerald-950/95 dark:text-emerald-50 dark:shadow-[inset_0_0_0_1px_rgba(52,211,153,0.45)]'
+                      : 'text-accent hover:bg-white/50 dark:text-emerald-200 dark:hover:bg-neutral-800/80'
+                  )
+                }
+              >
+                Home
+              </NavLink>
+
+              <Dropdown label="About" items={aboutItems} />
+
+              <NavLink
+                to="/gallery"
+                className={({ isActive }) =>
+                  clsx(
+                    'rounded-full px-3 py-2 text-sm font-medium transition-colors',
+                    isActive
+                      ? 'bg-white/80 text-accent shadow-sm dark:bg-emerald-950/95 dark:text-emerald-50 dark:shadow-[inset_0_0_0_1px_rgba(52,211,153,0.45)]'
+                      : 'text-accent hover:bg-white/50 dark:text-emerald-200 dark:hover:bg-neutral-800/80'
+                  )
+                }
+              >
+                Gallery
+              </NavLink>
+
+              <Dropdown label="Programs" items={programItems} />
+              <Dropdown label="Registrations" items={registrationItems} />
+
+              <NavLink
+                to="/gurukulam"
+                className={({ isActive }) =>
+                  clsx(
+                    'rounded-full px-3 py-2 text-sm font-medium transition-colors',
+                    isActive
+                      ? 'bg-white/80 text-accent shadow-sm dark:bg-emerald-950/95 dark:text-emerald-50 dark:shadow-[inset_0_0_0_1px_rgba(52,211,153,0.45)]'
+                      : 'text-accent hover:bg-white/50 dark:text-emerald-200 dark:hover:bg-neutral-800/80'
+                  )
+                }
+              >
+                Gurukulam
+              </NavLink>
+
+              {!compact &&
+                morePool.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className={({ isActive }) =>
+                      clsx(
+                        'rounded-full px-3 py-2 text-sm font-medium transition-colors',
+                        isActive
+                          ? 'bg-white/80 text-accent shadow-sm dark:bg-emerald-950/95 dark:text-emerald-50 dark:shadow-[inset_0_0_0_1px_rgba(52,211,153,0.45)]'
+                          : 'text-accent hover:bg-white/50 dark:text-emerald-200 dark:hover:bg-neutral-800/80'
+                      )
+                    }
+                  >
+                    {item.label}
+                  </NavLink>
+                ))}
+
+              {compact && <Dropdown label="More" items={morePool} />}
+            </nav>
+
+            <div className="flex items-center gap-1">
+              <ThemeToggle className="hidden rounded-full p-2 hover:bg-white/50 dark:hover:bg-neutral-800 lg:inline-flex" />
+              <button
+                type="button"
+                className="inline-flex rounded-full p-2 hover:bg-white/50 dark:hover:bg-neutral-800 lg:hidden"
+                aria-label="Open menu"
+                onClick={() => setMobileOpen(true)}
+              >
+                <Menu className="h-6 w-6 text-accent dark:text-emerald-200" />
+              </button>
+            </div>
+          </div>
+        </Container>
+      </motion.header>
+
+      <MobileMenu open={mobileOpen} onClose={() => setMobileOpen(false)} />
+    </>
+  );
+}

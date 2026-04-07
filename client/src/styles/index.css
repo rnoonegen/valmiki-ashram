@@ -1,0 +1,69 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply min-h-screen bg-neutral-50 font-sans text-neutral-900 antialiased transition-colors duration-300 dark:bg-neutral-950 dark:text-neutral-100;
+  }
+}
+
+/* Semantic text & surfaces — use these for consistent light/dark UI */
+@layer components {
+  .heading-page {
+    @apply text-3xl font-bold leading-tight text-accent dark:text-emerald-200 md:text-4xl;
+  }
+
+  .heading-section {
+    @apply text-2xl font-bold text-accent dark:text-emerald-200 md:text-3xl;
+  }
+
+  .heading-card {
+    @apply text-lg font-semibold text-accent dark:text-emerald-200;
+  }
+
+  .heading-hero {
+    @apply text-3xl font-bold leading-tight text-accent dark:text-emerald-200 md:text-4xl lg:text-[2.15rem] xl:text-4xl;
+  }
+
+  .text-prose {
+    @apply text-neutral-700 dark:text-neutral-300;
+  }
+
+  .text-prose-muted {
+    @apply text-neutral-600 dark:text-neutral-400;
+  }
+
+  .link-app {
+    @apply text-blue-700 underline decoration-blue-700/35 underline-offset-2 transition-colors hover:text-blue-900 dark:text-sky-400 dark:decoration-sky-400/45 dark:hover:text-sky-200;
+  }
+
+  .surface-muted {
+    @apply bg-neutral-100/80 dark:bg-neutral-900/80;
+  }
+
+  .border-theme {
+    @apply border-neutral-200 dark:border-neutral-700;
+  }
+
+  .map-frame {
+    @apply overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-100 shadow-nav ring-1 ring-black/5 dark:border-neutral-700 dark:bg-neutral-900 dark:shadow-nav-dark dark:ring-white/10;
+  }
+}
+
+/* Keep phone country dropdown above sticky submit bar */
+.va-phone-container .country-list,
+.va-phone-dropdown {
+  z-index: 25 !important;
+}
+
+.va-phone-container {
+  position: relative;
+  z-index: 1;
+}
+
+.va-phone-container:focus-within {
+  z-index: 24;
+}
