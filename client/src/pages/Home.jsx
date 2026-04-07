@@ -121,7 +121,7 @@ const defaultSamskaraVideos = [
   },
 ];
 
-const philosophyContent = {
+const defaultPhilosophyContent = {
   title: "Our Philosophy",
   intro:
     "At Valmiki Ashram, learning is not just a tagline. It is how children truly absorb culture and values through rhythm, stories, repetition, and doing things with their own hands.",
@@ -151,6 +151,7 @@ export default function Home() {
     programCards,
     samskaraVideos: defaultSamskaraVideos,
     testimonials: defaultTestimonials,
+    philosophyContent: defaultPhilosophyContent,
   });
   const [draft, setDraft] = useState(cms);
   const [editingField, setEditingField] = useState("");
@@ -158,6 +159,7 @@ export default function Home() {
   const [cardEditor, setCardEditor] = useState(null);
   const [samskaraEditor, setSamskaraEditor] = useState(null);
   const [testimonialEditor, setTestimonialEditor] = useState(null);
+  const [philosophyEditor, setPhilosophyEditor] = useState(null);
   const samskaraTrackRef = useRef(null);
   const testimonialsTrackRef = useRef(null);
   useEffect(() => setDraft(cms), [cms]);
@@ -172,6 +174,8 @@ export default function Home() {
   const displayTestimonials = Array.isArray(display.testimonials)
     ? display.testimonials
     : defaultTestimonials;
+  const displayPhilosophy =
+    display.philosophyContent || defaultPhilosophyContent;
 
   const saveHomeContent = async (nextContent) => {
     await adminRequest("/api/admin/content/home", {
@@ -300,6 +304,69 @@ export default function Home() {
   const deleteTestimonial = async (index) => {
     const items = displayTestimonials.filter((_, i) => i !== index);
     const next = { ...draft, testimonials: items };
+    setDraft(next);
+    await saveHomeContent(next);
+  };
+
+  const openPhilosophyEditor = () => {
+    setPhilosophyEditor({
+      title: displayPhilosophy.title || "",
+      intro: displayPhilosophy.intro || "",
+      verseTitle: displayPhilosophy.verseTitle || "",
+      verseMeaning: displayPhilosophy.verseMeaning || "",
+      paragraphsText: (displayPhilosophy.paragraphs || []).join("\n"),
+    });
+  };
+
+  const savePhilosophyEditor = async () => {
+    if (!philosophyEditor) return;
+    const nextPhilosophy = {
+      ...displayPhilosophy,
+      title: philosophyEditor.title || "Our Philosophy",
+      intro: philosophyEditor.intro || "",
+      verseTitle: philosophyEditor.verseTitle || "",
+      verseMeaning: philosophyEditor.verseMeaning || "",
+      paragraphs: (philosophyEditor.paragraphsText || "")
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean),
+    };
+    const next = { ...draft, philosophyContent: nextPhilosophy };
+    setDraft(next);
+    await saveHomeContent(next);
+    setPhilosophyEditor(null);
+  };
+
+  const updatePhilosophyImage = async (index, imageUrl) => {
+    const images = [...(displayPhilosophy.images || [])];
+    images[index] = imageUrl;
+    const next = {
+      ...draft,
+      philosophyContent: { ...displayPhilosophy, images },
+    };
+    setDraft(next);
+    await saveHomeContent(next);
+  };
+
+  const addPhilosophyImage = async (imageUrl) => {
+    const images = [...(displayPhilosophy.images || [])];
+    images.push(imageUrl);
+    const next = {
+      ...draft,
+      philosophyContent: { ...displayPhilosophy, images },
+    };
+    setDraft(next);
+    await saveHomeContent(next);
+  };
+
+  const deletePhilosophyImage = async (index) => {
+    const images = (displayPhilosophy.images || []).filter(
+      (_, i) => i !== index,
+    );
+    const next = {
+      ...draft,
+      philosophyContent: { ...displayPhilosophy, images },
+    };
     setDraft(next);
     await saveHomeContent(next);
   };
@@ -651,40 +718,95 @@ export default function Home() {
             className="mb-8 rounded-2xl border border-accent/20 bg-secondary/70 p-5 shadow-sm md:mb-10 md:p-8 dark:border-emerald-700/40 dark:bg-neutral-900/90"
             {...fade}
           >
-            <h2 className="heading-section text-accent dark:text-emerald-200">
-              {philosophyContent.title}
-            </h2>
+            <div className="flex items-start justify-between gap-3">
+              <h2 className="heading-section text-accent dark:text-emerald-200">
+                {displayPhilosophy.title}
+              </h2>
+              {isAdmin ? (
+                <button
+                  type="button"
+                  onClick={openPhilosophyEditor}
+                  className="rounded-md bg-white/90 p-1 text-accent shadow dark:bg-neutral-800 dark:text-emerald-200"
+                  aria-label="Edit philosophy text"
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
+              ) : null}
+            </div>
             <p className="mt-4 max-w-4xl text-sm leading-7 text-prose-muted sm:text-base md:text-lg md:leading-8">
-              {philosophyContent.intro}
+              {displayPhilosophy.intro}
             </p>
             <div className="my-5 h-px bg-accent/50 dark:bg-emerald-700/60" />
             <p className="text-lg font-semibold tracking-wide text-prose sm:text-xl md:text-2xl">
-              {philosophyContent.verseTitle}
+              {displayPhilosophy.verseTitle}
             </p>
             <p className="mt-1 text-sm leading-relaxed text-prose-muted sm:text-base md:text-lg">
-              {philosophyContent.verseMeaning}
+              {displayPhilosophy.verseMeaning}
             </p>
             <div className="my-5 h-px bg-accent/50 dark:bg-emerald-700/60" />
             <div className="grid items-start gap-5 sm:gap-6 md:grid-cols-[1.7fr_1fr] md:gap-8">
               <div className="space-y-3">
-                <img
-                  src={philosophyContent.images[0]}
-                  alt="Indian cow at Valmiki Ashram"
-                  className="h-full min-h-[260px] w-full rounded-lg object-cover shadow-sm"
-                />
+                <div className="relative">
+                  <img
+                    src={displayPhilosophy.images?.[0]}
+                    alt="Indian cow at Valmiki Ashram"
+                    className="h-full min-h-[260px] w-full rounded-lg object-cover shadow-sm"
+                  />
+                  {isAdmin ? (
+                    <div className="absolute right-2 top-2 z-10 flex gap-1">
+                      <ImageUploader
+                        folder="home"
+                        buttonText="Change Image"
+                        onUploaded={(asset) =>
+                          updatePhilosophyImage(0, asset.url)
+                        }
+                      />
+                    </div>
+                  ) : null}
+                </div>
                 <div className="grid grid-cols-2 gap-3">
-                  {philosophyContent.images.slice(1).map((imageUrl, index) => (
-                    <img
-                      key={imageUrl}
-                      src={imageUrl}
-                      alt={`Desi cow ${index + 2}`}
-                      className="h-28 w-full rounded-lg object-cover shadow-sm sm:h-32"
-                    />
-                  ))}
+                  {(displayPhilosophy.images || [])
+                    .slice(1)
+                    .map((imageUrl, index) => {
+                      const imageIndex = index + 1;
+                      return (
+                        <div
+                          key={`${imageUrl}-${imageIndex}`}
+                          className="relative"
+                        >
+                          <img
+                            src={imageUrl}
+                            alt={`Desi cow ${imageIndex + 1}`}
+                            className="h-28 w-full rounded-lg object-cover shadow-sm sm:h-32"
+                          />
+                          {isAdmin ? (
+                            <div className="absolute right-1 top-1 z-10 flex gap-1">
+                              <ImageUploader
+                                folder="home"
+                                buttonText="Change"
+                                onUploaded={(asset) =>
+                                  updatePhilosophyImage(imageIndex, asset.url)
+                                }
+                              />
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  deletePhilosophyImage(imageIndex)
+                                }
+                                className="rounded-md bg-rose-600 p-1 text-white shadow"
+                                aria-label="Delete philosophy image"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          ) : null}
+                        </div>
+                      );
+                    })}
                 </div>
               </div>
               <div className="space-y-4 text-sm leading-7 text-prose sm:text-base md:space-y-5 md:text-lg md:leading-8">
-                {philosophyContent.paragraphs.map((paragraph) => (
+                {(displayPhilosophy.paragraphs || []).map((paragraph) => (
                   <p key={paragraph}>{paragraph}</p>
                 ))}
               </div>
@@ -943,6 +1065,82 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => setTestimonialEditor(null)}
+                className="inline-flex items-center gap-1 rounded-lg bg-neutral-200 px-4 py-2 text-sm text-neutral-800 dark:bg-neutral-700 dark:text-neutral-100"
+              >
+                <X className="h-4 w-4" /> Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {isAdmin && philosophyEditor ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-2xl rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
+            <h3 className="text-lg font-semibold text-accent dark:text-emerald-200">
+              Edit Philosophy Content
+            </h3>
+            <div className="mt-4 space-y-3">
+              <input
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                placeholder="Section title"
+                value={philosophyEditor.title}
+                onChange={(e) =>
+                  setPhilosophyEditor((p) => ({ ...p, title: e.target.value }))
+                }
+              />
+              <textarea
+                className="h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                placeholder="Intro text"
+                value={philosophyEditor.intro}
+                onChange={(e) =>
+                  setPhilosophyEditor((p) => ({ ...p, intro: e.target.value }))
+                }
+              />
+              <input
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                placeholder="Verse title"
+                value={philosophyEditor.verseTitle}
+                onChange={(e) =>
+                  setPhilosophyEditor((p) => ({
+                    ...p,
+                    verseTitle: e.target.value,
+                  }))
+                }
+              />
+              <textarea
+                className="h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                placeholder="Verse meaning"
+                value={philosophyEditor.verseMeaning}
+                onChange={(e) =>
+                  setPhilosophyEditor((p) => ({
+                    ...p,
+                    verseMeaning: e.target.value,
+                  }))
+                }
+              />
+              <textarea
+                className="h-28 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                placeholder="Paragraphs (one paragraph per line)"
+                value={philosophyEditor.paragraphsText}
+                onChange={(e) =>
+                  setPhilosophyEditor((p) => ({
+                    ...p,
+                    paragraphsText: e.target.value,
+                  }))
+                }
+              />
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={savePhilosophyEditor}
+                className="inline-flex items-center gap-1 rounded-lg bg-accent px-4 py-2 text-sm text-white dark:bg-emerald-700"
+              >
+                <Save className="h-4 w-4" /> Save
+              </button>
+              <button
+                type="button"
+                onClick={() => setPhilosophyEditor(null)}
                 className="inline-flex items-center gap-1 rounded-lg bg-neutral-200 px-4 py-2 text-sm text-neutral-800 dark:bg-neutral-700 dark:text-neutral-100"
               >
                 <X className="h-4 w-4" /> Cancel
