@@ -1,9 +1,125 @@
+import { useEffect, useState } from 'react';
+import { Pencil, Plus, Save, Trash2, X } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
+import { adminRequest } from '../admin/api';
 import Container from '../components/Container';
 import { FaqCategorySection } from '../components/FaqAccordion';
 import PageFade from '../components/PageFade';
 import { faqCategories } from '../data/faqData';
+import useLiveContent from '../hooks/useLiveContent';
 
 export default function FAQ() {
+  const location = useLocation();
+  const isAdmin = location.pathname === '/admin/faq';
+  const cms = useLiveContent('faq', { faqCategories });
+  const categories = cms.faqCategories?.length ? cms.faqCategories : faqCategories;
+  const [draft, setDraft] = useState(categories);
+  const [editor, setEditor] = useState(null);
+  const [status, setStatus] = useState({ type: '', message: '' });
+
+  useEffect(() => {
+    setDraft(categories);
+  }, [cms]);
+
+  const saveAll = async (nextDraft = draft) => {
+    try {
+      await adminRequest('/api/admin/content/faq', {
+        method: 'PUT',
+        body: JSON.stringify({ content: { faqCategories: nextDraft } }),
+      });
+      setStatus({ type: 'success', message: 'Changes saved.' });
+      return true;
+    } catch (error) {
+      setStatus({ type: 'error', message: error.message || 'Save failed. Please login again.' });
+      return false;
+    }
+  };
+
+  const openCategoryEditor = (index) => {
+    const item = draft[index];
+    const isNew = !item;
+    setEditor({
+      type: 'category',
+      index,
+      title: item?.title || (isNew ? 'New Category' : ''),
+      id: item?.id || `category-${Date.now()}`,
+      isNew,
+    });
+  };
+
+  const openItemEditor = (categoryIndex, itemIndex) => {
+    const item = draft?.[categoryIndex]?.items?.[itemIndex];
+    setEditor({
+      type: 'item',
+      categoryIndex,
+      itemIndex,
+      question: item?.question || '',
+      answer: item?.answer || '',
+      id: item?.id || `faq-item-${Date.now()}`,
+      isNew: !item,
+    });
+  };
+
+  const deleteCategory = async (index) => {
+    const next = draft.filter((_, i) => i !== index);
+    setDraft(next);
+    await saveAll(next);
+  };
+
+  const deleteItem = async (categoryIndex, itemIndex) => {
+    const next = draft.map((c, i) =>
+      i !== categoryIndex ? c : { ...c, items: c.items.filter((_, ii) => ii !== itemIndex) }
+    );
+    setDraft(next);
+    await saveAll(next);
+  };
+
+  const saveEditor = async () => {
+    if (!editor) return;
+    if (editor.type === 'category' && !String(editor.title || '').trim()) {
+      setStatus({ type: 'error', message: 'Category title is required.' });
+      return;
+    }
+    if (editor.type === 'item' && !String(editor.question || '').trim()) {
+      setStatus({ type: 'error', message: 'Question is required.' });
+      return;
+    }
+
+    let next = [...draft];
+    if (editor.type === 'category') {
+      const payload = {
+        id: editor.id,
+        title: editor.title,
+        items: editor.isNew ? [] : next[editor.index]?.items || [],
+      };
+      if (editor.isNew) {
+        next = [payload, ...next];
+      } else {
+        next[editor.index] = payload;
+      }
+    } else {
+      const payload = { id: editor.id, question: editor.question, answer: editor.answer };
+      const cIndex = editor.categoryIndex;
+      const c = next[cIndex];
+      if (!c) return;
+      const items = [...(c.items || [])];
+      if (editor.isNew) {
+        items.push(payload);
+      } else {
+        items[editor.itemIndex] = { ...(items[editor.itemIndex] || {}), ...payload };
+      }
+      next[cIndex] = { ...c, items };
+    }
+    const prev = draft;
+    setDraft(next);
+    const ok = await saveAll(next);
+    if (ok) {
+      setEditor(null);
+    } else {
+      setDraft(prev);
+    }
+  };
+
   return (
     <PageFade>
       <Container className="py-12 md:py-16">
@@ -17,11 +133,150 @@ export default function FAQ() {
         </header>
 
         <div className="mt-10 flex flex-col gap-8 md:mt-12 md:gap-10">
-          {faqCategories.map((category) => (
-            <FaqCategorySection key={category.id} category={category} />
-          ))}
+          {(isAdmin ? draft : categories).map((category, categoryIndex) =>
+            isAdmin ? (
+              <section
+                key={category.id}
+                className="rounded-2xl border border-neutral-200 bg-white/90 p-4 shadow-sm ring-1 ring-black/5 dark:border-neutral-700 dark:bg-neutral-900/60 dark:ring-white/5 md:p-6"
+              >
+                <div className="mb-3 flex items-center justify-between gap-2 border-b border-theme pb-3">
+                  <h2 className="heading-card text-xl md:text-2xl">{category.title}</h2>
+                  <div className="flex gap-1">
+                    <button
+                      type="button"
+                      className="rounded-md bg-neutral-100 p-1.5 text-accent dark:bg-neutral-800 dark:text-emerald-200"
+                      onClick={() => openCategoryEditor(categoryIndex)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-md bg-rose-100 p-1.5 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
+                      onClick={() => deleteCategory(categoryIndex)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-md bg-emerald-100 p-1.5 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+                      onClick={() => openItemEditor(categoryIndex)}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="divide-y divide-neutral-200 dark:divide-neutral-700">
+                  {category.items.map((item, itemIndex) => (
+                    <div key={item.id} className="py-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-semibold text-neutral-900 dark:text-neutral-100">{item.question}</p>
+                        <div className="flex gap-1">
+                          <button
+                            type="button"
+                            className="rounded-md bg-neutral-100 p-1.5 text-accent dark:bg-neutral-800 dark:text-emerald-200"
+                            onClick={() => openItemEditor(categoryIndex, itemIndex)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            className="rounded-md bg-rose-100 p-1.5 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
+                            onClick={() => deleteItem(categoryIndex, itemIndex)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                      {item.answer ? (
+                        <p className="mt-2 text-sm leading-relaxed text-prose-muted">{item.answer}</p>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ) : (
+              <FaqCategorySection key={category.id} category={category} />
+            )
+          )}
         </div>
       </Container>
+      {isAdmin ? (
+        <>
+          {status.message ? (
+            <div
+              className={`fixed right-4 top-24 z-50 rounded-lg px-3 py-2 text-sm shadow-lg ${
+                status.type === 'error'
+                  ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'
+                  : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+              }`}
+            >
+              {status.message}
+            </div>
+          ) : null}
+          <div className="fixed bottom-6 right-4 z-40">
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm text-white shadow-lg dark:bg-emerald-700"
+              onClick={() => openCategoryEditor()}
+            >
+              <Plus className="h-4 w-4" /> Add Category
+            </button>
+          </div>
+          {editor ? (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+              <div className="w-full max-w-xl rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
+                <h3 className="text-lg font-semibold text-accent dark:text-emerald-200">
+                  {editor.type === 'category'
+                    ? `${editor.isNew ? 'Add' : 'Edit'} Category`
+                    : `${editor.isNew ? 'Add' : 'Edit'} FAQ Item`}
+                </h3>
+                <div className="mt-4 space-y-3">
+                  {editor.type === 'category' ? (
+                    <input
+                      className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                      placeholder="Category title"
+                      value={editor.title}
+                      onChange={(e) => setEditor((p) => ({ ...p, title: e.target.value }))}
+                    />
+                  ) : (
+                    <>
+                      <input
+                        className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                        placeholder="Question"
+                        value={editor.question}
+                        onChange={(e) => setEditor((p) => ({ ...p, question: e.target.value }))}
+                      />
+                      <textarea
+                        className="h-32 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                        placeholder="Answer"
+                        value={editor.answer}
+                        onChange={(e) => setEditor((p) => ({ ...p, answer: e.target.value }))}
+                      />
+                    </>
+                  )}
+                </div>
+                <div className="mt-4 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={saveEditor}
+                    className="inline-flex items-center gap-1 rounded-lg bg-accent px-4 py-2 text-sm text-white dark:bg-emerald-700"
+                  >
+                    <Save className="h-4 w-4" /> Save
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditor(null)}
+                    className="inline-flex items-center gap-1 rounded-lg bg-neutral-200 px-4 py-2 text-sm text-neutral-800 dark:bg-neutral-700 dark:text-neutral-100"
+                  >
+                    <X className="h-4 w-4" /> Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </>
+      ) : null}
     </PageFade>
   );
 }

@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import clsx from 'clsx';
 import Dropdown from './Dropdown';
 import ThemeToggle from './ThemeToggle';
@@ -34,7 +34,19 @@ const tailLinks = [
 ];
 
 export default function MobileMenu({ open, onClose }) {
+  const location = useLocation();
+  const adminMode = location.pathname === '/admin' || location.pathname.startsWith('/admin/');
+  const p = (path) => {
+    if (!adminMode) return path;
+    if (path === '/') return '/admin';
+    return `/admin${path}`;
+  };
+
   const [openDropdown, setOpenDropdown] = useState(null);
+  const aboutItemsMapped = aboutItems.map((i) => ({ ...i, to: p(i.to) }));
+  const programItemsMapped = programItems.map((i) => ({ ...i, to: p(i.to) }));
+  const registrationItemsMapped = registrationItems.map((i) => ({ ...i, to: p(i.to) }));
+  const tailLinksMapped = tailLinks.map((i) => ({ ...i, to: p(i.to) }));
 
   const closeAll = () => {
     setOpenDropdown(null);
@@ -79,7 +91,7 @@ export default function MobileMenu({ open, onClose }) {
             </div>
             <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4">
               <NavLink
-                to="/"
+                to={p('/')}
                 end
                 onClick={closeAll}
                 className={({ isActive }) =>
@@ -97,7 +109,7 @@ export default function MobileMenu({ open, onClose }) {
               <div className="border-t border-neutral-200 pt-2 dark:border-neutral-700">
                 <Dropdown
                   label="About"
-                  items={aboutItems}
+                  items={aboutItemsMapped}
                   mobileControlled
                   mobileOpen={openDropdown === 'about'}
                   onMobileToggle={() =>
@@ -110,7 +122,7 @@ export default function MobileMenu({ open, onClose }) {
               <div className="border-t border-neutral-200 pt-2 dark:border-neutral-700">
                 <Dropdown
                   label="Programs"
-                  items={programItems}
+                  items={programItemsMapped}
                   mobileControlled
                   mobileOpen={openDropdown === 'programs'}
                   onMobileToggle={() =>
@@ -123,7 +135,7 @@ export default function MobileMenu({ open, onClose }) {
               <div className="border-t border-neutral-200 pt-2 dark:border-neutral-700">
                 <Dropdown
                   label="Registrations"
-                  items={registrationItems}
+                  items={registrationItemsMapped}
                   mobileControlled
                   mobileOpen={openDropdown === 'registrations'}
                   onMobileToggle={() =>
@@ -133,7 +145,7 @@ export default function MobileMenu({ open, onClose }) {
                 />
               </div>
 
-              {tailLinks.map((link) => (
+              {tailLinksMapped.map((link) => (
                 <NavLink
                   key={link.to}
                   to={link.to}

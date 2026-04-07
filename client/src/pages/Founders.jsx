@@ -1,6 +1,11 @@
 import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { adminRequest } from '../admin/api';
+import ImageUploader from '../components/admin/ImageUploader';
 import Container from '../components/Container';
 import PageFade from '../components/PageFade';
+import useLiveContent from '../hooks/useLiveContent';
 
 const fade = {
   initial: { opacity: 0, y: 20 },
@@ -15,6 +20,23 @@ const imgSwapna =
   'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=900&q=80';
 
 export default function Founders() {
+  const location = useLocation();
+  const isAdmin = location.pathname === '/admin/founders';
+  const cms = useLiveContent('founders', {});
+  const [draft, setDraft] = useState(cms);
+  useEffect(() => setDraft(cms), [cms]);
+  const rameshImage = cms.rameshImage || imgRamesh;
+  const swapnaImage = cms.swapnaImage || imgSwapna;
+  const displayRamesh = isAdmin ? draft.rameshImage || imgRamesh : rameshImage;
+  const displaySwapna = isAdmin ? draft.swapnaImage || imgSwapna : swapnaImage;
+
+  const save = async () => {
+    await adminRequest('/api/admin/content/founders', {
+      method: 'PUT',
+      body: JSON.stringify({ content: draft }),
+    });
+  };
+
   return (
     <PageFade>
       <Container className="py-8 md:py-12">
@@ -72,12 +94,21 @@ export default function Founders() {
               </div>
             </div>
             <div className="order-1 md:order-2">
-              <div className="overflow-hidden rounded-[2rem] shadow-lg ring-1 ring-black/10 dark:ring-white/10">
+              <div className="group relative overflow-hidden rounded-[2rem] shadow-lg ring-1 ring-black/10 dark:ring-white/10">
                 <img
-                  src={imgRamesh}
+                  src={displayRamesh}
                   alt="Ramesh Noone"
                   className="aspect-[4/5] w-full object-cover md:aspect-[3/4]"
                 />
+                {isAdmin ? (
+                  <div className="absolute inset-x-3 top-3 z-10 flex justify-end">
+                    <ImageUploader
+                      folder="founders"
+                      buttonText="Change Photo"
+                      onUploaded={(asset) => setDraft((p) => ({ ...p, rameshImage: asset.url }))}
+                    />
+                  </div>
+                ) : null}
               </div>
             </div>
           </motion.section>
@@ -87,12 +118,21 @@ export default function Founders() {
             className="grid items-center gap-10 md:grid-cols-2 md:gap-14"
             {...fade}
           >
-            <div className="overflow-hidden rounded-[2rem] shadow-lg ring-1 ring-black/10 dark:ring-white/10">
+            <div className="group relative overflow-hidden rounded-[2rem] shadow-lg ring-1 ring-black/10 dark:ring-white/10">
               <img
-                src={imgSwapna}
+                src={displaySwapna}
                 alt="Swapna Makam"
                 className="aspect-[4/5] w-full object-cover md:aspect-[3/4]"
               />
+              {isAdmin ? (
+                <div className="absolute inset-x-3 top-3 z-10 flex justify-end">
+                  <ImageUploader
+                    folder="founders"
+                    buttonText="Change Photo"
+                    onUploaded={(asset) => setDraft((p) => ({ ...p, swapnaImage: asset.url }))}
+                  />
+                </div>
+              ) : null}
             </div>
             <div className="space-y-5">
               <h2 className="text-2xl font-bold text-neutral-900 dark:text-emerald-100 md:text-3xl">
@@ -136,6 +176,17 @@ export default function Founders() {
           </motion.section>
         </div>
       </Container>
+      {isAdmin ? (
+        <div className="fixed bottom-20 left-4 z-40 rounded-xl border border-neutral-200 bg-white/95 p-3 shadow-xl dark:border-neutral-700 dark:bg-neutral-900/95">
+          <button
+            type="button"
+            onClick={save}
+            className="rounded-lg bg-accent px-4 py-2 text-sm text-white dark:bg-emerald-700"
+          >
+            Save Founder Photos
+          </button>
+        </div>
+      ) : null}
     </PageFade>
   );
 }

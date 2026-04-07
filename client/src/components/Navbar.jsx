@@ -1,7 +1,7 @@
 import { Menu } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import clsx from 'clsx';
 import Container from './Container';
 import Dropdown from './Dropdown';
@@ -53,8 +53,20 @@ function useCompactNav() {
 }
 
 export default function Navbar() {
+  const location = useLocation();
+  const adminMode = location.pathname === '/admin' || location.pathname.startsWith('/admin/');
+  const p = (path) => {
+    if (!adminMode) return path;
+    if (path === '/') return '/admin';
+    return `/admin${path}`;
+  };
+
   const [mobileOpen, setMobileOpen] = useState(false);
   const compact = useCompactNav();
+  const aboutItemsMapped = aboutItems.map((i) => ({ ...i, to: p(i.to) }));
+  const programItemsMapped = programItems.map((i) => ({ ...i, to: p(i.to) }));
+  const registrationItemsMapped = registrationItems.map((i) => ({ ...i, to: p(i.to) }));
+  const morePoolMapped = morePool.map((i) => ({ ...i, to: p(i.to) }));
 
   return (
     <>
@@ -65,7 +77,7 @@ export default function Navbar() {
         <Container>
           <div className="flex items-center justify-between gap-3 rounded-full border border-neutral-200/80 bg-primary/90 px-3 py-2 shadow-nav backdrop-blur-md dark:border-emerald-800/45 dark:bg-emerald-950/75 dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)] dark:backdrop-blur-md">
             <Link
-              to="/"
+              to={p('/')}
               className="flex shrink-0 items-center gap-2 rounded-full px-2 py-1 text-accent dark:text-emerald-200"
             >
               <LotusMark className="h-9 w-9 text-accent dark:text-emerald-200" />
@@ -79,7 +91,7 @@ export default function Navbar() {
               aria-label="Primary"
             >
               <NavLink
-                to="/"
+                to={p('/')}
                 end
                 className={({ isActive }) =>
                   clsx(
@@ -93,10 +105,10 @@ export default function Navbar() {
                 Home
               </NavLink>
 
-              <Dropdown label="About" items={aboutItems} />
+              <Dropdown label="About" items={aboutItemsMapped} />
 
               <NavLink
-                to="/gallery"
+                to={p('/gallery')}
                 className={({ isActive }) =>
                   clsx(
                     'rounded-full px-3 py-2 text-sm font-medium transition-colors',
@@ -109,11 +121,11 @@ export default function Navbar() {
                 Gallery
               </NavLink>
 
-              <Dropdown label="Programs" items={programItems} />
-              <Dropdown label="Registrations" items={registrationItems} />
+              <Dropdown label="Programs" items={programItemsMapped} />
+              <Dropdown label="Registrations" items={registrationItemsMapped} />
 
               <NavLink
-                to="/gurukulam"
+                to={p('/gurukulam')}
                 className={({ isActive }) =>
                   clsx(
                     'rounded-full px-3 py-2 text-sm font-medium transition-colors',
@@ -127,7 +139,7 @@ export default function Navbar() {
               </NavLink>
 
               {!compact &&
-                morePool.map((item) => (
+                morePoolMapped.map((item) => (
                   <NavLink
                     key={item.to}
                     to={item.to}
@@ -144,7 +156,7 @@ export default function Navbar() {
                   </NavLink>
                 ))}
 
-              {compact && <Dropdown label="More" items={morePool} />}
+              {compact && <Dropdown label="More" items={morePoolMapped} />}
             </nav>
 
             <div className="flex items-center gap-1">

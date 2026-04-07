@@ -1,7 +1,9 @@
 import { Route, Routes } from 'react-router-dom';
+import AdminRoute from '../components/admin/AdminRoute';
 import Layout from '../components/Layout';
 import About from '../pages/About';
 import Admission from '../pages/Admission';
+import AdminLogin from '../pages/AdminLogin';
 import ContactUs from '../pages/ContactUs';
 import Contests from '../pages/Contests';
 import Curriculam from '../pages/Curriculam';
@@ -43,6 +45,16 @@ export default function AppRoutes() {
         <Route path="contact" element={<ContactUs />} />
         <Route path="faq" element={<FAQ />} />
         <Route path="terms" element={<Terms />} />
+      </Route>
+      <Route path="admin-login" element={<AdminLogin />} />
+      <Route element={<AdminRoute />}>
+        <Route element={<Layout />}>
+          <Route path="admin" element={<Home />} />
+          <Route path="admin/about" element={<About />} />
+          <Route path="admin/founders" element={<Founders />} />
+          <Route path="admin/gallery" element={<Gallery />} />
+          <Route path="admin/faq" element={<FAQ />} />
+        </Route>
       </Route>
     </Routes>
   );

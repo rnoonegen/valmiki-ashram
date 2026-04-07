@@ -1,7 +1,12 @@
 import { BookOpen, Flower2, Orbit, Sparkles, Target, Users } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { adminRequest } from '../admin/api';
 import Button from '../components/Button';
+import ImageUploader from '../components/admin/ImageUploader';
 import Container from '../components/Container';
 import PageFade from '../components/PageFade';
+import useLiveContent from '../hooks/useLiveContent';
 
 const founderImg =
   'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=600&q=80';
@@ -53,6 +58,23 @@ const aboutHighlights = [
 ];
 
 export default function About() {
+  const location = useLocation();
+  const isAdmin = location.pathname === '/admin/about';
+  const cms = useLiveContent('about', {});
+  const [draft, setDraft] = useState(cms);
+  useEffect(() => setDraft(cms), [cms]);
+  const founderOne = cms.founderImage1 || founderImg;
+  const founderTwo = cms.founderImage2 || founderImg2;
+  const displayOne = isAdmin ? draft.founderImage1 || founderImg : founderOne;
+  const displayTwo = isAdmin ? draft.founderImage2 || founderImg2 : founderTwo;
+
+  const save = async () => {
+    await adminRequest('/api/admin/content/about', {
+      method: 'PUT',
+      body: JSON.stringify({ content: draft }),
+    });
+  };
+
   return (
     <PageFade>
       <h1 className="sr-only">About Valmiki Ashram</h1>
@@ -107,26 +129,40 @@ export default function About() {
           <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-700 dark:bg-neutral-900 sm:p-7">
             <div className="grid gap-10 lg:grid-cols-[1.25fr_1fr] lg:items-center lg:gap-12">
               <div className="grid grid-cols-2 gap-4 sm:gap-6 md:max-w-xl lg:max-w-none">
-              <figure
-                className="group overflow-hidden rounded-2xl border border-neutral-200 shadow-sm dark:border-neutral-700"
-              >
+              <figure className="group relative overflow-hidden rounded-2xl border border-neutral-200 shadow-sm dark:border-neutral-700">
                 <img
-                  src={founderImg}
+                  src={displayOne}
                   alt="Sri Ramesh Kumar"
                   className="aspect-[4/5] w-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
+                {isAdmin ? (
+                  <div className="absolute inset-x-2 top-2 z-10 flex justify-end">
+                    <ImageUploader
+                      folder="about"
+                      buttonText="Change"
+                      onUploaded={(asset) => setDraft((p) => ({ ...p, founderImage1: asset.url }))}
+                    />
+                  </div>
+                ) : null}
                 <figcaption className="bg-white/90 px-3 py-2 text-center text-sm font-medium text-neutral-800 dark:bg-neutral-900/90 dark:text-neutral-100">
                   Sri Ramesh Kumar
                 </figcaption>
               </figure>
-              <figure
-                className="group overflow-hidden rounded-2xl border border-neutral-200 shadow-sm dark:border-neutral-700"
-              >
+              <figure className="group relative overflow-hidden rounded-2xl border border-neutral-200 shadow-sm dark:border-neutral-700">
                 <img
-                  src={founderImg2}
+                  src={displayTwo}
                   alt="Srimathi Swapna"
                   className="aspect-[4/5] w-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
+                {isAdmin ? (
+                  <div className="absolute inset-x-2 top-2 z-10 flex justify-end">
+                    <ImageUploader
+                      folder="about"
+                      buttonText="Change"
+                      onUploaded={(asset) => setDraft((p) => ({ ...p, founderImage2: asset.url }))}
+                    />
+                  </div>
+                ) : null}
                 <figcaption className="bg-white/90 px-3 py-2 text-center text-sm font-medium text-neutral-800 dark:bg-neutral-900/90 dark:text-neutral-100">
                   Srimathi Swapna
                 </figcaption>
@@ -179,6 +215,17 @@ export default function About() {
           </div>
         </Container>
       </section>
+      {isAdmin ? (
+        <div className="fixed bottom-20 left-4 z-40 rounded-xl border border-neutral-200 bg-white/95 p-3 shadow-xl dark:border-neutral-700 dark:bg-neutral-900/95">
+          <button
+            type="button"
+            onClick={save}
+            className="rounded-lg bg-accent px-4 py-2 text-sm text-white dark:bg-emerald-700"
+          >
+            Save About Photos
+          </button>
+        </div>
+      ) : null}
     </PageFade>
   );
 }
