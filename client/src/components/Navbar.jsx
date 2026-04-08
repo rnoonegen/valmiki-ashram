@@ -1,10 +1,13 @@
 import { Menu } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import clsx from 'clsx';
+import { adminRequest } from '../admin/api';
+import ImageUploader from './admin/ImageUploader';
 import Container from './Container';
 import Dropdown from './Dropdown';
+import useLiveContent from '../hooks/useLiveContent';
 import LotusMark from './LotusMark';
 import MobileMenu from './MobileMenu';
 import ThemeToggle from './ThemeToggle';
@@ -29,32 +32,19 @@ const registrationItems = [
 ];
 
 const morePool = [
+  { to: '/gallery', label: 'Gallery' },
+  { to: '/curriculum', label: 'Curriculum' },
+  { to: '/faq', label: 'FAQ' },
   { to: '/admission', label: 'Admission' },
   { to: '/contests', label: 'Contests' },
   { to: '/contact', label: 'Contact Us' },
 ];
 
-function useCompactNav() {
-  const [compact, setCompact] = useState(
-    () =>
-      typeof window !== 'undefined' &&
-      window.matchMedia('(max-width: 1279px)').matches
-  );
-
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 1279px)');
-    const onChange = () => setCompact(mq.matches);
-    onChange();
-    mq.addEventListener('change', onChange);
-    return () => mq.removeEventListener('change', onChange);
-  }, []);
-
-  return compact;
-}
-
 export default function Navbar() {
   const location = useLocation();
   const adminMode = location.pathname === '/admin' || location.pathname.startsWith('/admin/');
+  const siteContent = useLiveContent('site', {});
+  const logoUrl = siteContent.logoUrl || '';
   const p = (path) => {
     if (!adminMode) return path;
     if (path === '/') return '/admin';
@@ -62,11 +52,17 @@ export default function Navbar() {
   };
 
   const [mobileOpen, setMobileOpen] = useState(false);
-  const compact = useCompactNav();
+  const [logoPreviewOpen, setLogoPreviewOpen] = useState(false);
   const aboutItemsMapped = aboutItems.map((i) => ({ ...i, to: p(i.to) }));
   const programItemsMapped = programItems.map((i) => ({ ...i, to: p(i.to) }));
   const registrationItemsMapped = registrationItems.map((i) => ({ ...i, to: p(i.to) }));
   const morePoolMapped = morePool.map((i) => ({ ...i, to: p(i.to) }));
+  const saveLogo = async (url) => {
+    await adminRequest('/api/admin/content/site', {
+      method: 'PUT',
+      body: JSON.stringify({ content: { ...siteContent, logoUrl: url } }),
+    });
+  };
 
   return (
     <>
@@ -78,13 +74,42 @@ export default function Navbar() {
           <div className="flex items-center justify-between gap-3 rounded-full border border-neutral-200/80 bg-primary/90 px-3 py-2 shadow-nav backdrop-blur-md dark:border-emerald-800/45 dark:bg-emerald-950/75 dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)] dark:backdrop-blur-md">
             <Link
               to={p('/')}
-              className="flex shrink-0 items-center gap-2 rounded-full px-2 py-1 text-accent dark:text-emerald-200"
+              className="group flex shrink-0 items-center gap-2 rounded-full px-2 py-1 text-accent dark:text-emerald-200"
             >
-              <LotusMark className="h-9 w-9 text-accent dark:text-emerald-200" />
+              {logoUrl ? (
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    if (adminMode) {
+                      event.preventDefault();
+                      setLogoPreviewOpen(true);
+                    }
+                  }}
+                  className="relative h-9 w-9 overflow-hidden rounded-full bg-white/70 p-1 ring-1 ring-black/10 dark:bg-neutral-900/80 dark:ring-white/10"
+                  aria-label={adminMode ? 'Preview logo' : 'Logo'}
+                >
+                  <img
+                    src={logoUrl}
+                    alt="Valmiki Ashram logo"
+                    className="h-full w-full object-contain"
+                  />
+                </button>
+              ) : (
+                <LotusMark className="h-9 w-9 text-accent dark:text-emerald-200" />
+              )}
               <span className="text-sm font-semibold tracking-tight sm:text-base">
                 Valmiki Ashram
               </span>
             </Link>
+            {adminMode ? (
+              <div className="hidden sm:block">
+                <ImageUploader
+                  folder="branding"
+                  buttonText={logoUrl ? 'Change Logo' : 'Upload Logo'}
+                  onUploaded={(asset) => saveLogo(asset.url)}
+                />
+              </div>
+            ) : null}
 
             <nav
               className="hidden items-center gap-1 lg:flex"
@@ -107,20 +132,6 @@ export default function Navbar() {
 
               <Dropdown label="About" items={aboutItemsMapped} />
 
-              <NavLink
-                to={p('/gallery')}
-                className={({ isActive }) =>
-                  clsx(
-                    'rounded-full px-3 py-2 text-sm font-medium transition-colors',
-                    isActive
-                      ? 'bg-white/80 text-accent shadow-sm dark:bg-emerald-950/95 dark:text-emerald-50 dark:shadow-[inset_0_0_0_1px_rgba(52,211,153,0.45)]'
-                      : 'text-accent hover:bg-white/50 dark:text-emerald-200 dark:hover:bg-neutral-800/80'
-                  )
-                }
-              >
-                Gallery
-              </NavLink>
-
               <Dropdown label="Programs" items={programItemsMapped} />
               <Dropdown label="Registrations" items={registrationItemsMapped} />
 
@@ -138,25 +149,7 @@ export default function Navbar() {
                 Gurukulam
               </NavLink>
 
-              {!compact &&
-                morePoolMapped.map((item) => (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    className={({ isActive }) =>
-                      clsx(
-                        'rounded-full px-3 py-2 text-sm font-medium transition-colors',
-                        isActive
-                          ? 'bg-white/80 text-accent shadow-sm dark:bg-emerald-950/95 dark:text-emerald-50 dark:shadow-[inset_0_0_0_1px_rgba(52,211,153,0.45)]'
-                          : 'text-accent hover:bg-white/50 dark:text-emerald-200 dark:hover:bg-neutral-800/80'
-                      )
-                    }
-                  >
-                    {item.label}
-                  </NavLink>
-                ))}
-
-              {compact && <Dropdown label="More" items={morePoolMapped} />}
+              <Dropdown label="More" items={morePoolMapped} />
             </nav>
 
             <div className="flex items-center gap-1">
@@ -175,6 +168,25 @@ export default function Navbar() {
       </motion.header>
 
       <MobileMenu open={mobileOpen} onClose={() => setMobileOpen(false)} />
+      {adminMode && logoPreviewOpen && logoUrl ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4"
+          role="presentation"
+          onClick={() => setLogoPreviewOpen(false)}
+        >
+          <div
+            className="w-full max-w-2xl rounded-2xl bg-white p-4 shadow-2xl dark:bg-neutral-900"
+            role="presentation"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <img
+              src={logoUrl}
+              alt="Logo preview"
+              className="max-h-[70vh] w-full object-contain"
+            />
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }

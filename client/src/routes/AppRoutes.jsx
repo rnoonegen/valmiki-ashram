@@ -51,6 +51,7 @@ export default function AppRoutes() {
         <Route path="admission" element={<Admission />} />
         <Route path="contests" element={<Contests />} />
         <Route path="curriculam" element={<Curriculam />} />
+        <Route path="curriculum" element={<Curriculam />} />
         <Route path="contact" element={<ContactUs />} />
         <Route path="faq" element={<FAQ />} />
         <Route path="terms" element={<Terms />} />
@@ -65,6 +66,7 @@ export default function AppRoutes() {
           <Route path="admin/gallery" element={<Gallery />} />
           <Route path="admin/faq" element={<FAQ />} />
           <Route path="admin/programs" element={<Programs />} />
+          <Route path="admin/curriculam" element={<Curriculam />} />
         </Route>
       </Route>
     </Routes>

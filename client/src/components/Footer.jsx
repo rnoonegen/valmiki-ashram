@@ -3,6 +3,7 @@ import { FaFacebook, FaInstagram, FaLinkedin, FaYoutube } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 import { Link } from 'react-router-dom';
 import Container from './Container';
+import useLiveContent from '../hooks/useLiveContent';
 import LotusMark from './LotusMark';
 
 const social = [
@@ -42,6 +43,8 @@ const linkClass =
   'w-fit text-accent underline decoration-accent/50 underline-offset-4 transition-colors hover:text-accent-light dark:text-emerald-200 dark:decoration-emerald-500/40 dark:hover:text-emerald-100';
 
 export default function Footer({ className }) {
+  const siteContent = useLiveContent('site', {});
+  const logoUrl = siteContent.logoUrl || '';
   const email = process.env.REACT_APP_EMAIL || '';
   const phone = process.env.REACT_APP_PHONE || '';
   const digits = phone.replace(/\D/g, '');
@@ -69,7 +72,17 @@ export default function Footer({ className }) {
           <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-10">
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-3">
-                <LotusMark className="h-10 w-10 shrink-0 text-accent dark:text-emerald-200" />
+                {logoUrl ? (
+                  <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-white/80 p-1 ring-1 ring-black/10 dark:bg-neutral-900 dark:ring-white/10">
+                    <img
+                      src={logoUrl}
+                      alt="Valmiki Ashram logo"
+                      className="h-full w-full object-contain"
+                    />
+                  </div>
+                ) : (
+                  <LotusMark className="h-10 w-10 shrink-0 text-accent dark:text-emerald-200" />
+                )}
                 <span className="text-2xl font-medium text-accent dark:text-emerald-200 md:text-3xl">
                   Valmiki Ashram
                 </span>

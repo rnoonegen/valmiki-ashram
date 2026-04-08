@@ -28,6 +28,8 @@ const registrationItems = [
 const tailLinks = [
   { to: '/gallery', label: 'Gallery' },
   { to: '/gurukulam', label: 'Gurukulam' },
+  { to: '/curriculum', label: 'Curriculum' },
+  { to: '/faq', label: 'FAQ' },
   { to: '/admission', label: 'Admission' },
   { to: '/contests', label: 'Contests' },
   { to: '/contact', label: 'Contact Us' },

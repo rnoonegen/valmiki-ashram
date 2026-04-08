@@ -1,0 +1,108 @@
+export const defaultCurriculum = [
+  {
+    title: 'Academic Learning',
+    subjects: [
+      { title: 'Mathematics', children: [] },
+      { title: 'Science', children: [{ title: 'Physics' }, { title: 'Chemistry' }, { title: 'Biology' }] },
+      { title: 'English', children: [] },
+      { title: 'Social Studies', children: [] },
+      { title: 'Mother Tongue', children: [{ title: 'Hindi' }, { title: 'Telugu' }, { title: 'Tamil' }, { title: 'Kannada' }] },
+    ],
+  },
+  {
+    title: 'IKS (Bharatiya Jnana Parampara)',
+    subjects: [
+      { title: 'Ayurveda & Yoga', children: [] },
+      { title: 'Natya Sastra', children: [] },
+      { title: 'Tarka Sastra', children: [] },
+      { title: 'Ganitam', children: [] },
+      { title: 'Vignanama', children: [] },
+      { title: 'Panchangam (Indian Calendar System)', children: [] },
+      { title: 'Hindu Symbolism', children: [] },
+      { title: 'Introduction to all Sastras', children: [] },
+      { title: 'Geography (Bhoogola)', children: [] },
+      { title: 'Itihaasa (Ramayana, Mahabharata)', children: [] },
+      { title: 'Decolonization Studies', children: [] },
+    ],
+  },
+  {
+    title: 'Physical Fitness',
+    subjects: [
+      { title: 'Yoga', children: [] },
+      { title: 'Indian Martial Arts', children: [{ title: 'Ghatka' }, { title: 'Mallakhambh' }, { title: 'Kalari Payattu' }, { title: 'Dhanurvidya (Archery)' }] },
+      { title: 'Bharatiya Khel', children: [{ title: 'Kabaddi' }, { title: 'Seven Stones' }] },
+      { title: 'Sports', children: [{ title: 'Cricket' }, { title: 'Volleyball' }, { title: 'Table Tennis' }] },
+    ],
+  },
+  {
+    title: 'Arts & Aesthetics (Bharateeya Kala)',
+    subjects: [
+      { title: 'Vocal Music (Carnatic)', children: [] },
+      { title: 'Instrumental Music', children: [] },
+      { title: 'Natyam (Kuchipudi, Bharatanatyam)', children: [] },
+      { title: 'Nataka (Drama)', children: [] },
+      { title: 'Shilpa Kala', children: [] },
+      { title: 'Pata Chitra', children: [] },
+      { title: 'Pottery', children: [] },
+      { title: 'Basket Weaving', children: [] },
+      { title: 'Cloth Weaving', children: [] },
+      { title: 'Rangoli', children: [] },
+      { title: 'Stitching', children: [] },
+      { title: '(Extensible: up to 64 art forms)', children: [] },
+    ],
+  },
+  {
+    title: 'Nature Education',
+    subjects: [
+      { title: 'Natural & Organic Farming', children: [] },
+      { title: 'Bhoo Vignanama', children: [] },
+      { title: 'Gou Vignanama', children: [] },
+      { title: 'Herbal Garden', children: [] },
+    ],
+  },
+  {
+    title: 'Life Skills',
+    subjects: [
+      {
+        title: 'Emerging Technologies (Grades 9-10)',
+        children: [
+          { title: 'Artificial Intelligence' },
+          { title: 'Robotics' },
+          { title: 'Machine Learning' },
+          { title: 'Data Science' },
+          { title: 'Automation' },
+          { title: 'Photography' },
+          { title: 'Digital Media Editing' },
+          { title: 'Film Making' },
+        ],
+      },
+      {
+        title: 'Entrepreneurship & Leadership (Grades 9-10)',
+        children: [
+          { title: 'Digital Marketing' },
+          { title: 'Business Strategy' },
+          { title: 'Public Speaking' },
+          { title: 'Team Building' },
+          { title: 'Innovation & Problem Solving' },
+          { title: 'Crisis & Risk Management' },
+          { title: 'Sales & Persuasion' },
+          { title: 'Financial Management' },
+          { title: 'Branding & Marketing' },
+          { title: 'Networking & Relationship Building' },
+        ],
+      },
+      {
+        title: 'Practical Skills',
+        children: [
+          { title: 'Carpentry' },
+          { title: 'Electrical' },
+          { title: 'Plumbing' },
+          { title: 'House Construction' },
+          { title: 'Metal Working' },
+          { title: 'Welding' },
+          { title: 'Soldering' },
+        ],
+      },
+    ],
+  },
+];
