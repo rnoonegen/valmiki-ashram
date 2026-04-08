@@ -931,7 +931,7 @@ export default function Home() {
                 />
               </div>
               <input
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
                 placeholder="Title"
                 value={cardEditor.title}
                 onChange={(e) =>
@@ -939,7 +939,7 @@ export default function Home() {
                 }
               />
               <textarea
-                className="h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                className="h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
                 placeholder="Description"
                 value={cardEditor.body}
                 onChange={(e) =>
@@ -947,7 +947,7 @@ export default function Home() {
                 }
               />
               <input
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
                 placeholder="Route path (e.g. /gurukulam)"
                 value={cardEditor.path}
                 onChange={(e) =>
@@ -955,7 +955,7 @@ export default function Home() {
                 }
               />
               <input
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
                 placeholder="Button label"
                 value={cardEditor.buttonLabel}
                 onChange={(e) =>
@@ -992,7 +992,7 @@ export default function Home() {
             </h3>
             <div className="mt-4 space-y-3">
               <input
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
                 placeholder="Video title"
                 value={samskaraEditor.title}
                 onChange={(e) =>
@@ -1000,7 +1000,7 @@ export default function Home() {
                 }
               />
               <input
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
                 placeholder="YouTube URL"
                 value={samskaraEditor.url}
                 onChange={(e) =>
@@ -1035,7 +1035,7 @@ export default function Home() {
             </h3>
             <div className="mt-4 space-y-3">
               <textarea
-                className="h-28 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                className="h-28 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
                 placeholder="Testimonial quote"
                 value={testimonialEditor.quote}
                 onChange={(e) =>
@@ -1043,7 +1043,7 @@ export default function Home() {
                 }
               />
               <input
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
                 placeholder="Author (e.g. Janaki - parent)"
                 value={testimonialEditor.author}
                 onChange={(e) =>
@@ -1081,7 +1081,7 @@ export default function Home() {
             </h3>
             <div className="mt-4 space-y-3">
               <input
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
                 placeholder="Section title"
                 value={philosophyEditor.title}
                 onChange={(e) =>
@@ -1089,7 +1089,7 @@ export default function Home() {
                 }
               />
               <textarea
-                className="h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                className="h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
                 placeholder="Intro text"
                 value={philosophyEditor.intro}
                 onChange={(e) =>
@@ -1097,7 +1097,7 @@ export default function Home() {
                 }
               />
               <input
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
                 placeholder="Verse title"
                 value={philosophyEditor.verseTitle}
                 onChange={(e) =>
@@ -1108,7 +1108,7 @@ export default function Home() {
                 }
               />
               <textarea
-                className="h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                className="h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
                 placeholder="Verse meaning"
                 value={philosophyEditor.verseMeaning}
                 onChange={(e) =>
@@ -1119,7 +1119,7 @@ export default function Home() {
                 }
               />
               <textarea
-                className="h-28 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                className="h-28 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
                 placeholder="Paragraphs (one paragraph per line)"
                 value={philosophyEditor.paragraphsText}
                 onChange={(e) =>
@@ -1160,7 +1160,7 @@ export default function Home() {
                 : "Hero Subtitle"}
           </p>
           <textarea
-            className="h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-950"
+            className="h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
             value={fieldValue}
             onChange={(e) => setFieldValue(e.target.value)}
           />

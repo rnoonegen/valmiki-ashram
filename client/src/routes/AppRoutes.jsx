@@ -54,6 +54,7 @@ export default function AppRoutes() {
           <Route path="admin/founders" element={<Founders />} />
           <Route path="admin/gallery" element={<Gallery />} />
           <Route path="admin/faq" element={<FAQ />} />
+          <Route path="admin/programs" element={<Programs />} />
         </Route>
       </Route>
     </Routes>

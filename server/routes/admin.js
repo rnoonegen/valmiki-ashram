@@ -14,7 +14,14 @@ const upload = multer({
   limits: { fileSize: MAX_UPLOAD_MB * 1024 * 1024 },
 });
 
-const ALLOWED_PAGES = new Set(['home', 'about', 'founders', 'faq', 'gallery']);
+const ALLOWED_PAGES = new Set([
+  'home',
+  'about',
+  'founders',
+  'faq',
+  'gallery',
+  'programs',
+]);
 
 router.post('/login', (req, res) => {
   const { username, password } = req.body || {};
