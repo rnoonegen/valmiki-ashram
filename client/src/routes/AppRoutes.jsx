@@ -21,6 +21,8 @@ import Terms from "../pages/Terms";
 import ValmikiAshram from "../pages/ValmikiAshram";
 import WinterCampRegistration from "../pages/WinterCampRegistration";
 import WinterCamp from "../pages/WinterCamp";
+import WinterCampSchedule from "../pages/WinterCampSchedule";
+import SummerCampSchedule from "../pages/SummerCampSchedule";
 
 export default function AppRoutes() {
   return (
@@ -54,6 +56,8 @@ export default function AppRoutes() {
         <Route path="contact" element={<ContactUs />} />
         <Route path="faq" element={<FAQ />} />
         <Route path="terms" element={<Terms />} />
+        <Route path="winter-camp/schedule" element={<WinterCampSchedule />} />
+        <Route path="summer-camp/schedule" element={<SummerCampSchedule />} />
         {/* <Route path="nri-summer" element={<NRI Summer Camp />} /> */}
       </Route>
       <Route path="admin-login" element={<AdminLogin />} />
