@@ -159,16 +159,6 @@ export default function Navbar() {
 
             <div className="flex items-center gap-1">
               {adminMode ? (
-                <Link
-                  to="/admin/settings"
-                  aria-label="Admin settings"
-                  title="Settings"
-                  className="hidden rounded-full bg-neutral-200 p-2 text-neutral-800 hover:bg-neutral-300 dark:bg-neutral-700 dark:text-neutral-100 dark:hover:bg-neutral-600 lg:inline-flex"
-                >
-                  <Settings className="h-5 w-5" />
-                </Link>
-              ) : null}
-              {adminMode ? (
                 <button
                   type="button"
                   onClick={logout}
@@ -179,6 +169,16 @@ export default function Navbar() {
                 </button>
               ) : null}
               <ThemeToggle className="hidden rounded-full p-2 hover:bg-white/50 dark:hover:bg-neutral-800 lg:inline-flex" />
+              {adminMode ? (
+                <Link
+                  to="/admin/settings"
+                  aria-label="Admin settings"
+                  title="Settings"
+                  className="hidden rounded-full p-2 text-accent hover:bg-white/50 dark:text-emerald-200 dark:hover:bg-neutral-800 lg:inline-flex"
+                >
+                  <Settings className="h-5 w-5" />
+                </Link>
+              ) : null}
               <button
                 type="button"
                 className="inline-flex rounded-full p-2 hover:bg-white/50 dark:hover:bg-neutral-800 lg:hidden"
