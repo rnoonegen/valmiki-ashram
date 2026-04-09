@@ -4,6 +4,7 @@ import Layout from "../components/Layout";
 import About from "../pages/About";
 import Admission from "../pages/Admission";
 import AdminLogin from "../pages/AdminLogin";
+import AdminSettings from "../pages/AdminSettings";
 import ContactUs from "../pages/ContactUs";
 import Contests from "../pages/Contests";
 import Curriculum from "../pages/Curriculum";
@@ -66,6 +67,8 @@ export default function AppRoutes() {
           <Route path="admin/faq" element={<FAQ />} />
           <Route path="admin/programs" element={<Programs />} />
           <Route path="admin/curriculum" element={<Curriculum />} />
+          <Route path="admin/contact" element={<ContactUs />} />
+          <Route path="admin/settings" element={<AdminSettings />} />
         </Route>
       </Route>
     </Routes>

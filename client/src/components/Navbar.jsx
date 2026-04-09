@@ -1,9 +1,9 @@
-import { Menu } from 'lucide-react';
+import { LogOut, Menu, Settings } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
-import { adminRequest } from '../admin/api';
+import { adminRequest, clearAdminToken } from '../admin/api';
 import ImageUploader from './admin/ImageUploader';
 import Container from './Container';
 import Dropdown from './Dropdown';
@@ -42,6 +42,7 @@ const morePool = [
 
 export default function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const adminMode = location.pathname === '/admin' || location.pathname.startsWith('/admin/');
   const siteContent = useLiveContent('site', {});
   const logoUrl = siteContent.logoUrl || '';
@@ -62,6 +63,10 @@ export default function Navbar() {
       method: 'PUT',
       body: JSON.stringify({ content: { ...siteContent, logoUrl: url } }),
     });
+  };
+  const logout = () => {
+    clearAdminToken();
+    navigate('/admin-login');
   };
 
   return (
@@ -153,6 +158,26 @@ export default function Navbar() {
             </nav>
 
             <div className="flex items-center gap-1">
+              {adminMode ? (
+                <Link
+                  to="/admin/settings"
+                  aria-label="Admin settings"
+                  title="Settings"
+                  className="hidden rounded-full bg-neutral-200 p-2 text-neutral-800 hover:bg-neutral-300 dark:bg-neutral-700 dark:text-neutral-100 dark:hover:bg-neutral-600 lg:inline-flex"
+                >
+                  <Settings className="h-5 w-5" />
+                </Link>
+              ) : null}
+              {adminMode ? (
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="hidden items-center gap-1 rounded-full bg-rose-100 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-200 dark:bg-rose-900/40 dark:text-rose-300 dark:hover:bg-rose-900/55 lg:inline-flex sm:text-sm"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </button>
+              ) : null}
               <ThemeToggle className="hidden rounded-full p-2 hover:bg-white/50 dark:hover:bg-neutral-800 lg:inline-flex" />
               <button
                 type="button"
@@ -167,7 +192,10 @@ export default function Navbar() {
         </Container>
       </motion.header>
 
-      <MobileMenu open={mobileOpen} onClose={() => setMobileOpen(false)} />
+      <MobileMenu
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+      />
       {adminMode && logoPreviewOpen && logoUrl ? (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4"
