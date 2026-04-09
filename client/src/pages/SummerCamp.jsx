@@ -11,9 +11,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { adminRequest } from "../admin/api";
 import ImageUploader from "../components/admin/ImageUploader";
+import ContentBlockEditor from "../components/camp/ContentBlockEditor";
 import Container from "../components/Container";
 import PageFade from "../components/PageFade";
 import useLiveContent from "../hooks/useLiveContent";
+import { renderContentBlocks, resolveContentBlocks, sanitizeContentBlocks } from "../utils/campContentBlocks";
 
 const tabs = [
   { id: "about", label: "About Camp" },
@@ -243,145 +245,6 @@ const defaultChecklistCamp = {
   },
 };
 
-function normalizeBlock(block) {
-  if (!block || typeof block !== "object") return null;
-  const t = block.type;
-  if (t === "subheading") {
-    const text = typeof block.text === "string" ? block.text.trim() : "";
-    return text ? { type: "subheading", text } : null;
-  }
-  if (t === "bullets") {
-    const items = Array.isArray(block.items)
-      ? block.items.map((x) => (typeof x === "string" ? x.trim() : String(x))).filter(Boolean)
-      : [];
-    return items.length ? { type: "bullets", items } : null;
-  }
-  const text = typeof block.text === "string" ? block.text.trim() : "";
-  return text ? { type: "paragraph", text } : null;
-}
-
-function sanitizeBlocks(blocks) {
-  return (blocks || []).map(normalizeBlock).filter(Boolean);
-}
-
-function resolveBlocks(raw, key, fallback, legacyKey) {
-  const merged = { ...(raw || {}) };
-  const fromApi = merged[key];
-  if (Array.isArray(fromApi) && fromApi.length > 0) {
-    const normalized = sanitizeBlocks(fromApi);
-    if (normalized.length > 0) return normalized;
-  }
-  if (legacyKey && merged[legacyKey] && String(merged[legacyKey]).trim()) {
-    return [{ type: "paragraph", text: String(merged[legacyKey]).trim() }];
-  }
-  return fallback;
-}
-
-function renderBlocks(blocks, keyPrefix, firstMargin = "mt-4") {
-  return (blocks || []).map((block, bi) => {
-    const pCls = bi === 0 ? `${firstMargin} text-base leading-8 text-prose-muted` : "mt-2 text-base leading-8 text-prose-muted";
-    const hCls = bi === 0 ? `${firstMargin} text-lg font-semibold text-prose` : "mt-5 text-lg font-semibold text-prose";
-    const uCls = bi === 0 ? `${firstMargin} list-disc space-y-2 pl-6 text-prose-muted` : "mt-5 list-disc space-y-2 pl-6 text-prose-muted";
-    if (block.type === "subheading") {
-      return <p key={`${keyPrefix}-${bi}`} className={hCls}>{block.text}</p>;
-    }
-    if (block.type === "bullets") {
-      return (
-        <ul key={`${keyPrefix}-${bi}`} className={uCls}>
-          {(block.items || []).map((item, i) => <li key={`${keyPrefix}-${bi}-${i}`}>{item}</li>)}
-        </ul>
-      );
-    }
-    return <p key={`${keyPrefix}-${bi}`} className={pCls}>{block.text}</p>;
-  });
-}
-
-function BlockEditor({ title, hint, blocks, onChange, keyPrefix }) {
-  const list = blocks || [];
-  return (
-    <div className="mt-4 rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
-      <h4 className="text-sm font-semibold text-prose">{title}</h4>
-      {hint ? <p className="mt-1 text-xs text-prose-muted">{hint}</p> : null}
-      <div className="mt-3 space-y-4">
-        {list.map((block, bi) => (
-          <div key={`${keyPrefix}-${bi}`} className="rounded-lg border border-neutral-100 bg-neutral-50/80 p-3 dark:border-neutral-800 dark:bg-neutral-900/50">
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wide text-prose-muted">
-                {block.type === "paragraph" ? "Paragraph" : block.type === "subheading" ? "Subheading" : "Bullet list"}
-              </span>
-              <div className="flex gap-1">
-                <button type="button" disabled={bi === 0} onClick={() => {
-                  if (bi === 0) return;
-                  const next = [...list];
-                  [next[bi - 1], next[bi]] = [next[bi], next[bi - 1]];
-                  onChange(next);
-                }} className="rounded-md border border-neutral-300 p-1.5 disabled:opacity-40 dark:border-neutral-600">
-                  <ChevronUp className="h-4 w-4" />
-                </button>
-                <button type="button" disabled={bi === list.length - 1} onClick={() => {
-                  if (bi === list.length - 1) return;
-                  const next = [...list];
-                  [next[bi], next[bi + 1]] = [next[bi + 1], next[bi]];
-                  onChange(next);
-                }} className="rounded-md border border-neutral-300 p-1.5 disabled:opacity-40 dark:border-neutral-600">
-                  <ChevronDown className="h-4 w-4" />
-                </button>
-                <button type="button" onClick={() => onChange(list.filter((_, i) => i !== bi))} className="rounded-md bg-rose-600 p-1.5 text-white">
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            {block.type === "paragraph" ? (
-              <textarea
-                className="h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-950"
-                value={block.text || ""}
-                onChange={(e) => onChange(list.map((b, i) => (i === bi ? { ...b, text: e.target.value } : b)))}
-              />
-            ) : null}
-            {block.type === "subheading" ? (
-              <input
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-950"
-                value={block.text || ""}
-                onChange={(e) => onChange(list.map((b, i) => (i === bi ? { ...b, text: e.target.value } : b)))}
-              />
-            ) : null}
-            {block.type === "bullets" ? (
-              <div className="space-y-2">
-                {(block.items || []).map((line, li) => (
-                  <div key={`${keyPrefix}-${bi}-li-${li}`} className="flex gap-2">
-                    <input
-                      className="flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-950"
-                      value={line}
-                      onChange={(e) => onChange(list.map((b, i) => {
-                        if (i !== bi) return b;
-                        const items = [...(b.items || [])];
-                        items[li] = e.target.value;
-                        return { ...b, items };
-                      }))}
-                    />
-                    <button type="button" className="rounded-md bg-rose-600 p-2 text-white" onClick={() => onChange(list.map((b, i) => i !== bi ? b : { ...b, items: (b.items || []).filter((_, j) => j !== li) }))}>
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
-                <button type="button" className="text-xs font-medium text-accent dark:text-emerald-200" onClick={() => onChange(list.map((b, i) => i !== bi ? b : { ...b, items: [...(b.items || []), ""] }))}>
-                  + Add bullet
-                </button>
-              </div>
-            ) : null}
-          </div>
-        ))}
-      </div>
-      <div className="mt-3 flex flex-wrap gap-2">
-        <button type="button" onClick={() => onChange([...list, { type: "paragraph", text: "" }])} className="inline-flex items-center gap-1 rounded-lg border border-neutral-300 px-2 py-1.5 text-xs dark:border-neutral-600"><Plus className="h-3.5 w-3.5" /> Paragraph</button>
-        <button type="button" onClick={() => onChange([...list, { type: "subheading", text: "" }])} className="inline-flex items-center gap-1 rounded-lg border border-neutral-300 px-2 py-1.5 text-xs dark:border-neutral-600"><Plus className="h-3.5 w-3.5" /> Subheading</button>
-        <button type="button" onClick={() => onChange([...list, { type: "bullets", items: [""] }])} className="inline-flex items-center gap-1 rounded-lg border border-neutral-300 px-2 py-1.5 text-xs dark:border-neutral-600"><Plus className="h-3.5 w-3.5" /> Bullet list</button>
-      </div>
-    </div>
-  );
-}
-
 function normalizeEntry(raw) {
   if (!raw || typeof raw !== "object") return null;
   if (raw.type === "nested" || Array.isArray(raw.bullets)) {
@@ -451,23 +314,23 @@ export default function SummerCamp() {
       ? display.aboutCamp.ageGuidelines
       : defaultAboutCamp.ageGuidelines,
     images: Array.isArray(display.aboutCamp?.images) ? display.aboutCamp.images : defaultAboutCamp.images,
-    belowTitleBlocks: resolveBlocks(display.aboutCamp, "belowTitleBlocks", defaultAboutCamp.belowTitleBlocks, "intro"),
-    belowAdventureBlocks: resolveBlocks(display.aboutCamp, "belowAdventureBlocks", defaultAboutCamp.belowAdventureBlocks, "adventureText"),
-    belowGuidelinesBlocks: resolveBlocks(display.aboutCamp, "belowGuidelinesBlocks", defaultAboutCamp.belowGuidelinesBlocks),
+    belowTitleBlocks: resolveContentBlocks(display.aboutCamp, "belowTitleBlocks", defaultAboutCamp.belowTitleBlocks, "intro"),
+    belowAdventureBlocks: resolveContentBlocks(display.aboutCamp, "belowAdventureBlocks", defaultAboutCamp.belowAdventureBlocks, "adventureText"),
+    belowGuidelinesBlocks: resolveContentBlocks(display.aboutCamp, "belowGuidelinesBlocks", defaultAboutCamp.belowGuidelinesBlocks),
   };
 
   const batchesCamp = {
     ...defaultBatchesCamp,
     ...(display.batchesCamp || {}),
     items: Array.isArray(display.batchesCamp?.items) ? display.batchesCamp.items : defaultBatchesCamp.items,
-    leftContentBlocks: resolveBlocks(display.batchesCamp, "leftContentBlocks", defaultBatchesCamp.leftContentBlocks, "description"),
-    rightContentBlocks: resolveBlocks(display.batchesCamp, "rightContentBlocks", defaultBatchesCamp.rightContentBlocks, "note"),
+    leftContentBlocks: resolveContentBlocks(display.batchesCamp, "leftContentBlocks", defaultBatchesCamp.leftContentBlocks, "description"),
+    rightContentBlocks: resolveContentBlocks(display.batchesCamp, "rightContentBlocks", defaultBatchesCamp.rightContentBlocks, "note"),
   };
 
   const highlightsCamp = {
     ...defaultHighlightsCamp,
     ...(display.highlightsCamp || {}),
-    contentBlocks: resolveBlocks(display.highlightsCamp, "contentBlocks", defaultHighlightsCamp.contentBlocks),
+    contentBlocks: resolveContentBlocks(display.highlightsCamp, "contentBlocks", defaultHighlightsCamp.contentBlocks),
     images: Array.isArray(display.highlightsCamp?.images)
       ? display.highlightsCamp.images
       : defaultHighlightsCamp.images,
@@ -488,7 +351,7 @@ export default function SummerCamp() {
       items: Array.isArray(display.checklistCamp?.reminders?.items)
         ? display.checklistCamp.reminders.items.map((it) => ({ label: it.label || "", body: it.body || "" }))
         : defaultChecklistCamp.reminders.items,
-      closingBlocks: resolveBlocks(display.checklistCamp?.reminders, "closingBlocks", defaultChecklistCamp.reminders.closingBlocks, "closing"),
+      closingBlocks: resolveContentBlocks(display.checklistCamp?.reminders, "closingBlocks", defaultChecklistCamp.reminders.closingBlocks, "closing"),
     },
   };
 
@@ -533,10 +396,10 @@ export default function SummerCamp() {
             <ol className="mt-4 list-decimal space-y-2 pl-6 text-prose-muted">
               {(batchesCamp.items || []).map((item, i) => <li key={`b-${i}`}>{item}</li>)}
             </ol>
-            {renderBlocks(batchesCamp.leftContentBlocks, "batch-left", "mt-6")}
+            {renderContentBlocks(batchesCamp.leftContentBlocks, "batch-left", "mt-6")}
           </div>
           <div className="rounded-2xl border border-neutral-200 bg-primary/50 p-6 dark:border-neutral-700 dark:bg-neutral-800/80">
-            {renderBlocks(batchesCamp.rightContentBlocks, "batch-right", "")}
+            {renderContentBlocks(batchesCamp.rightContentBlocks, "batch-right", "")}
           </div>
         </div>
       );
@@ -552,7 +415,7 @@ export default function SummerCamp() {
               contentBlocks: JSON.parse(JSON.stringify(highlightsCamp.contentBlocks || [])),
             })} className="rounded-md bg-white/90 p-1 text-accent shadow dark:bg-neutral-800 dark:text-emerald-200"><Pencil className="h-4 w-4" /></button> : null}
           </div>
-          {renderBlocks(highlightsCamp.contentBlocks, "highlights", "mt-4")}
+          {renderContentBlocks(highlightsCamp.contentBlocks, "highlights", "mt-4")}
           {isAdmin ? <div className="mt-5 flex justify-end"><ImageUploader folder="summer-camp" buttonText="Add Highlight Image" onUploaded={(asset) => {
             const next = { ...draft, highlightsCamp: { ...highlightsCamp, images: [...(highlightsCamp.images || []), asset.url] } };
             saveAndClose(next, () => {});
@@ -631,7 +494,7 @@ export default function SummerCamp() {
                     <li key={`r-${i}`}>{it.label ? <><span className="font-medium text-prose">{it.label}</span> {it.body}</> : it.body}</li>
                   ))}
                 </ul>
-                {renderBlocks(reminders.closingBlocks, "reminders", "mt-5")}
+                {renderContentBlocks(reminders.closingBlocks, "reminders", "mt-5")}
               </div>
             )}
           </div>
@@ -653,14 +516,14 @@ export default function SummerCamp() {
             belowGuidelinesBlocks: JSON.parse(JSON.stringify(aboutCamp.belowGuidelinesBlocks || [])),
           })} className="rounded-md bg-white/90 p-1 text-accent shadow dark:bg-neutral-800 dark:text-emerald-200"><Pencil className="h-4 w-4" /></button> : null}
         </div>
-        {renderBlocks(aboutCamp.belowTitleBlocks, "about-title", "mt-4")}
+        {renderContentBlocks(aboutCamp.belowTitleBlocks, "about-title", "mt-4")}
         <p className="mt-6 text-lg font-semibold text-prose">{aboutCamp.adventureHeading}</p>
-        {renderBlocks(aboutCamp.belowAdventureBlocks, "about-adv", "mt-2")}
+        {renderContentBlocks(aboutCamp.belowAdventureBlocks, "about-adv", "mt-2")}
         <ul className="mt-5 list-disc space-y-2 pl-6 text-prose-muted">
           <li><span className="font-medium text-prose">{aboutCamp.ageGuidelinesTitle}</span></li>
           {(aboutCamp.ageGuidelines || []).map((line, i) => <li key={`age-${i}`}>{line}</li>)}
         </ul>
-        {renderBlocks(aboutCamp.belowGuidelinesBlocks, "about-guides", "mt-5")}
+        {renderContentBlocks(aboutCamp.belowGuidelinesBlocks, "about-guides", "mt-5")}
         {isAdmin ? <div className="mt-5 flex justify-end"><ImageUploader folder="summer-camp" buttonText="Add Image" onUploaded={(asset) => {
           const next = { ...draft, aboutCamp: { ...aboutCamp, images: [...(aboutCamp.images || []), asset.url] } };
           saveAndClose(next, () => {});
@@ -726,9 +589,9 @@ export default function SummerCamp() {
             <h3 className="text-lg font-semibold text-accent dark:text-emerald-200">Edit About Camp</h3>
             <div className="mt-4 space-y-3">
               <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={aboutEditor.title} onChange={(e) => setAboutEditor((p) => ({ ...p, title: e.target.value }))} />
-              <BlockEditor keyPrefix="about-b1" title="Below main heading" hint="Add paragraphs, subheadings, or bullet lists." blocks={aboutEditor.belowTitleBlocks} onChange={(next) => setAboutEditor((p) => ({ ...p, belowTitleBlocks: next }))} />
+              <ContentBlockEditor keyPrefix="about-b1" title="Below main heading" hint="Add paragraphs, subheadings, or bullet lists." blocks={aboutEditor.belowTitleBlocks} onChange={(next) => setAboutEditor((p) => ({ ...p, belowTitleBlocks: next }))} />
               <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={aboutEditor.adventureHeading} onChange={(e) => setAboutEditor((p) => ({ ...p, adventureHeading: e.target.value }))} />
-              <BlockEditor keyPrefix="about-b2" title="Below adventure heading" blocks={aboutEditor.belowAdventureBlocks} onChange={(next) => setAboutEditor((p) => ({ ...p, belowAdventureBlocks: next }))} />
+              <ContentBlockEditor keyPrefix="about-b2" title="Below adventure heading" blocks={aboutEditor.belowAdventureBlocks} onChange={(next) => setAboutEditor((p) => ({ ...p, belowAdventureBlocks: next }))} />
               <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={aboutEditor.ageGuidelinesTitle} onChange={(e) => setAboutEditor((p) => ({ ...p, ageGuidelinesTitle: e.target.value }))} />
               <div className="rounded-lg border border-neutral-200 p-3 dark:border-neutral-700">
                 <div className="mb-3 flex items-center justify-between">
@@ -748,13 +611,13 @@ export default function SummerCamp() {
                   ))}
                 </div>
               </div>
-              <BlockEditor keyPrefix="about-b3" title="Below age guidelines" blocks={aboutEditor.belowGuidelinesBlocks} onChange={(next) => setAboutEditor((p) => ({ ...p, belowGuidelinesBlocks: next }))} />
+              <ContentBlockEditor keyPrefix="about-b3" title="Below age guidelines" blocks={aboutEditor.belowGuidelinesBlocks} onChange={(next) => setAboutEditor((p) => ({ ...p, belowGuidelinesBlocks: next }))} />
             </div>
             <div className="mt-4 flex gap-2">
               <button type="button" className="inline-flex items-center gap-1 rounded-lg bg-accent px-4 py-2 text-sm text-white dark:bg-emerald-700" onClick={async () => {
-                let a = sanitizeBlocks(aboutEditor.belowTitleBlocks || []);
-                let b = sanitizeBlocks(aboutEditor.belowAdventureBlocks || []);
-                const c = sanitizeBlocks(aboutEditor.belowGuidelinesBlocks || []);
+                let a = sanitizeContentBlocks(aboutEditor.belowTitleBlocks || []);
+                let b = sanitizeContentBlocks(aboutEditor.belowAdventureBlocks || []);
+                const c = sanitizeContentBlocks(aboutEditor.belowGuidelinesBlocks || []);
                 if (a.length === 0) a = defaultAboutCamp.belowTitleBlocks;
                 if (b.length === 0) b = defaultAboutCamp.belowAdventureBlocks;
                 const next = {
@@ -802,13 +665,13 @@ export default function SummerCamp() {
                   ))}
                 </div>
               </div>
-              <BlockEditor keyPrefix="bat-l" title="Below batch list (left)" blocks={batchesEditor.leftContentBlocks} onChange={(next) => setBatchesEditor((p) => ({ ...p, leftContentBlocks: next }))} />
-              <BlockEditor keyPrefix="bat-r" title="Right highlighted box" blocks={batchesEditor.rightContentBlocks} onChange={(next) => setBatchesEditor((p) => ({ ...p, rightContentBlocks: next }))} />
+              <ContentBlockEditor keyPrefix="bat-l" title="Below batch list (left)" blocks={batchesEditor.leftContentBlocks} onChange={(next) => setBatchesEditor((p) => ({ ...p, leftContentBlocks: next }))} />
+              <ContentBlockEditor keyPrefix="bat-r" title="Right highlighted box" blocks={batchesEditor.rightContentBlocks} onChange={(next) => setBatchesEditor((p) => ({ ...p, rightContentBlocks: next }))} />
             </div>
             <div className="mt-4 flex gap-2">
               <button type="button" className="inline-flex items-center gap-1 rounded-lg bg-accent px-4 py-2 text-sm text-white dark:bg-emerald-700" onClick={async () => {
-                let left = sanitizeBlocks(batchesEditor.leftContentBlocks || []);
-                let right = sanitizeBlocks(batchesEditor.rightContentBlocks || []);
+                let left = sanitizeContentBlocks(batchesEditor.leftContentBlocks || []);
+                let right = sanitizeContentBlocks(batchesEditor.rightContentBlocks || []);
                 if (left.length === 0) left = defaultBatchesCamp.leftContentBlocks;
                 if (right.length === 0) right = defaultBatchesCamp.rightContentBlocks;
                 const next = {
@@ -835,11 +698,11 @@ export default function SummerCamp() {
             <h3 className="text-lg font-semibold text-accent dark:text-emerald-200">Edit Camp Highlights</h3>
             <div className="mt-4 space-y-3">
               <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={highlightsEditor.title} onChange={(e) => setHighlightsEditor((p) => ({ ...p, title: e.target.value }))} />
-              <BlockEditor keyPrefix="hl" title="Highlights blocks" blocks={highlightsEditor.contentBlocks} onChange={(next) => setHighlightsEditor((p) => ({ ...p, contentBlocks: next }))} />
+              <ContentBlockEditor keyPrefix="hl" title="Highlights blocks" blocks={highlightsEditor.contentBlocks} onChange={(next) => setHighlightsEditor((p) => ({ ...p, contentBlocks: next }))} />
             </div>
             <div className="mt-4 flex gap-2">
               <button type="button" className="inline-flex items-center gap-1 rounded-lg bg-accent px-4 py-2 text-sm text-white dark:bg-emerald-700" onClick={async () => {
-                let blocks = sanitizeBlocks(highlightsEditor.contentBlocks || []);
+                let blocks = sanitizeContentBlocks(highlightsEditor.contentBlocks || []);
                 if (blocks.length === 0) blocks = defaultHighlightsCamp.contentBlocks;
                 const next = {
                   ...draft,
@@ -1020,12 +883,12 @@ export default function SummerCamp() {
                   ))}
                 </div>
               </div>
-              <BlockEditor keyPrefix="rem-close" title="Below the reminder list" blocks={remindersEditor.closingBlocks} onChange={(next) => setRemindersEditor((p) => ({ ...p, closingBlocks: next }))} />
+              <ContentBlockEditor keyPrefix="rem-close" title="Below the reminder list" blocks={remindersEditor.closingBlocks} onChange={(next) => setRemindersEditor((p) => ({ ...p, closingBlocks: next }))} />
             </div>
             <div className="mt-4 flex gap-2">
               <button type="button" className="inline-flex items-center gap-1 rounded-lg bg-accent px-4 py-2 text-sm text-white dark:bg-emerald-700" onClick={async () => {
                 const items = (remindersEditor.items || []).map((it) => ({ label: (it.label || "").trim(), body: (it.body || "").trim() })).filter((it) => it.label || it.body);
-                let closingBlocks = sanitizeBlocks(remindersEditor.closingBlocks || []);
+                let closingBlocks = sanitizeContentBlocks(remindersEditor.closingBlocks || []);
                 if (closingBlocks.length === 0) closingBlocks = defaultChecklistCamp.reminders.closingBlocks;
                 const next = {
                   ...draft,

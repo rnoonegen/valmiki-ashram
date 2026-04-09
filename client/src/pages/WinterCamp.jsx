@@ -12,9 +12,11 @@ import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { adminRequest } from "../admin/api";
 import ImageUploader from "../components/admin/ImageUploader";
+import ContentBlockEditor from "../components/camp/ContentBlockEditor";
 import Container from "../components/Container";
 import PageFade from "../components/PageFade";
 import useLiveContent from "../hooks/useLiveContent";
+import { renderContentBlocks, sanitizeContentBlocks } from "../utils/campContentBlocks";
 
 const tabs = [
   { id: "about", label: "About Camp" },
@@ -68,31 +70,11 @@ const defaultHighlightsCampContent = {
   ],
 };
 
-function normalizeHighlightsBlock(b) {
-  if (!b || typeof b !== "object") return null;
-  const t = b.type;
-  if (!t && Array.isArray(b.items)) {
-    return normalizeHighlightsBlock({ ...b, type: "bullets" });
-  }
-  if (t === "subheading") {
-    const text = typeof b.text === "string" ? b.text.trim() : "";
-    return text ? { type: "subheading", text } : null;
-  }
-  if (t === "bullets") {
-    const items = Array.isArray(b.items)
-      ? b.items.map((x) => (typeof x === "string" ? x.trim() : String(x))).filter(Boolean)
-      : [];
-    return items.length ? { type: "bullets", items } : null;
-  }
-  const text = typeof b.text === "string" ? b.text.trim() : "";
-  return text ? { type: "paragraph", text } : null;
-}
-
 function buildHighlightsContentBlocks(raw) {
   const merged = { ...defaultHighlightsCampContent, ...(raw || {}) };
   const fromApi = merged.contentBlocks;
   if (Array.isArray(fromApi) && fromApi.length > 0) {
-    const normalized = fromApi.map(normalizeHighlightsBlock).filter(Boolean);
+    const normalized = sanitizeContentBlocks(fromApi, { allowImplicitBullets: true });
     if (normalized.length > 0) return normalized;
   }
   const legacy = [];
@@ -114,13 +96,9 @@ function buildHighlightsContentBlocks(raw) {
     });
   }
   if (legacy.length > 0) {
-    return legacy.map(normalizeHighlightsBlock).filter(Boolean);
+    return sanitizeContentBlocks(legacy, { allowImplicitBullets: true });
   }
   return defaultHighlightsCampContent.contentBlocks;
-}
-
-function sanitizeHighlightsContentBlocks(blocks) {
-  return (blocks || []).map(normalizeHighlightsBlock).filter(Boolean);
 }
 
 const defaultAboutCampContent = {
@@ -157,7 +135,7 @@ function buildAboutSectionBlocks(raw, blocksKey, legacyTextKey) {
   const merged = { ...defaultAboutCampContent, ...(raw || {}) };
   const fromApi = merged[blocksKey];
   if (Array.isArray(fromApi) && fromApi.length > 0) {
-    const normalized = fromApi.map(normalizeHighlightsBlock).filter(Boolean);
+    const normalized = sanitizeContentBlocks(fromApi, { allowImplicitBullets: true });
     if (normalized.length > 0) return normalized;
   }
   const legacy = merged[legacyTextKey];
@@ -179,46 +157,10 @@ function buildAboutBelowGuidelinesBlocks(raw) {
   const merged = { ...defaultAboutCampContent, ...(raw || {}) };
   const fromApi = merged.belowGuidelinesBlocks;
   if (Array.isArray(fromApi) && fromApi.length > 0) {
-    const normalized = fromApi.map(normalizeHighlightsBlock).filter(Boolean);
+    const normalized = sanitizeContentBlocks(fromApi, { allowImplicitBullets: true });
     if (normalized.length > 0) return normalized;
   }
   return [];
-}
-
-function renderAboutRegionBlocks(blocks, regionKey, firstMargin) {
-  return (blocks || []).map((block, bi) => {
-    const isFirst = bi === 0;
-    const pCls = isFirst
-      ? `${firstMargin} text-base leading-8 text-prose-muted`
-      : "mt-2 text-base leading-8 text-prose-muted";
-    const subCls = isFirst
-      ? `${firstMargin} text-lg font-semibold text-prose`
-      : "mt-5 text-lg font-semibold text-prose";
-    const ulCls = isFirst
-      ? `${firstMargin} list-disc space-y-2 pl-6 text-prose-muted`
-      : "mt-5 list-disc space-y-2 pl-6 text-prose-muted";
-    if (block.type === "subheading") {
-      return (
-        <p key={`${regionKey}-${bi}`} className={subCls}>
-          {block.text}
-        </p>
-      );
-    }
-    if (block.type === "bullets") {
-      return (
-        <ul key={`${regionKey}-${bi}`} className={ulCls}>
-          {(block.items || []).map((item, ii) => (
-            <li key={`${regionKey}-${bi}-${ii}`}>{item}</li>
-          ))}
-        </ul>
-      );
-    }
-    return (
-      <p key={`${regionKey}-${bi}`} className={pCls}>
-        {block.text}
-      </p>
-    );
-  });
 }
 
 const defaultBatchesCampContent = {
@@ -244,7 +186,7 @@ function buildBatchesSideBlocks(raw, blocksKey, legacyTextKey) {
   const merged = { ...defaultBatchesCampContent, ...(raw || {}) };
   const fromApi = merged[blocksKey];
   if (Array.isArray(fromApi) && fromApi.length > 0) {
-    const normalized = fromApi.map(normalizeHighlightsBlock).filter(Boolean);
+    const normalized = sanitizeContentBlocks(fromApi, { allowImplicitBullets: true });
     if (normalized.length > 0) return normalized;
   }
   const legacy = merged[legacyTextKey];
@@ -262,194 +204,6 @@ function buildBatchesRightBlocks(raw) {
   return buildBatchesSideBlocks(raw, "rightContentBlocks", "note");
 }
 
-function WinterBatchesColumnBlockEditor({
-  sectionTitle,
-  sectionHint,
-  blocks,
-  onBlocksChange,
-  blockKeyPrefix = "batch-side",
-}) {
-  const bl = blocks || [];
-  const setBl = (next) => onBlocksChange(next);
-
-  return (
-    <div className="mt-4 rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
-      <h4 className="text-sm font-semibold text-prose">{sectionTitle}</h4>
-      {sectionHint ? (
-        <p className="mt-1 text-xs text-prose-muted">{sectionHint}</p>
-      ) : null}
-      <div className="mt-3 space-y-4">
-        {bl.map((block, bi) => {
-          const blockCount = bl.length;
-          return (
-            <div
-              key={`batch-side-${bi}`}
-              className="rounded-lg border border-neutral-100 bg-neutral-50/80 p-3 dark:border-neutral-800 dark:bg-neutral-900/50"
-            >
-              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                <span className="text-xs font-semibold uppercase tracking-wide text-prose-muted">
-                  {block.type === "paragraph"
-                    ? "Paragraph"
-                    : block.type === "subheading"
-                      ? "Subheading"
-                      : "Bullet list"}
-                </span>
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    disabled={bi === 0}
-                    onClick={() => {
-                      if (bi <= 0) return;
-                      const next = [...bl];
-                      [next[bi - 1], next[bi]] = [next[bi], next[bi - 1]];
-                      setBl(next);
-                    }}
-                    className="rounded-md border border-neutral-300 p-1.5 disabled:opacity-40 dark:border-neutral-600"
-                    aria-label="Move block up"
-                  >
-                    <ChevronUp className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    disabled={bi >= blockCount - 1}
-                    onClick={() => {
-                      if (bi >= bl.length - 1) return;
-                      const next = [...bl];
-                      [next[bi], next[bi + 1]] = [next[bi + 1], next[bi]];
-                      setBl(next);
-                    }}
-                    className="rounded-md border border-neutral-300 p-1.5 disabled:opacity-40 dark:border-neutral-600"
-                    aria-label="Move block down"
-                  >
-                    <ChevronDown className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setBl(bl.filter((_, i) => i !== bi))}
-                    className="rounded-md bg-rose-600 p-1.5 text-white"
-                    aria-label="Remove block"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-
-              {block.type === "paragraph" ? (
-                <textarea
-                  className="h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
-                  placeholder="Paragraph text"
-                  value={block.text || ""}
-                  onChange={(e) =>
-                    setBl(
-                      bl.map((b, i) =>
-                        i === bi ? { ...b, text: e.target.value } : b
-                      )
-                    )
-                  }
-                />
-              ) : null}
-
-              {block.type === "subheading" ? (
-                <input
-                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
-                  placeholder="Subheading"
-                  value={block.text || ""}
-                  onChange={(e) =>
-                    setBl(
-                      bl.map((b, i) =>
-                        i === bi ? { ...b, text: e.target.value } : b
-                      )
-                    )
-                  }
-                />
-              ) : null}
-
-              {block.type === "bullets" ? (
-                <div className="space-y-2">
-                  {(block.items || []).map((line, li) => (
-                    <div key={`${bi}-bul-${li}`} className="flex gap-2">
-                      <input
-                        className="flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
-                        placeholder={`Bullet ${li + 1}`}
-                        value={line}
-                        onChange={(e) =>
-                          setBl(
-                            bl.map((b, i) => {
-                              if (i !== bi) return b;
-                              const items = [...(b.items || [])];
-                              items[li] = e.target.value;
-                              return { ...b, items };
-                            })
-                          )
-                        }
-                      />
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setBl(
-                            bl.map((b, i) => {
-                              if (i !== bi) return b;
-                              return {
-                                ...b,
-                                items: (b.items || []).filter((_, j) => j !== li),
-                              };
-                            })
-                          )
-                        }
-                        className="rounded-md bg-rose-600 p-2 text-white"
-                        aria-label="Remove bullet"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setBl(
-                        bl.map((b, i) =>
-                          i === bi
-                            ? { ...b, items: [...(b.items || []), ""] }
-                            : b
-                        )
-                      )
-                    }
-                    className="text-xs font-medium text-accent dark:text-emerald-200"
-                  >
-                    + Add bullet
-                  </button>
-                </div>
-              ) : null}
-            </div>
-          );
-        })}
-      </div>
-      <div className="mt-3 flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => setBl([...bl, { type: "paragraph", text: "" }])}
-          className="inline-flex items-center gap-1 rounded-lg border border-neutral-300 px-2 py-1.5 text-xs dark:border-neutral-600"
-        >
-          <Plus className="h-3.5 w-3.5" /> Paragraph
-        </button>
-        <button
-          type="button"
-          onClick={() => setBl([...bl, { type: "subheading", text: "" }])}
-          className="inline-flex items-center gap-1 rounded-lg border border-neutral-300 px-2 py-1.5 text-xs dark:border-neutral-600"
-        >
-          <Plus className="h-3.5 w-3.5" /> Subheading
-        </button>
-        <button
-          type="button"
-          onClick={() => setBl([...bl, { type: "bullets", items: [""] }])}
-          className="inline-flex items-center gap-1 rounded-lg border border-neutral-300 px-2 py-1.5 text-xs dark:border-neutral-600"
-        >
-          <Plus className="h-3.5 w-3.5" /> Bullet list
-        </button>
-      </div>
-    </div>
-  );
-}
 
 function normalizeChecklistEntry(raw) {
   if (!raw || typeof raw !== "object") return null;
@@ -668,7 +422,7 @@ function buildRemindersClosingBlocks(rawReminders) {
   };
   const fromApi = merged.closingBlocks;
   if (Array.isArray(fromApi) && fromApi.length > 0) {
-    const normalized = fromApi.map(normalizeHighlightsBlock).filter(Boolean);
+    const normalized = sanitizeContentBlocks(fromApi, { allowImplicitBullets: true });
     if (normalized.length > 0) return normalized;
   }
   const legacy = merged.closing;
@@ -790,13 +544,13 @@ export default function WinterCamp() {
 
   const saveAboutEditor = async () => {
     if (!aboutEditor) return;
-    let belowTitle = sanitizeHighlightsContentBlocks(
+    let belowTitle = sanitizeContentBlocks(
       aboutEditor.belowTitleBlocks || []
     );
-    let belowAdventure = sanitizeHighlightsContentBlocks(
+    let belowAdventure = sanitizeContentBlocks(
       aboutEditor.belowAdventureBlocks || []
     );
-    const belowGuidelines = sanitizeHighlightsContentBlocks(
+    const belowGuidelines = sanitizeContentBlocks(
       aboutEditor.belowGuidelinesBlocks || []
     );
     if (belowTitle.length === 0) {
@@ -853,10 +607,10 @@ export default function WinterCamp() {
 
   const saveBatchesEditor = async () => {
     if (!batchesEditor) return;
-    let leftBlocks = sanitizeHighlightsContentBlocks(
+    let leftBlocks = sanitizeContentBlocks(
       batchesEditor.leftContentBlocks || []
     );
-    let rightBlocks = sanitizeHighlightsContentBlocks(
+    let rightBlocks = sanitizeContentBlocks(
       batchesEditor.rightContentBlocks || []
     );
     if (leftBlocks.length === 0) {
@@ -893,7 +647,7 @@ export default function WinterCamp() {
 
   const saveHighlightsEditor = async () => {
     if (!highlightsEditor) return;
-    let blocks = sanitizeHighlightsContentBlocks(
+    let blocks = sanitizeContentBlocks(
       highlightsEditor.contentBlocks || []
     );
     if (blocks.length === 0) {
@@ -976,7 +730,7 @@ export default function WinterCamp() {
         body: (it.body || "").trim(),
       }))
       .filter((it) => it.label || it.body);
-    let closingBlocks = sanitizeHighlightsContentBlocks(
+    let closingBlocks = sanitizeContentBlocks(
       remindersEditor.closingBlocks || []
     );
     if (closingBlocks.length === 0) {
@@ -1370,7 +1124,7 @@ export default function WinterCamp() {
                     </li>
                   ))}
                 </ul>
-                {renderAboutRegionBlocks(
+                {renderContentBlocks(
                   reminders.closingBlocks,
                   "rem-close",
                   "mt-5"
@@ -1399,11 +1153,11 @@ export default function WinterCamp() {
             </button>
           ) : null}
         </div>
-        {renderAboutRegionBlocks(aboutCamp.belowTitleBlocks, "about-t", "mt-4")}
+        {renderContentBlocks(aboutCamp.belowTitleBlocks, "about-t", "mt-4")}
         <p className="mt-6 text-lg font-semibold text-prose">
           {aboutCamp.adventureHeading}
         </p>
-        {renderAboutRegionBlocks(
+        {renderContentBlocks(
           aboutCamp.belowAdventureBlocks,
           "about-a",
           "mt-2"
@@ -1418,7 +1172,7 @@ export default function WinterCamp() {
             <li key={`${line}-${index}`}>{line}</li>
           ))}
         </ul>
-        {renderAboutRegionBlocks(
+        {renderContentBlocks(
           aboutCamp.belowGuidelinesBlocks,
           "about-g",
           "mt-5"
@@ -2059,7 +1813,7 @@ export default function WinterCamp() {
                   ))}
                 </div>
               </div>
-              <WinterBatchesColumnBlockEditor
+              <ContentBlockEditor
                 blockKeyPrefix="reminders-closing"
                 sectionTitle="Below the reminder list"
                 sectionHint="One or more paragraphs, subheadings, or bullet lists after the bullets."
@@ -2417,7 +2171,7 @@ export default function WinterCamp() {
                 </div>
               </div>
 
-              <WinterBatchesColumnBlockEditor
+              <ContentBlockEditor
                 sectionTitle="Below the batch list (left column)"
                 sectionHint="Add paragraphs, subheadings, or bullet lists under the numbered batches."
                 blocks={batchesEditor.leftContentBlocks}
@@ -2425,7 +2179,7 @@ export default function WinterCamp() {
                   setBatchesEditor((p) => ({ ...p, leftContentBlocks: next }))
                 }
               />
-              <WinterBatchesColumnBlockEditor
+              <ContentBlockEditor
                 sectionTitle="Highlighted box (right column)"
                 sectionHint="Extra callouts beside the main column — same block types as the left side."
                 blocks={batchesEditor.rightContentBlocks}
@@ -2470,7 +2224,7 @@ export default function WinterCamp() {
                   setAboutEditor((p) => ({ ...p, title: e.target.value }))
                 }
               />
-              <WinterBatchesColumnBlockEditor
+              <ContentBlockEditor
                 blockKeyPrefix="about-below-title"
                 sectionTitle="Below the main heading"
                 sectionHint="Paragraphs, subheadings, or bullet lists shown directly under the section title."
@@ -2490,7 +2244,7 @@ export default function WinterCamp() {
                   }))
                 }
               />
-              <WinterBatchesColumnBlockEditor
+              <ContentBlockEditor
                 blockKeyPrefix="about-below-adventure"
                 sectionTitle="Below the small heading"
                 sectionHint="More paragraphs or lists under the adventure subheading."
@@ -2563,7 +2317,7 @@ export default function WinterCamp() {
                 </div>
               </div>
 
-              <WinterBatchesColumnBlockEditor
+              <ContentBlockEditor
                 blockKeyPrefix="about-below-guidelines"
                 sectionTitle="Below age guideline lines"
                 sectionHint="Optional extra copy after the bullet list (paragraphs, subheadings, or bullets)."
