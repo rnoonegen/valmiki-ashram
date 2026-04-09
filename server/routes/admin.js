@@ -25,6 +25,7 @@ const ALLOWED_PAGES = new Set([
   'winter-camp-schedule',
   'summer-camp',
   'summer-camp-schedule',
+  'online-programs',
 ]);
 
 const PAGE_ALIASES = {
@@ -33,6 +34,8 @@ const PAGE_ALIASES = {
   wintercampschedule: 'winter-camp-schedule',
   summercampschedule: 'summer-camp-schedule',
   summer_camp: 'summer-camp',
+  onlineprograms: 'online-programs',
+  online_programs: 'online-programs',
   winter_camp: 'winter-camp',
   winter_camp_schedule: 'winter-camp-schedule',
   summer_camp_schedule: 'summer-camp-schedule',

@@ -83,6 +83,7 @@ export default function AppRoutes() {
             path="admin/summer-camp/schedule"
             element={<SummerCampSchedule />}
           />
+          <Route path="admin/online-programs" element={<OnlinePrograms />} />
           <Route
             path="admin/register/summer-camp"
             element={<SummerCampRegistration />}

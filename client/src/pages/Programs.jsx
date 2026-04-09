@@ -229,7 +229,7 @@ const defaultProgramCards = [
     imageAlt: "Online learning and workshops",
     body: "Learn from anywhere with live and flexible offerings: Samskrutham, Ayurveda, astronomy, video editing, and more. Weekend and online courses welcome all ages, so families can deepen skills and culture without leaving home.",
     to: "/online-programs",
-    adminTo: "/admin/programs",
+    adminTo: "/admin/online-programs",
     buttonLabel: "Learn More",
   },
 ];

@@ -10,6 +10,7 @@ const links = [
   { to: '/admin/faq', label: 'FAQ' },
   { to: '/admin/gallery', label: 'Gallery' },
   { to: '/admin/programs', label: 'Programs' },
+  { to: '/admin/online-programs', label: 'Online Programs' },
   { to: '/admin/winter-camp', label: 'Winter Camp' },
   { to: '/admin/summer-camp', label: 'Summer Camp' },
 ];
