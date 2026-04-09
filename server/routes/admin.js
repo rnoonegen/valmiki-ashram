@@ -24,6 +24,9 @@ const ALLOWED_PAGES = new Set([
   'faq',
   'gallery',
   'programs',
+  'gurukulam',
+  'summer-camp',
+  'summer-camp-registration',
   'contact',
   'footer',
 ]);

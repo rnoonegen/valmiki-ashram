@@ -34,6 +34,7 @@ const registrationItems = [
 const morePool = [
   { to: '/gallery', label: 'Gallery' },
   { to: '/curriculum', label: 'Curriculum' },
+  { to: '/gurukulam', label: 'Gurukulam' },
   { to: '/faq', label: 'FAQ' },
   { to: '/admission', label: 'Admission' },
   { to: '/contests', label: 'Contests' },
@@ -140,20 +141,6 @@ export default function Navbar() {
               <Dropdown label="Programs" items={programItemsMapped} />
               <Dropdown label="Registrations" items={registrationItemsMapped} />
 
-              <NavLink
-                to={p('/gurukulam')}
-                className={({ isActive }) =>
-                  clsx(
-                    'rounded-full px-3 py-2 text-sm font-medium transition-colors',
-                    isActive
-                      ? 'bg-white/80 text-accent shadow-sm dark:bg-emerald-950/95 dark:text-emerald-50 dark:shadow-[inset_0_0_0_1px_rgba(52,211,153,0.45)]'
-                      : 'text-accent hover:bg-white/50 dark:text-emerald-200 dark:hover:bg-neutral-800/80'
-                  )
-                }
-              >
-                Gurukulam
-              </NavLink>
-
               <Dropdown label="More" items={morePoolMapped} />
             </nav>
 
@@ -163,9 +150,11 @@ export default function Navbar() {
                   type="button"
                   onClick={logout}
                   className="hidden items-center gap-1 rounded-full bg-rose-100 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-200 dark:bg-rose-900/40 dark:text-rose-300 dark:hover:bg-rose-900/55 lg:inline-flex sm:text-sm"
+                  aria-label="Logout"
+                  title="Logout"
                 >
                   <LogOut className="h-4 w-4" />
-                  Logout
+                  <span className="hidden xl:inline">Logout</span>
                 </button>
               ) : null}
               <ThemeToggle className="hidden rounded-full p-2 hover:bg-white/50 dark:hover:bg-neutral-800 lg:inline-flex" />

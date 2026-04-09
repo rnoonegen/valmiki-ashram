@@ -18,6 +18,7 @@ import OnlinePrograms from "../pages/OnlinePrograms";
 import Programs from "../pages/Programs";
 import SummerCampRegistration from "../pages/SummerCampRegistration";
 import SummerCamp from "../pages/SummerCamp";
+import SummerCampDetail from "../pages/SummerCampDetail";
 import Terms from "../pages/Terms";
 import ValmikiAshram from "../pages/ValmikiAshram";
 import WinterCampRegistration from "../pages/WinterCampRegistration";
@@ -39,6 +40,7 @@ export default function AppRoutes() {
           element={<WinterCampRegistration />}
         />
         <Route path="summer-camp" element={<SummerCamp />} />
+        <Route path="summer-camp/:galleryId" element={<SummerCampDetail />} />
         <Route
           path="register/summer-camp"
           element={<SummerCampRegistration />}
@@ -66,7 +68,11 @@ export default function AppRoutes() {
           <Route path="admin/gallery" element={<Gallery />} />
           <Route path="admin/faq" element={<FAQ />} />
           <Route path="admin/programs" element={<Programs />} />
+          <Route path="admin/summer-camp" element={<SummerCamp />} />
+          <Route path="admin/summer-camp/:galleryId" element={<SummerCampDetail />} />
+          <Route path="admin/register/summer-camp" element={<SummerCampRegistration />} />
           <Route path="admin/curriculum" element={<Curriculum />} />
+          <Route path="admin/gurukulam" element={<Gurukulam />} />
           <Route path="admin/contact" element={<ContactUs />} />
           <Route path="admin/settings" element={<AdminSettings />} />
         </Route>
