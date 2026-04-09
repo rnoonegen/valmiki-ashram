@@ -60,7 +60,7 @@ export default function Gurukulam() {
               create, debate, and explore.
             </p>
             <div className="mt-6">
-              <Button to="/curriculam" className="rounded-full px-6">
+              <Button to="/curriculum" className="rounded-full px-6">
                 View Full Curriculum
               </Button>
             </div>

@@ -6,7 +6,7 @@ import Admission from "../pages/Admission";
 import AdminLogin from "../pages/AdminLogin";
 import ContactUs from "../pages/ContactUs";
 import Contests from "../pages/Contests";
-import Curriculam from "../pages/Curriculam";
+import Curriculum from "../pages/Curriculum";
 import FAQ from "../pages/FAQ";
 import Founders from "../pages/Founders";
 import Gallery from "../pages/Gallery";
@@ -50,8 +50,7 @@ export default function AppRoutes() {
         <Route path="gurukulam" element={<Gurukulam />} />
         <Route path="admission" element={<Admission />} />
         <Route path="contests" element={<Contests />} />
-        <Route path="curriculam" element={<Curriculam />} />
-        <Route path="curriculum" element={<Curriculam />} />
+        <Route path="curriculum" element={<Curriculum />} />
         <Route path="contact" element={<ContactUs />} />
         <Route path="faq" element={<FAQ />} />
         <Route path="terms" element={<Terms />} />
@@ -66,7 +65,7 @@ export default function AppRoutes() {
           <Route path="admin/gallery" element={<Gallery />} />
           <Route path="admin/faq" element={<FAQ />} />
           <Route path="admin/programs" element={<Programs />} />
-          <Route path="admin/curriculam" element={<Curriculam />} />
+          <Route path="admin/curriculum" element={<Curriculum />} />
         </Route>
       </Route>
     </Routes>

@@ -56,9 +56,9 @@ function normalizeCurriculum(list = []) {
   }));
 }
 
-export default function Curriculam() {
+export default function Curriculum() {
   const location = useLocation();
-  const isAdmin = location.pathname === '/admin/curriculam' || location.pathname === '/admin/curriculum';
+  const isAdmin = location.pathname === '/admin/curriculum';
   const liveCategories = useLiveCurriculum();
   const categories = useMemo(
     () => (Array.isArray(liveCategories) && liveCategories.length ? liveCategories : defaultCurriculum),
