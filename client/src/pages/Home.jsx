@@ -1150,35 +1150,37 @@ export default function Home() {
         </div>
       ) : null}
       {isAdmin && editingField ? (
-        <div className="fixed bottom-20 left-4 z-40 w-[min(92vw,520px)] rounded-2xl border border-neutral-200 bg-white/95 p-4 shadow-xl backdrop-blur dark:border-neutral-700 dark:bg-neutral-900/95">
-          <p className="mb-2 text-sm font-semibold text-accent dark:text-emerald-200">
-            Edit{" "}
-            {editingField === "introVideoUrl"
-              ? "Intro Video URL"
-              : editingField === "heroTitle"
-                ? "Hero Title"
-                : "Hero Subtitle"}
-          </p>
-          <textarea
-            className="h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
-            value={fieldValue}
-            onChange={(e) => setFieldValue(e.target.value)}
-          />
-          <div className="mt-3 flex gap-2">
-            <button
-              type="button"
-              onClick={saveField}
-              className="inline-flex items-center gap-1 rounded-lg bg-accent px-4 py-2 text-sm text-white dark:bg-emerald-700"
-            >
-              <Save className="h-4 w-4" /> Save
-            </button>
-            <button
-              type="button"
-              onClick={() => setEditingField("")}
-              className="inline-flex items-center gap-1 rounded-lg bg-neutral-200 px-4 py-2 text-sm text-neutral-800 dark:bg-neutral-700 dark:text-neutral-100"
-            >
-              <X className="h-4 w-4" /> Cancel
-            </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-xl rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
+            <h3 className="text-lg font-semibold text-accent dark:text-emerald-200">
+              Edit{" "}
+              {editingField === "introVideoUrl"
+                ? "Intro Video URL"
+                : editingField === "heroTitle"
+                  ? "Hero Title"
+                  : "Hero Subtitle"}
+            </h3>
+            <textarea
+              className="mt-4 h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+              value={fieldValue}
+              onChange={(e) => setFieldValue(e.target.value)}
+            />
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={saveField}
+                className="inline-flex items-center gap-1 rounded-lg bg-accent px-4 py-2 text-sm text-white dark:bg-emerald-700"
+              >
+                <Save className="h-4 w-4" /> Save
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditingField("")}
+                className="inline-flex items-center gap-1 rounded-lg bg-neutral-200 px-4 py-2 text-sm text-neutral-800 dark:bg-neutral-700 dark:text-neutral-100"
+              >
+                <X className="h-4 w-4" /> Cancel
+              </button>
+            </div>
           </div>
         </div>
       ) : null}

@@ -216,14 +216,19 @@ export default function About() {
         </Container>
       </section>
       {isAdmin ? (
-        <div className="fixed bottom-20 left-4 z-40 rounded-xl border border-neutral-200 bg-white/95 p-3 shadow-xl dark:border-neutral-700 dark:bg-neutral-900/95">
-          <button
-            type="button"
-            onClick={save}
-            className="rounded-lg bg-accent px-4 py-2 text-sm text-white dark:bg-emerald-700"
-          >
-            Save About Photos
-          </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+          <div className="pointer-events-auto w-full max-w-sm rounded-2xl border border-neutral-200 bg-white p-5 shadow-xl dark:border-neutral-700 dark:bg-neutral-900">
+            <p className="mb-4 text-sm text-neutral-600 dark:text-neutral-300">
+              Save photo changes to the server when you are done editing.
+            </p>
+            <button
+              type="button"
+              onClick={save}
+              className="w-full rounded-lg bg-accent px-4 py-2 text-sm text-white dark:bg-emerald-700 sm:w-auto"
+            >
+              Save About Photos
+            </button>
+          </div>
         </div>
       ) : null}
     </PageFade>

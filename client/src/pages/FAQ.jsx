@@ -124,12 +124,25 @@ export default function FAQ() {
     <PageFade>
       <Container className="py-12 md:py-16">
         <header className="max-w-3xl">
-          <h1 className="heading-page">Frequently Asked Questions</h1>
-          <p className="mt-4 text-base leading-relaxed text-prose md:text-lg">
-            Find answers about alternative education, Gurukulam, homeschooling,
-            colonized education, NIOS, and how we approach learning at Valmiki
-            Ashram. Open a section below to explore each topic.
-          </p>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+            <div className="min-w-0 flex-1">
+              <h1 className="heading-page">Frequently Asked Questions</h1>
+              <p className="mt-4 text-base leading-relaxed text-prose md:text-lg">
+                Find answers about alternative education, Gurukulam, homeschooling,
+                colonized education, NIOS, and how we approach learning at Valmiki
+                Ashram. Open a section below to explore each topic.
+              </p>
+            </div>
+            {isAdmin ? (
+              <button
+                type="button"
+                className="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-full bg-accent px-4 py-2 text-sm text-white shadow-md dark:bg-emerald-700"
+                onClick={() => openCategoryEditor()}
+              >
+                <Plus className="h-4 w-4" /> Add Category
+              </button>
+            ) : null}
+          </div>
         </header>
 
         <div className="mt-10 flex flex-col gap-8 md:mt-12 md:gap-10">
@@ -205,7 +218,7 @@ export default function FAQ() {
         <>
           {status.message ? (
             <div
-              className={`fixed right-4 top-24 z-50 rounded-lg px-3 py-2 text-sm shadow-lg ${
+              className={`fixed left-1/2 top-24 z-50 max-w-[min(92vw,28rem)] -translate-x-1/2 rounded-lg px-3 py-2 text-center text-sm shadow-lg ${
                 status.type === 'error'
                   ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'
                   : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
@@ -214,15 +227,6 @@ export default function FAQ() {
               {status.message}
             </div>
           ) : null}
-          <div className="fixed bottom-6 right-4 z-40">
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm text-white shadow-lg dark:bg-emerald-700"
-              onClick={() => openCategoryEditor()}
-            >
-              <Plus className="h-4 w-4" /> Add Category
-            </button>
-          </div>
           {editor ? (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
               <div className="w-full max-w-xl rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
