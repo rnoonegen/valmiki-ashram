@@ -17,10 +17,12 @@ import OnlinePrograms from "../pages/OnlinePrograms";
 import Programs from "../pages/Programs";
 import SummerCampRegistration from "../pages/SummerCampRegistration";
 import SummerCamp from "../pages/SummerCamp";
+import SummerCampSchedule from "../pages/SummerCampSchedule";
 import Terms from "../pages/Terms";
 import ValmikiAshram from "../pages/ValmikiAshram";
 import WinterCampRegistration from "../pages/WinterCampRegistration";
 import WinterCamp from "../pages/WinterCamp";
+import WinterCampSchedule from "../pages/WinterCampSchedule";
 
 export default function AppRoutes() {
   return (
@@ -54,6 +56,8 @@ export default function AppRoutes() {
         <Route path="contact" element={<ContactUs />} />
         <Route path="faq" element={<FAQ />} />
         <Route path="terms" element={<Terms />} />
+        <Route path="winter-camp/schedule" element={<WinterCampSchedule />} />
+        <Route path="summer-camp/schedule" element={<SummerCampSchedule />} />
         {/* <Route path="nri-summer" element={<NRI Summer Camp />} /> */}
       </Route>
       <Route path="admin-login" element={<AdminLogin />} />
@@ -65,6 +69,25 @@ export default function AppRoutes() {
           <Route path="admin/gallery" element={<Gallery />} />
           <Route path="admin/faq" element={<FAQ />} />
           <Route path="admin/programs" element={<Programs />} />
+          <Route path="admin/winter-camp" element={<WinterCamp />} />
+          <Route
+            path="admin/winter-camp/schedule"
+            element={<WinterCampSchedule />}
+          />
+          <Route
+            path="admin/register/winter-camp"
+            element={<WinterCampRegistration />}
+          />
+          <Route path="admin/summer-camp" element={<SummerCamp />} />
+          <Route
+            path="admin/summer-camp/schedule"
+            element={<SummerCampSchedule />}
+          />
+          <Route path="admin/online-programs" element={<OnlinePrograms />} />
+          <Route
+            path="admin/register/summer-camp"
+            element={<SummerCampRegistration />}
+          />
           <Route path="admin/curriculum" element={<Curriculum />} />
         </Route>
       </Route>

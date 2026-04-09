@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import { motion } from "framer-motion";
 import { Pencil, Plus, Save, Trash2, X } from "lucide-react";
-import { FaWhatsapp } from "react-icons/fa";
+// import { FaWhatsapp } from "react-icons/fa";//remove this import if whatsapp community link is not needed
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { adminRequest } from "../admin/api";
@@ -29,10 +29,10 @@ const WHY_SPECIAL_IMAGE =
 const WHY_SPECIAL_HEADING = "Why are we special?";
 const WHY_SPECIAL_BODY =
   "Valmiki Ashram brings together ancient Indian wisdom and modern education in a way that nurtures both the mind and spirit. Children here don't just study—they live, learn, and grow in a community rooted in values, creativity, and nature.";
-const WHATSAPP_COMMUNITY_LINK =
-  "https://chat.whatsapp.com/your-community-invite-link";
-const WHATSAPP_COMMUNITY_HEADING =
-  "To stay updated, join our WhatsApp Community";
+// const WHATSAPP_COMMUNITY_LINK =
+//   process.env.REACT_APP_WHATSAPP_COMMUNITY_LINK || "";
+// const WHATSAPP_COMMUNITY_HEADING =
+//   "To stay updated, join our WhatsApp Community";
 
 const defaultWhySpecial = {
   heading: WHY_SPECIAL_HEADING,
@@ -40,25 +40,25 @@ const defaultWhySpecial = {
   image: WHY_SPECIAL_IMAGE,
   buttonLabel: "Learn More",
   buttonTo: "/about",
+  adminButtonTo: "/admin/about",
 };
 
-const defaultCommunityCta = {
-  heading: WHATSAPP_COMMUNITY_HEADING,
-  buttonLabel: "Join the Community",
-  buttonHref: WHATSAPP_COMMUNITY_LINK,
-};
+// const defaultCommunityCta = {
+//   heading: WHATSAPP_COMMUNITY_HEADING,
+//   buttonLabel: "Join the Community",
+//   buttonHref: WHATSAPP_COMMUNITY_LINK,
+// };
 
 function WhySpecialSection({ isAdmin, content, onEdit, onImageUploaded }) {
   const { theme } = useTheme();
+  const targetPath = isAdmin
+    ? content.adminButtonTo ||
+      resolveAdminPath(content.buttonTo || defaultWhySpecial.buttonTo)
+    : content.buttonTo || defaultWhySpecial.buttonTo;
 
   return (
     <motion.section
-      className={clsx(
-        "border-y border-theme py-10 md:py-14 lg:py-16",
-        theme === "dark"
-          ? "bg-neutral-900 text-neutral-100"
-          : "bg-[#FEF9E7] text-neutral-900"
-      )}
+      className="pt-4 pb-6 md:pt-6 md:pb-8 lg:pt-8 lg:pb-10"
       initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
@@ -66,52 +66,57 @@ function WhySpecialSection({ isAdmin, content, onEdit, onImageUploaded }) {
       aria-labelledby="programs-why-special-heading"
     >
       <Container>
-        <div className="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:gap-12 xl:gap-16">
-          {isAdmin ? (
-            <button
-              type="button"
-              onClick={onEdit}
-              className="absolute right-0 top-0 z-10 rounded-md bg-white/90 p-1 text-accent shadow dark:bg-neutral-800 dark:text-emerald-200"
-              aria-label="Edit why special section"
-            >
-              <Pencil className="h-4 w-4" />
-            </button>
-          ) : null}
-          <div className="min-w-0 flex-1 lg:order-1">
-            <h2 id="programs-why-special-heading" className="heading-section">
-              {content.heading || defaultWhySpecial.heading}
-            </h2>
-            <p className="mt-4 max-w-xl text-base leading-relaxed text-prose md:text-lg">
-              {content.body || defaultWhySpecial.body}
-            </p>
-            <Button
-              to={content.buttonTo || defaultWhySpecial.buttonTo}
-              variant="outline"
-              className="mt-6"
-            >
-              {content.buttonLabel || defaultWhySpecial.buttonLabel}
-            </Button>
-          </div>
-          <div className="min-w-0 flex-1 lg:order-2">
-            <div className="group/image relative overflow-hidden rounded-2xl border border-theme shadow-nav ring-1 ring-black/5 dark:shadow-nav-dark dark:ring-white/10">
-              <img
-                src={content.image || defaultWhySpecial.image}
-                alt="Children learning together in an educational setting"
-                className="aspect-[4/3] w-full object-cover"
-                width={1200}
-                height={900}
-                loading="lazy"
-                decoding="async"
-              />
-              {isAdmin ? (
-                <div className="absolute inset-x-2 bottom-2 flex justify-end">
-                  <ImageUploader
-                    folder="programs"
-                    buttonText="Change Image"
-                    onUploaded={onImageUploaded}
-                  />
-                </div>
-              ) : null}
+        <div
+          className={clsx(
+            "relative rounded-2xl border border-theme p-6 md:p-8 lg:p-10",
+            theme === "dark"
+              ? "bg-neutral-900 text-neutral-100"
+              : "bg-[#FEF9E7] text-neutral-900",
+          )}
+        >
+          <div className="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:gap-12 xl:gap-16">
+            {isAdmin ? (
+              <button
+                type="button"
+                onClick={onEdit}
+                className="absolute right-0 top-0 z-10 rounded-md bg-white/90 p-1 text-accent shadow dark:bg-neutral-800 dark:text-emerald-200"
+                aria-label="Edit why special section"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+            ) : null}
+            <div className="min-w-0 flex-1 lg:order-1">
+              <h2 id="programs-why-special-heading" className="heading-section">
+                {content.heading || defaultWhySpecial.heading}
+              </h2>
+              <p className="mt-4 max-w-xl text-base leading-relaxed text-prose md:text-lg">
+                {content.body || defaultWhySpecial.body}
+              </p>
+              <Button to={targetPath} variant="outline" className="mt-6">
+                {content.buttonLabel || defaultWhySpecial.buttonLabel}
+              </Button>
+            </div>
+            <div className="min-w-0 flex-1 lg:order-2">
+              <div className="group/image relative overflow-hidden rounded-2xl border border-theme shadow-nav ring-1 ring-black/5 dark:shadow-nav-dark dark:ring-white/10">
+                <img
+                  src={content.image || defaultWhySpecial.image}
+                  alt="Children learning together in an educational setting"
+                  className="aspect-[4/3] w-full object-cover"
+                  width={1200}
+                  height={900}
+                  loading="lazy"
+                  decoding="async"
+                />
+                {isAdmin ? (
+                  <div className="absolute inset-x-2 bottom-2 flex justify-end">
+                    <ImageUploader
+                      folder="programs"
+                      buttonText="Change Image"
+                      onUploaded={onImageUploaded}
+                    />
+                  </div>
+                ) : null}
+              </div>
             </div>
           </div>
         </div>
@@ -120,61 +125,61 @@ function WhySpecialSection({ isAdmin, content, onEdit, onImageUploaded }) {
   );
 }
 
-function WhatsAppCommunitySection({ isAdmin, content, onEdit }) {
-  const { theme } = useTheme();
+// function WhatsAppCommunitySection({ isAdmin, content, onEdit }) {
+//   const { theme } = useTheme();
 
-  return (
-    <motion.section
-      className={clsx(
-        "border-b border-theme py-12 sm:py-14 md:py-16",
-        theme === "dark"
-          ? "bg-neutral-950 text-neutral-100"
-          : "bg-white text-neutral-900"
-      )}
-      initial={{ opacity: 0, y: 14 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.4 }}
-      aria-labelledby="programs-whatsapp-heading"
-    >
-      <Container>
-        <div className="relative mx-auto max-w-5xl text-center">
-          {isAdmin ? (
-            <button
-              type="button"
-              onClick={onEdit}
-              className="absolute right-0 top-0 z-10 rounded-md bg-white/90 p-1 text-accent shadow dark:bg-neutral-800 dark:text-emerald-200"
-              aria-label="Edit WhatsApp section"
-            >
-              <Pencil className="h-4 w-4" />
-            </button>
-          ) : null}
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500 text-3xl font-semibold text-white shadow-nav ring-1 ring-black/10 dark:bg-emerald-600 dark:shadow-nav-dark dark:ring-white/10 sm:h-20 sm:w-20">
-            <span aria-hidden="true">
-              <FaWhatsapp className="h-9 w-9 sm:h-11 sm:w-11" />
-            </span>
-          </div>
+//   return (
+//     <motion.section
+//       className={clsx(
+//         "border-b border-theme py-12 sm:py-14 md:py-16",
+//         theme === "dark"
+//           ? "bg-neutral-950 text-neutral-100"
+//           : "bg-white text-neutral-900"
+//       )}
+//       initial={{ opacity: 0, y: 14 }}
+//       whileInView={{ opacity: 1, y: 0 }}
+//       viewport={{ once: true, margin: "-40px" }}
+//       transition={{ duration: 0.4 }}
+//       aria-labelledby="programs-whatsapp-heading"
+//     >
+//       <Container>
+//         <div className="relative mx-auto max-w-5xl text-center">
+//           {isAdmin ? (
+//             <button
+//               type="button"
+//               onClick={onEdit}
+//               className="absolute right-0 top-0 z-10 rounded-md bg-white/90 p-1 text-accent shadow dark:bg-neutral-800 dark:text-emerald-200"
+//               aria-label="Edit WhatsApp section"
+//             >
+//               <Pencil className="h-4 w-4" />
+//             </button>
+//           ) : null}
+//           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500 text-3xl font-semibold text-white shadow-nav ring-1 ring-black/10 dark:bg-emerald-600 dark:shadow-nav-dark dark:ring-white/10 sm:h-20 sm:w-20">
+//             <span aria-hidden="true">
+//               <FaWhatsapp className="h-9 w-9 sm:h-11 sm:w-11" />
+//             </span>
+//           </div>
 
-          <h2
-            id="programs-whatsapp-heading"
-            className="mt-6 text-4xl font-bold leading-tight text-accent dark:text-emerald-200 sm:text-5xl md:text-6xl"
-          >
-            {content.heading || defaultCommunityCta.heading}
-          </h2>
+//           <h2
+//             id="programs-whatsapp-heading"
+//             className="mt-6 text-4xl font-bold leading-tight text-accent dark:text-emerald-200 sm:text-5xl md:text-6xl"
+//           >
+//             {content.heading || defaultCommunityCta.heading}
+//           </h2>
 
-          <div className="mt-7">
-            <Button
-              href={content.buttonHref || defaultCommunityCta.buttonHref}
-              className="rounded-full px-8 py-3 text-base sm:text-lg"
-            >
-              {content.buttonLabel || defaultCommunityCta.buttonLabel}
-            </Button>
-          </div>
-        </div>
-      </Container>
-    </motion.section>
-  );
-}
+//           <div className="mt-7">
+//             <Button
+//               href={content.buttonHref || defaultCommunityCta.buttonHref}
+//               className="rounded-full px-8 py-3 text-base sm:text-lg"
+//             >
+//               {content.buttonLabel || defaultCommunityCta.buttonLabel}
+//             </Button>
+//           </div>
+//         </div>
+//       </Container>
+//     </motion.section>
+//   );
+// }
 
 const defaultProgramCards = [
   {
@@ -184,6 +189,7 @@ const defaultProgramCards = [
     imageAlt: "Children learning outdoors at camp",
     body: "Our summer camps offer exciting activities that ignite curiosity and build resilience, allowing kids to connect with their roots while developing modern critical thinking. Through adventure, creativity, and hands-on discovery, they learn, grow, and create lifelong memories—all while having fun!",
     to: "/summer-camp",
+    adminTo: "/admin/summer-camp",
     buttonLabel: "Learn More",
   },
   {
@@ -193,6 +199,7 @@ const defaultProgramCards = [
     imageAlt: "Seasonal camp learning and activities",
     body: "Our winter cohort brings martial arts, robotics, yoga, gamified math, and more into a focused seasonal immersion. Shorter days, warm community, and hands-on projects help children stay active, curious, and connected to learning through the cooler months.",
     to: "/winter-camp",
+    adminTo: "/admin/winter-camp",
     buttonLabel: "Learn More",
   },
   {
@@ -202,6 +209,7 @@ const defaultProgramCards = [
     imageAlt: "Students learning together",
     body: "Designed with NRI families in mind, our summer camp helps children bond with Bharatiya culture, language, and values while visiting or reconnecting from abroad. Structured activities, caring mentors, and peers from similar journeys make it easy to feel at home and return with confidence and lasting friendships.",
     to: "/summer-camp",
+    adminTo: "/admin/summer-camp",
     buttonLabel: "Learn More",
   },
   {
@@ -211,6 +219,7 @@ const defaultProgramCards = [
     imageAlt: "Residential Gurukulam learning environment",
     body: "The Gurukulam is our full-time residential pathway—Shatpatha Shiksha blending academics, Indian knowledge systems, and life skills. Children learn at their own pace through real-world projects, memory training, stories, and hands-on challenges in a supportive family-style community.",
     to: "/gurukulam",
+    adminTo: "/admin/programs",
     buttonLabel: "Learn More",
   },
   {
@@ -220,9 +229,17 @@ const defaultProgramCards = [
     imageAlt: "Online learning and workshops",
     body: "Learn from anywhere with live and flexible offerings: Samskrutham, Ayurveda, astronomy, video editing, and more. Weekend and online courses welcome all ages, so families can deepen skills and culture without leaving home.",
     to: "/online-programs",
+    adminTo: "/admin/online-programs",
     buttonLabel: "Learn More",
   },
 ];
+
+function resolveAdminPath(path) {
+  if (!path || typeof path !== "string") return "/admin/programs";
+  if (path.startsWith("/admin/")) return path;
+  if (!path.startsWith("/")) return "/admin/programs";
+  return `/admin${path}`;
+}
 
 function ProgramCard({
   card,
@@ -233,6 +250,10 @@ function ProgramCard({
   setDraft,
   saveProgramsContent,
 }) {
+  const targetPath = isAdmin
+    ? card.adminTo || resolveAdminPath(card.to)
+    : card.to;
+
   return (
     <motion.article
       className="relative flex h-full flex-col rounded-2xl border-2 border-accent/35 bg-secondary/90 p-6 shadow-sm dark:border-emerald-700/40 dark:bg-neutral-900 dark:shadow-nav-dark"
@@ -300,7 +321,7 @@ function ProgramCard({
       </div>
       <h3 className="heading-card">{card.title}</h3>
       <p className="mt-2 flex-1 text-sm text-prose-muted">{card.body}</p>
-      <Button to={card.to} className="mt-4 self-start">
+      <Button to={targetPath} className="mt-4 self-start">
         {card.buttonLabel || "Learn More"}
       </Button>
     </motion.article>
@@ -331,7 +352,7 @@ export default function Programs() {
     display.programCards?.length ? display.programCards : defaultProgramCards
   ).slice(0, 24);
   const whySpecial = { ...defaultWhySpecial, ...(display.whySpecial || {}) };
-  const communityCta = { ...defaultCommunityCta, ...(display.communityCta || {}) };
+  // const communityCta = { ...defaultCommunityCta, ...(display.communityCta || {}) };
 
   const openCardEditor = (index) => {
     const card = Number.isInteger(index) ? displayCards[index] : undefined;
@@ -342,6 +363,7 @@ export default function Programs() {
       title: card?.title || "",
       body: card?.body || "",
       path: card?.to || "/programs",
+      adminPath: card?.adminTo || resolveAdminPath(card?.to || "/programs"),
       buttonLabel: card?.buttonLabel || "Learn More",
       image: card?.image || "",
       imageAlt: card?.imageAlt || "",
@@ -358,6 +380,9 @@ export default function Programs() {
       title: cardEditor.title || "Untitled",
       body: cardEditor.body || "",
       to: cardEditor.path || "/programs",
+      adminTo:
+        (cardEditor.adminPath || "").trim() ||
+        resolveAdminPath(cardEditor.path || "/programs"),
       buttonLabel: cardEditor.buttonLabel || "Learn More",
       image: cardEditor.image || "",
       imageAlt: cardEditor.imageAlt || "",
@@ -424,7 +449,10 @@ export default function Programs() {
 
           <ul className="mt-8 grid list-none grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
             {displayCards.map((card, index) => (
-              <li key={card.key || `${card.title}-${index}`} className="min-w-0">
+              <li
+                key={card.key || `${card.title}-${index}`}
+                className="min-w-0"
+              >
                 <ProgramCard
                   card={card}
                   index={index}
@@ -453,11 +481,11 @@ export default function Programs() {
           saveProgramsContent(next);
         }}
       />
-      <WhatsAppCommunitySection
+      {/* <WhatsAppCommunitySection
         isAdmin={isAdmin}
         content={communityCta}
         onEdit={() => openSectionEditor("communityCta", communityCta)}
-      />
+      /> */}
 
       {isAdmin && cardEditor ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -521,6 +549,14 @@ export default function Programs() {
               />
               <input
                 className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+                placeholder="Admin route path (e.g. /admin/summer-camp)"
+                value={cardEditor.adminPath || ""}
+                onChange={(e) =>
+                  setCardEditor((p) => ({ ...p, adminPath: e.target.value }))
+                }
+              />
+              <input
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
                 placeholder="Button label"
                 value={cardEditor.buttonLabel}
                 onChange={(e) =>
@@ -552,10 +588,7 @@ export default function Programs() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
             <h3 className="text-lg font-semibold text-accent dark:text-emerald-200">
-              Edit{" "}
-              {sectionEditor.sectionKey === "whySpecial"
-                ? "Why are we special"
-                : "Community CTA"}
+              Edit Why are we special
             </h3>
             <div className="mt-4 space-y-3">
               <input
@@ -570,92 +603,76 @@ export default function Programs() {
                 }
               />
 
-              {sectionEditor.sectionKey === "whySpecial" ? (
-                <>
-                  <textarea
-                    className="h-28 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
-                    placeholder="Body text"
-                    value={sectionEditor.content.body || ""}
-                    onChange={(e) =>
-                      setSectionEditor((p) => ({
-                        ...p,
-                        content: { ...p.content, body: e.target.value },
-                      }))
-                    }
+              <textarea
+                className="h-28 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+                placeholder="Body text"
+                value={sectionEditor.content.body || ""}
+                onChange={(e) =>
+                  setSectionEditor((p) => ({
+                    ...p,
+                    content: { ...p.content, body: e.target.value },
+                  }))
+                }
+              />
+              <div>
+                <p className="mb-2 text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                  Section Image
+                </p>
+                {sectionEditor.content.image ? (
+                  <img
+                    src={sectionEditor.content.image}
+                    alt={sectionEditor.content.heading || "Why special preview"}
+                    className="mb-2 h-28 w-full rounded-lg object-cover"
                   />
-                  <div>
-                    <p className="mb-2 text-sm font-medium text-neutral-700 dark:text-neutral-200">
-                      Section Image
-                    </p>
-                    {sectionEditor.content.image ? (
-                      <img
-                        src={sectionEditor.content.image}
-                        alt={sectionEditor.content.heading || "Why special preview"}
-                        className="mb-2 h-28 w-full rounded-lg object-cover"
-                      />
-                    ) : (
-                      <div className="mb-2 h-28 w-full rounded-lg bg-neutral-100 dark:bg-neutral-800" />
-                    )}
-                    <ImageUploader
-                      folder="programs"
-                      buttonText={sectionEditor.content.image ? "Change Image" : "Add Image"}
-                      onUploaded={(asset) =>
-                        setSectionEditor((p) => ({
-                          ...p,
-                          content: { ...p.content, image: asset.url },
-                        }))
-                      }
-                    />
-                  </div>
-                  <input
-                    className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
-                    placeholder="Button label"
-                    value={sectionEditor.content.buttonLabel || ""}
-                    onChange={(e) =>
-                      setSectionEditor((p) => ({
-                        ...p,
-                        content: { ...p.content, buttonLabel: e.target.value },
-                      }))
-                    }
-                  />
-                  <input
-                    className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
-                    placeholder="Button route (e.g. /about)"
-                    value={sectionEditor.content.buttonTo || ""}
-                    onChange={(e) =>
-                      setSectionEditor((p) => ({
-                        ...p,
-                        content: { ...p.content, buttonTo: e.target.value },
-                      }))
-                    }
-                  />
-                </>
-              ) : (
-                <>
-                  <input
-                    className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
-                    placeholder="Button label"
-                    value={sectionEditor.content.buttonLabel || ""}
-                    onChange={(e) =>
-                      setSectionEditor((p) => ({
-                        ...p,
-                        content: { ...p.content, buttonLabel: e.target.value },
-                      }))
-                    }
-                  />
-                  <input
-                    className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
-                    placeholder="WhatsApp invite URL"
-                    value={sectionEditor.content.buttonHref || ""}
-                    onChange={(e) =>
-                      setSectionEditor((p) => ({
-                        ...p,
-                        content: { ...p.content, buttonHref: e.target.value },
-                      }))
-                    }
-                  />
-                </>
-              )}
+                ) : (
+                  <div className="mb-2 h-28 w-full rounded-lg bg-neutral-100 dark:bg-neutral-800" />
+                )}
+                <ImageUploader
+                  folder="programs"
+                  buttonText={
+                    sectionEditor.content.image ? "Change Image" : "Add Image"
+                  }
+                  onUploaded={(asset) =>
+                    setSectionEditor((p) => ({
+                      ...p,
+                      content: { ...p.content, image: asset.url },
+                    }))
+                  }
+                />
+              </div>
+              <input
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+                placeholder="Button label"
+                value={sectionEditor.content.buttonLabel || ""}
+                onChange={(e) =>
+                  setSectionEditor((p) => ({
+                    ...p,
+                    content: { ...p.content, buttonLabel: e.target.value },
+                  }))
+                }
+              />
+              <input
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+                placeholder="Button route (e.g. /about)"
+                value={sectionEditor.content.buttonTo || ""}
+                onChange={(e) =>
+                  setSectionEditor((p) => ({
+                    ...p,
+                    content: { ...p.content, buttonTo: e.target.value },
+                  }))
+                }
+              />
+              <input
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+                placeholder="Admin button route (e.g. /admin/about)"
+                value={sectionEditor.content.adminButtonTo || ""}
+                onChange={(e) =>
+                  setSectionEditor((p) => ({
+                    ...p,
+                    content: { ...p.content, adminButtonTo: e.target.value },
+                  }))
+                }
+              />
             </div>
             <div className="mt-4 flex gap-2">
               <button
