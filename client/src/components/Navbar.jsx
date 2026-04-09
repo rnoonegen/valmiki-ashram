@@ -1,9 +1,9 @@
-import { Menu } from 'lucide-react';
+import { LogOut, Menu, Settings } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
-import { adminRequest } from '../admin/api';
+import { adminRequest, clearAdminToken } from '../admin/api';
 import ImageUploader from './admin/ImageUploader';
 import Container from './Container';
 import Dropdown from './Dropdown';
@@ -34,6 +34,7 @@ const registrationItems = [
 const morePool = [
   { to: '/gallery', label: 'Gallery' },
   { to: '/curriculum', label: 'Curriculum' },
+  { to: '/gurukulam', label: 'Gurukulam' },
   { to: '/faq', label: 'FAQ' },
   { to: '/admission', label: 'Admission' },
   { to: '/contests', label: 'Contests' },
@@ -42,6 +43,7 @@ const morePool = [
 
 export default function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const adminMode = location.pathname === '/admin' || location.pathname.startsWith('/admin/');
   const siteContent = useLiveContent('site', {});
   const logoUrl = siteContent.logoUrl || '';
@@ -62,6 +64,10 @@ export default function Navbar() {
       method: 'PUT',
       body: JSON.stringify({ content: { ...siteContent, logoUrl: url } }),
     });
+  };
+  const logout = () => {
+    clearAdminToken();
+    navigate('/admin-login');
   };
 
   return (
@@ -135,25 +141,33 @@ export default function Navbar() {
               <Dropdown label="Programs" items={programItemsMapped} />
               <Dropdown label="Registrations" items={registrationItemsMapped} />
 
-              <NavLink
-                to={p('/gurukulam')}
-                className={({ isActive }) =>
-                  clsx(
-                    'rounded-full px-3 py-2 text-sm font-medium transition-colors',
-                    isActive
-                      ? 'bg-white/80 text-accent shadow-sm dark:bg-emerald-950/95 dark:text-emerald-50 dark:shadow-[inset_0_0_0_1px_rgba(52,211,153,0.45)]'
-                      : 'text-accent hover:bg-white/50 dark:text-emerald-200 dark:hover:bg-neutral-800/80'
-                  )
-                }
-              >
-                Gurukulam
-              </NavLink>
-
               <Dropdown label="More" items={morePoolMapped} />
             </nav>
 
             <div className="flex items-center gap-1">
+              {adminMode ? (
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="hidden items-center gap-1 rounded-full bg-rose-100 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-200 dark:bg-rose-900/40 dark:text-rose-300 dark:hover:bg-rose-900/55 lg:inline-flex sm:text-sm"
+                  aria-label="Logout"
+                  title="Logout"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span className="hidden xl:inline">Logout</span>
+                </button>
+              ) : null}
               <ThemeToggle className="hidden rounded-full p-2 hover:bg-white/50 dark:hover:bg-neutral-800 lg:inline-flex" />
+              {adminMode ? (
+                <Link
+                  to="/admin/settings"
+                  aria-label="Admin settings"
+                  title="Settings"
+                  className="hidden rounded-full p-2 text-accent hover:bg-white/50 dark:text-emerald-200 dark:hover:bg-neutral-800 lg:inline-flex"
+                >
+                  <Settings className="h-5 w-5" />
+                </Link>
+              ) : null}
               <button
                 type="button"
                 className="inline-flex rounded-full p-2 hover:bg-white/50 dark:hover:bg-neutral-800 lg:hidden"
@@ -167,7 +181,10 @@ export default function Navbar() {
         </Container>
       </motion.header>
 
-      <MobileMenu open={mobileOpen} onClose={() => setMobileOpen(false)} />
+      <MobileMenu
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+      />
       {adminMode && logoPreviewOpen && logoUrl ? (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4"

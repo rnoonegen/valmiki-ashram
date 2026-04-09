@@ -1,8 +1,9 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { X } from 'lucide-react';
+import { Settings, X } from 'lucide-react';
 import { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
+import { clearAdminToken } from '../admin/api';
 import Dropdown from './Dropdown';
 import ThemeToggle from './ThemeToggle';
 
@@ -37,6 +38,7 @@ const tailLinks = [
 
 export default function MobileMenu({ open, onClose }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const adminMode = location.pathname === '/admin' || location.pathname.startsWith('/admin/');
   const p = (path) => {
     if (!adminMode) return path;
@@ -53,6 +55,11 @@ export default function MobileMenu({ open, onClose }) {
   const closeAll = () => {
     setOpenDropdown(null);
     onClose();
+  };
+  const logout = () => {
+    clearAdminToken();
+    closeAll();
+    navigate('/admin-login');
   };
 
   return (
@@ -164,6 +171,31 @@ export default function MobileMenu({ open, onClose }) {
                   {link.label}
                 </NavLink>
               ))}
+              {adminMode ? (
+                <NavLink
+                  to="/admin/settings"
+                  onClick={closeAll}
+                  className={({ isActive }) =>
+                    clsx(
+                      'inline-flex items-center gap-2 rounded-xl px-4 py-3 text-base font-medium',
+                      isActive
+                        ? 'bg-primary text-accent dark:bg-emerald-950/95 dark:text-emerald-50 dark:shadow-[inset_0_0_0_1px_rgba(52,211,153,0.45)]'
+                        : 'text-neutral-800 hover:bg-primary/40 dark:text-neutral-200 dark:hover:bg-neutral-800'
+                    )
+                  }
+                >
+                  <Settings className="h-4 w-4" /> Settings
+                </NavLink>
+              ) : null}
+              {adminMode ? (
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="mt-2 rounded-xl bg-rose-100 px-4 py-3 text-left text-base font-medium text-rose-700 hover:bg-rose-200 dark:bg-rose-900/40 dark:text-rose-300 dark:hover:bg-rose-900/55"
+                >
+                  Logout
+                </button>
+              ) : null}
             </nav>
           </motion.aside>
         </>

@@ -1,36 +1,43 @@
 import { useRef, useState } from 'react';
 import { getAdminToken, getApiBase } from '../../admin/api';
 
-export default function ImageUploader({ folder, onUploaded, buttonText = 'Upload Image' }) {
+export default function ImageUploader({
+  folder,
+  onUploaded,
+  buttonText = 'Upload Image',
+  multiple = false,
+}) {
   const inputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
 
   const handleFile = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    const formData = new FormData();
-    formData.append('image', file);
-    formData.append('folder', folder);
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
 
     try {
       setUploading(true);
-      const res = await fetch(`${getApiBase()}/api/admin/upload-image`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${getAdminToken()}` },
-        body: formData,
-      });
-      if (!res.ok) {
-        let message = 'Upload failed';
-        try {
-          const body = await res.json();
-          message = body?.message || message;
-        } catch (error) {
-          // no-op
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('folder', folder);
+        const res = await fetch(`${getApiBase()}/api/admin/upload-image`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${getAdminToken()}` },
+          body: formData,
+        });
+        if (!res.ok) {
+          let message = 'Upload failed';
+          try {
+            const body = await res.json();
+            message = body?.message || message;
+          } catch (error) {
+            // no-op
+          }
+          throw new Error(message);
         }
-        throw new Error(message);
+        const data = await res.json();
+        onUploaded?.(data);
       }
-      const data = await res.json();
-      onUploaded?.(data);
     } catch (error) {
       alert(error.message || 'Upload failed');
     } finally {
@@ -45,6 +52,7 @@ export default function ImageUploader({ folder, onUploaded, buttonText = 'Upload
         ref={inputRef}
         type="file"
         accept="image/*"
+        multiple={multiple}
         className="hidden"
         onChange={handleFile}
       />

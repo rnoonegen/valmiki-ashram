@@ -4,6 +4,7 @@ import Layout from "../components/Layout";
 import About from "../pages/About";
 import Admission from "../pages/Admission";
 import AdminLogin from "../pages/AdminLogin";
+import AdminSettings from "../pages/AdminSettings";
 import ContactUs from "../pages/ContactUs";
 import Contests from "../pages/Contests";
 import Curriculum from "../pages/Curriculum";
@@ -17,6 +18,7 @@ import OnlinePrograms from "../pages/OnlinePrograms";
 import Programs from "../pages/Programs";
 import SummerCampRegistration from "../pages/SummerCampRegistration";
 import SummerCamp from "../pages/SummerCamp";
+import SummerCampDetail from "../pages/SummerCampDetail";
 import SummerCampSchedule from "../pages/SummerCampSchedule";
 import Terms from "../pages/Terms";
 import ValmikiAshram from "../pages/ValmikiAshram";
@@ -40,6 +42,7 @@ export default function AppRoutes() {
           element={<WinterCampRegistration />}
         />
         <Route path="summer-camp" element={<SummerCamp />} />
+        <Route path="summer-camp/:galleryId" element={<SummerCampDetail />} />
         <Route
           path="register/summer-camp"
           element={<SummerCampRegistration />}
@@ -79,6 +82,7 @@ export default function AppRoutes() {
             element={<WinterCampRegistration />}
           />
           <Route path="admin/summer-camp" element={<SummerCamp />} />
+          <Route path="admin/summer-camp/:galleryId" element={<SummerCampDetail />} />
           <Route
             path="admin/summer-camp/schedule"
             element={<SummerCampSchedule />}
@@ -89,6 +93,9 @@ export default function AppRoutes() {
             element={<SummerCampRegistration />}
           />
           <Route path="admin/curriculum" element={<Curriculum />} />
+          <Route path="admin/gurukulam" element={<Gurukulam />} />
+          <Route path="admin/contact" element={<ContactUs />} />
+          <Route path="admin/settings" element={<AdminSettings />} />
         </Route>
       </Route>
     </Routes>

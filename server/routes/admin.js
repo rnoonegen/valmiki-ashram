@@ -1,4 +1,6 @@
 const express = require('express');
+const crypto = require('crypto');
+const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const { ADMIN_PASSWORD, ADMIN_USERNAME } = require('../config/admin');
@@ -8,6 +10,7 @@ const MediaAsset = require('../models/MediaAsset');
 const { uploadImage, deleteImage } = require('../services/s3');
 
 const router = express.Router();
+const scrypt = promisify(crypto.scrypt);
 const MAX_UPLOAD_MB = Number(process.env.MAX_UPLOAD_MB || 25);
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -21,9 +24,15 @@ const ALLOWED_PAGES = new Set([
   'faq',
   'gallery',
   'programs',
+  'curriculum',
+  'gurukulam',
+  'contact',
+  'footer',
+  'site',
   'winter-camp',
   'winter-camp-schedule',
   'summer-camp',
+  'summer-camp-registration',
   'summer-camp-schedule',
   'online-programs',
 ]);
@@ -33,7 +42,9 @@ const PAGE_ALIASES = {
   wintercamp: 'winter-camp',
   wintercampschedule: 'winter-camp-schedule',
   summercampschedule: 'summer-camp-schedule',
+  summercampregistration: 'summer-camp-registration',
   summer_camp: 'summer-camp',
+  summer_camp_registration: 'summer-camp-registration',
   onlineprograms: 'online-programs',
   online_programs: 'online-programs',
   winter_camp: 'winter-camp',
@@ -49,9 +60,31 @@ function resolvePageKey(rawPage) {
   return PAGE_ALIASES[normalized] || normalized;
 }
 
-router.post('/login', (req, res) => {
+async function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const derivedKey = await scrypt(password, salt, 64);
+  return `${salt}:${derivedKey.toString('hex')}`;
+}
+
+async function verifyPassword(plainTextPassword, storedHash) {
+  if (!storedHash || !String(storedHash).includes(':')) {
+    return plainTextPassword === ADMIN_PASSWORD;
+  }
+  const [salt, keyHex] = String(storedHash).split(':');
+  const derivedKey = await scrypt(plainTextPassword, salt, 64);
+  const storedKey = Buffer.from(keyHex, 'hex');
+  return (
+    storedKey.length === derivedKey.length &&
+    crypto.timingSafeEqual(storedKey, derivedKey)
+  );
+}
+
+router.post('/login', async (req, res) => {
   const { username, password } = req.body || {};
-  if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+  const settingsRow = await PageContent.findOne({ page: 'admin-settings' }).lean();
+  const passwordHash = settingsRow?.content?.passwordHash || '';
+  const isPasswordValid = await verifyPassword(password, passwordHash);
+  if (username !== ADMIN_USERNAME || !isPasswordValid) {
     return res.status(401).json({ message: 'Invalid credentials' });
   }
 
@@ -62,6 +95,41 @@ router.post('/login', (req, res) => {
   );
 
   return res.json({ token, username });
+});
+
+router.post('/change-password', authRequired, async (req, res) => {
+  const { currentPassword, newPassword, confirmPassword } = req.body || {};
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    return res.status(400).json({ message: 'All password fields are required.' });
+  }
+  if (newPassword !== confirmPassword) {
+    return res.status(400).json({ message: 'New password and confirm password do not match.' });
+  }
+  if (String(newPassword).length < 8) {
+    return res.status(400).json({ message: 'New password must be at least 8 characters.' });
+  }
+
+  const settingsRow = await PageContent.findOne({ page: 'admin-settings' }).lean();
+  const currentHash = settingsRow?.content?.passwordHash || '';
+  const isCurrentValid = await verifyPassword(currentPassword, currentHash);
+  if (!isCurrentValid) {
+    return res.status(401).json({ message: 'Current password is incorrect.' });
+  }
+
+  const nextHash = await hashPassword(newPassword);
+  await PageContent.findOneAndUpdate(
+    { page: 'admin-settings' },
+    {
+      content: {
+        ...(settingsRow?.content || {}),
+        passwordHash: nextHash,
+      },
+      updatedBy: req.admin?.username || 'admin',
+    },
+    { returnDocument: 'after', upsert: true, setDefaultsOnInsert: true }
+  ).lean();
+
+  return res.json({ ok: true, message: 'Password changed successfully.' });
 });
 
 router.get('/validate', authRequired, (req, res) => {
