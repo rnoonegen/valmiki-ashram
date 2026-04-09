@@ -22,14 +22,20 @@ const ALLOWED_PAGES = new Set([
   'gallery',
   'programs',
   'winter-camp',
+  'winter-camp-schedule',
   'summer-camp',
+  'summer-camp-schedule',
 ]);
 
 const PAGE_ALIASES = {
   summercamp: 'summer-camp',
   wintercamp: 'winter-camp',
+  wintercampschedule: 'winter-camp-schedule',
+  summercampschedule: 'summer-camp-schedule',
   summer_camp: 'summer-camp',
   winter_camp: 'winter-camp',
+  winter_camp_schedule: 'winter-camp-schedule',
+  summer_camp_schedule: 'summer-camp-schedule',
 };
 
 function resolvePageKey(rawPage) {

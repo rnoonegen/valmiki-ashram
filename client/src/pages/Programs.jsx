@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import { motion } from "framer-motion";
 import { Pencil, Plus, Save, Trash2, X } from "lucide-react";
- // import { FaWhatsapp } from "react-icons/fa";//remove this import if whatsapp community link is not needed
+// import { FaWhatsapp } from "react-icons/fa";//remove this import if whatsapp community link is not needed
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { adminRequest } from "../admin/api";
@@ -40,6 +40,7 @@ const defaultWhySpecial = {
   image: WHY_SPECIAL_IMAGE,
   buttonLabel: "Learn More",
   buttonTo: "/about",
+  adminButtonTo: "/admin/about",
 };
 
 // const defaultCommunityCta = {
@@ -50,9 +51,12 @@ const defaultWhySpecial = {
 
 function WhySpecialSection({ isAdmin, content, onEdit, onImageUploaded }) {
   const { theme } = useTheme();
+  const targetPath = isAdmin
+    ? content.adminButtonTo ||
+      resolveAdminPath(content.buttonTo || defaultWhySpecial.buttonTo)
+    : content.buttonTo || defaultWhySpecial.buttonTo;
 
   return (
-
     <motion.section
       className="pt-4 pb-6 md:pt-6 md:pb-8 lg:pt-8 lg:pb-10"
       initial={{ opacity: 0, y: 16 }}
@@ -67,58 +71,54 @@ function WhySpecialSection({ isAdmin, content, onEdit, onImageUploaded }) {
             "relative rounded-2xl border border-theme p-6 md:p-8 lg:p-10",
             theme === "dark"
               ? "bg-neutral-900 text-neutral-100"
-              : "bg-[#FEF9E7] text-neutral-900"
+              : "bg-[#FEF9E7] text-neutral-900",
           )}
         >
           <div className="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:gap-12 xl:gap-16">
-          {isAdmin ? (
-            <button
-              type="button"
-              onClick={onEdit}
-              className="absolute right-0 top-0 z-10 rounded-md bg-white/90 p-1 text-accent shadow dark:bg-neutral-800 dark:text-emerald-200"
-              aria-label="Edit why special section"
-            >
-              <Pencil className="h-4 w-4" />
-            </button>
-          ) : null}
-          <div className="min-w-0 flex-1 lg:order-1">
-            <h2 id="programs-why-special-heading" className="heading-section">
-              {content.heading || defaultWhySpecial.heading}
-            </h2>
-            <p className="mt-4 max-w-xl text-base leading-relaxed text-prose md:text-lg">
-              {content.body || defaultWhySpecial.body}
-            </p>
-            <Button
-              to={content.buttonTo || defaultWhySpecial.buttonTo}
-              variant="outline"
-              className="mt-6"
-            >
-              {content.buttonLabel || defaultWhySpecial.buttonLabel}
-            </Button>
-          </div>
-          <div className="min-w-0 flex-1 lg:order-2">
-            <div className="group/image relative overflow-hidden rounded-2xl border border-theme shadow-nav ring-1 ring-black/5 dark:shadow-nav-dark dark:ring-white/10">
-              <img
-                src={content.image || defaultWhySpecial.image}
-                alt="Children learning together in an educational setting"
-                className="aspect-[4/3] w-full object-cover"
-                width={1200}
-                height={900}
-                loading="lazy"
-                decoding="async"
-              />
-              {isAdmin ? (
-                <div className="absolute inset-x-2 bottom-2 flex justify-end">
-                  <ImageUploader
-                    folder="programs"
-                    buttonText="Change Image"
-                    onUploaded={onImageUploaded}
-                  />
-                </div>
-              ) : null}
+            {isAdmin ? (
+              <button
+                type="button"
+                onClick={onEdit}
+                className="absolute right-0 top-0 z-10 rounded-md bg-white/90 p-1 text-accent shadow dark:bg-neutral-800 dark:text-emerald-200"
+                aria-label="Edit why special section"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+            ) : null}
+            <div className="min-w-0 flex-1 lg:order-1">
+              <h2 id="programs-why-special-heading" className="heading-section">
+                {content.heading || defaultWhySpecial.heading}
+              </h2>
+              <p className="mt-4 max-w-xl text-base leading-relaxed text-prose md:text-lg">
+                {content.body || defaultWhySpecial.body}
+              </p>
+              <Button to={targetPath} variant="outline" className="mt-6">
+                {content.buttonLabel || defaultWhySpecial.buttonLabel}
+              </Button>
+            </div>
+            <div className="min-w-0 flex-1 lg:order-2">
+              <div className="group/image relative overflow-hidden rounded-2xl border border-theme shadow-nav ring-1 ring-black/5 dark:shadow-nav-dark dark:ring-white/10">
+                <img
+                  src={content.image || defaultWhySpecial.image}
+                  alt="Children learning together in an educational setting"
+                  className="aspect-[4/3] w-full object-cover"
+                  width={1200}
+                  height={900}
+                  loading="lazy"
+                  decoding="async"
+                />
+                {isAdmin ? (
+                  <div className="absolute inset-x-2 bottom-2 flex justify-end">
+                    <ImageUploader
+                      folder="programs"
+                      buttonText="Change Image"
+                      onUploaded={onImageUploaded}
+                    />
+                  </div>
+                ) : null}
+              </div>
             </div>
           </div>
-        </div>
         </div>
       </Container>
     </motion.section>
@@ -189,6 +189,7 @@ const defaultProgramCards = [
     imageAlt: "Children learning outdoors at camp",
     body: "Our summer camps offer exciting activities that ignite curiosity and build resilience, allowing kids to connect with their roots while developing modern critical thinking. Through adventure, creativity, and hands-on discovery, they learn, grow, and create lifelong memories—all while having fun!",
     to: "/summer-camp",
+    adminTo: "/admin/summer-camp",
     buttonLabel: "Learn More",
   },
   {
@@ -198,6 +199,7 @@ const defaultProgramCards = [
     imageAlt: "Seasonal camp learning and activities",
     body: "Our winter cohort brings martial arts, robotics, yoga, gamified math, and more into a focused seasonal immersion. Shorter days, warm community, and hands-on projects help children stay active, curious, and connected to learning through the cooler months.",
     to: "/winter-camp",
+    adminTo: "/admin/winter-camp",
     buttonLabel: "Learn More",
   },
   {
@@ -207,6 +209,7 @@ const defaultProgramCards = [
     imageAlt: "Students learning together",
     body: "Designed with NRI families in mind, our summer camp helps children bond with Bharatiya culture, language, and values while visiting or reconnecting from abroad. Structured activities, caring mentors, and peers from similar journeys make it easy to feel at home and return with confidence and lasting friendships.",
     to: "/summer-camp",
+    adminTo: "/admin/summer-camp",
     buttonLabel: "Learn More",
   },
   {
@@ -216,6 +219,7 @@ const defaultProgramCards = [
     imageAlt: "Residential Gurukulam learning environment",
     body: "The Gurukulam is our full-time residential pathway—Shatpatha Shiksha blending academics, Indian knowledge systems, and life skills. Children learn at their own pace through real-world projects, memory training, stories, and hands-on challenges in a supportive family-style community.",
     to: "/gurukulam",
+    adminTo: "/admin/programs",
     buttonLabel: "Learn More",
   },
   {
@@ -225,9 +229,17 @@ const defaultProgramCards = [
     imageAlt: "Online learning and workshops",
     body: "Learn from anywhere with live and flexible offerings: Samskrutham, Ayurveda, astronomy, video editing, and more. Weekend and online courses welcome all ages, so families can deepen skills and culture without leaving home.",
     to: "/online-programs",
+    adminTo: "/admin/programs",
     buttonLabel: "Learn More",
   },
 ];
+
+function resolveAdminPath(path) {
+  if (!path || typeof path !== "string") return "/admin/programs";
+  if (path.startsWith("/admin/")) return path;
+  if (!path.startsWith("/")) return "/admin/programs";
+  return `/admin${path}`;
+}
 
 function ProgramCard({
   card,
@@ -238,6 +250,10 @@ function ProgramCard({
   setDraft,
   saveProgramsContent,
 }) {
+  const targetPath = isAdmin
+    ? card.adminTo || resolveAdminPath(card.to)
+    : card.to;
+
   return (
     <motion.article
       className="relative flex h-full flex-col rounded-2xl border-2 border-accent/35 bg-secondary/90 p-6 shadow-sm dark:border-emerald-700/40 dark:bg-neutral-900 dark:shadow-nav-dark"
@@ -305,7 +321,7 @@ function ProgramCard({
       </div>
       <h3 className="heading-card">{card.title}</h3>
       <p className="mt-2 flex-1 text-sm text-prose-muted">{card.body}</p>
-      <Button to={card.to} className="mt-4 self-start">
+      <Button to={targetPath} className="mt-4 self-start">
         {card.buttonLabel || "Learn More"}
       </Button>
     </motion.article>
@@ -347,6 +363,7 @@ export default function Programs() {
       title: card?.title || "",
       body: card?.body || "",
       path: card?.to || "/programs",
+      adminPath: card?.adminTo || resolveAdminPath(card?.to || "/programs"),
       buttonLabel: card?.buttonLabel || "Learn More",
       image: card?.image || "",
       imageAlt: card?.imageAlt || "",
@@ -363,6 +380,9 @@ export default function Programs() {
       title: cardEditor.title || "Untitled",
       body: cardEditor.body || "",
       to: cardEditor.path || "/programs",
+      adminTo:
+        (cardEditor.adminPath || "").trim() ||
+        resolveAdminPath(cardEditor.path || "/programs"),
       buttonLabel: cardEditor.buttonLabel || "Learn More",
       image: cardEditor.image || "",
       imageAlt: cardEditor.imageAlt || "",
@@ -429,7 +449,10 @@ export default function Programs() {
 
           <ul className="mt-8 grid list-none grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
             {displayCards.map((card, index) => (
-              <li key={card.key || `${card.title}-${index}`} className="min-w-0">
+              <li
+                key={card.key || `${card.title}-${index}`}
+                className="min-w-0"
+              >
                 <ProgramCard
                   card={card}
                   index={index}
@@ -526,6 +549,14 @@ export default function Programs() {
               />
               <input
                 className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+                placeholder="Admin route path (e.g. /admin/summer-camp)"
+                value={cardEditor.adminPath || ""}
+                onChange={(e) =>
+                  setCardEditor((p) => ({ ...p, adminPath: e.target.value }))
+                }
+              />
+              <input
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
                 placeholder="Button label"
                 value={cardEditor.buttonLabel}
                 onChange={(e) =>
@@ -598,7 +629,9 @@ export default function Programs() {
                 )}
                 <ImageUploader
                   folder="programs"
-                  buttonText={sectionEditor.content.image ? "Change Image" : "Add Image"}
+                  buttonText={
+                    sectionEditor.content.image ? "Change Image" : "Add Image"
+                  }
                   onUploaded={(asset) =>
                     setSectionEditor((p) => ({
                       ...p,
@@ -626,6 +659,17 @@ export default function Programs() {
                   setSectionEditor((p) => ({
                     ...p,
                     content: { ...p.content, buttonTo: e.target.value },
+                  }))
+                }
+              />
+              <input
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+                placeholder="Admin button route (e.g. /admin/about)"
+                value={sectionEditor.content.adminButtonTo || ""}
+                onChange={(e) =>
+                  setSectionEditor((p) => ({
+                    ...p,
+                    content: { ...p.content, adminButtonTo: e.target.value },
                   }))
                 }
               />

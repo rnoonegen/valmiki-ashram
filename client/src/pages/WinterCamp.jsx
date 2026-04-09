@@ -435,6 +435,10 @@ function buildRemindersClosingBlocks(rawReminders) {
 export default function WinterCamp() {
   const location = useLocation();
   const isAdmin = location.pathname === "/admin/winter-camp";
+  const schedulePath = isAdmin
+    ? "/admin/winter-camp/schedule"
+    : "/winter-camp/schedule";
+  const registerPath = isAdmin ? "/admin/register/winter-camp" : "/register/winter-camp";
   const [activeTab, setActiveTab] = useState("about");
   const [activeChecklistTab, setActiveChecklistTab] = useState("checklist");
   const cms = useLiveContent("winter-camp", {
@@ -1253,13 +1257,13 @@ export default function WinterCamp() {
 
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
-              to="/register/winter-camp"
+              to={registerPath}
               className="inline-flex items-center rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover:bg-accent-light dark:bg-emerald-700 dark:hover:bg-emerald-600"
             >
               Registration
             </Link>
             <Link
-              to="/winter-camp/schedule"
+              to={schedulePath}
               className="inline-flex items-center rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-prose transition hover:bg-neutral-100 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800"
             >
               Camp Schedule

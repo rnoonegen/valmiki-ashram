@@ -17,12 +17,12 @@ import OnlinePrograms from "../pages/OnlinePrograms";
 import Programs from "../pages/Programs";
 import SummerCampRegistration from "../pages/SummerCampRegistration";
 import SummerCamp from "../pages/SummerCamp";
+import SummerCampSchedule from "../pages/SummerCampSchedule";
 import Terms from "../pages/Terms";
 import ValmikiAshram from "../pages/ValmikiAshram";
 import WinterCampRegistration from "../pages/WinterCampRegistration";
 import WinterCamp from "../pages/WinterCamp";
 import WinterCampSchedule from "../pages/WinterCampSchedule";
-import SummerCampSchedule from "../pages/SummerCampSchedule";
 
 export default function AppRoutes() {
   return (
@@ -69,8 +69,24 @@ export default function AppRoutes() {
           <Route path="admin/gallery" element={<Gallery />} />
           <Route path="admin/faq" element={<FAQ />} />
           <Route path="admin/programs" element={<Programs />} />
-        <Route path="admin/winter-camp" element={<WinterCamp />} />
-        <Route path="admin/summer-camp" element={<SummerCamp />} />
+          <Route path="admin/winter-camp" element={<WinterCamp />} />
+          <Route
+            path="admin/winter-camp/schedule"
+            element={<WinterCampSchedule />}
+          />
+          <Route
+            path="admin/register/winter-camp"
+            element={<WinterCampRegistration />}
+          />
+          <Route path="admin/summer-camp" element={<SummerCamp />} />
+          <Route
+            path="admin/summer-camp/schedule"
+            element={<SummerCampSchedule />}
+          />
+          <Route
+            path="admin/register/summer-camp"
+            element={<SummerCampRegistration />}
+          />
         </Route>
       </Route>
     </Routes>

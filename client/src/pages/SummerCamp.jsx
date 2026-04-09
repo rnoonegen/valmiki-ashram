@@ -282,6 +282,12 @@ function sanitizeCategories(categories) {
 export default function SummerCamp() {
   const location = useLocation();
   const isAdmin = location.pathname === "/admin/summer-camp";
+  const registrationPath = isAdmin
+    ? "/admin/register/summer-camp"
+    : "/register/summer-camp";
+  const schedulePath = isAdmin
+    ? "/admin/summer-camp/schedule"
+    : "/summer-camp/schedule";
   const [activeTab, setActiveTab] = useState("about");
   const [activeChecklistTab, setActiveChecklistTab] = useState("checklist");
   const cms = useLiveContent("summer-camp", {
@@ -561,8 +567,8 @@ export default function SummerCamp() {
         <Container>
           <h1 className="heading-page">Summer Camp Details</h1>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Link to="/register/summer-camp" className="inline-flex items-center rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover:bg-accent-light dark:bg-emerald-700 dark:hover:bg-emerald-600">Registration</Link>
-            <Link to="/summer-camp/schedule" className="inline-flex items-center rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-prose transition hover:bg-neutral-100 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800">Camp Schedule</Link>
+            <Link to={registrationPath} className="inline-flex items-center rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover:bg-accent-light dark:bg-emerald-700 dark:hover:bg-emerald-600">Registration</Link>
+            <Link to={schedulePath} className="inline-flex items-center rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-prose transition hover:bg-neutral-100 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800">Camp Schedule</Link>
           </div>
         </Container>
       </section>
