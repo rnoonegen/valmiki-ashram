@@ -69,6 +69,8 @@ export default function AppRoutes() {
           <Route path="admin/gallery" element={<Gallery />} />
           <Route path="admin/faq" element={<FAQ />} />
           <Route path="admin/programs" element={<Programs />} />
+        <Route path="admin/winter-camp" element={<WinterCamp />} />
+        <Route path="admin/summer-camp" element={<SummerCamp />} />
         </Route>
       </Route>
     </Routes>

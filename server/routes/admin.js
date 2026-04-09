@@ -21,7 +21,24 @@ const ALLOWED_PAGES = new Set([
   'faq',
   'gallery',
   'programs',
+  'winter-camp',
+  'summer-camp',
 ]);
+
+const PAGE_ALIASES = {
+  summercamp: 'summer-camp',
+  wintercamp: 'winter-camp',
+  summer_camp: 'summer-camp',
+  winter_camp: 'winter-camp',
+};
+
+function resolvePageKey(rawPage) {
+  const normalized = String(rawPage || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[_\s]+/g, '-');
+  return PAGE_ALIASES[normalized] || normalized;
+}
 
 router.post('/login', (req, res) => {
   const { username, password } = req.body || {};
@@ -43,7 +60,7 @@ router.get('/validate', authRequired, (req, res) => {
 });
 
 router.get('/content/:page', authRequired, async (req, res) => {
-  const page = req.params.page;
+  const page = resolvePageKey(req.params.page);
   if (!ALLOWED_PAGES.has(page)) {
     return res.status(400).json({ message: 'Unsupported page' });
   }
@@ -53,7 +70,7 @@ router.get('/content/:page', authRequired, async (req, res) => {
 });
 
 router.put('/content/:page', authRequired, async (req, res) => {
-  const page = req.params.page;
+  const page = resolvePageKey(req.params.page);
   if (!ALLOWED_PAGES.has(page)) {
     return res.status(400).json({ message: 'Unsupported page' });
   }

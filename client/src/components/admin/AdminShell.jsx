@@ -9,6 +9,9 @@ const links = [
   { to: '/admin/founders', label: 'Founders' },
   { to: '/admin/faq', label: 'FAQ' },
   { to: '/admin/gallery', label: 'Gallery' },
+  { to: '/admin/programs', label: 'Programs' },
+  { to: '/admin/winter-camp', label: 'Winter Camp' },
+  { to: '/admin/summer-camp', label: 'Summer Camp' },
 ];
 
 export default function AdminShell() {
