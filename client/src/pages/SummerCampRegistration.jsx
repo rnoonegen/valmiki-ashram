@@ -7,7 +7,11 @@ import { io } from 'socket.io-client';
 import { z } from 'zod';
 import { adminRequest, apiRequest, getApiBase } from '../admin/api';
 import Container from '../components/Container';
+import FormSelect from '../components/forms/FormSelect';
+import PhoneInput from '../components/forms/PhoneInput';
 import PageFade from '../components/PageFade';
+import { useTheme } from '../context/ThemeContext';
+import { COUNTRY_OPTIONS } from '../data/registrationOptions';
 import useLiveContent from '../hooks/useLiveContent';
 
 const schema = z.object({
@@ -121,6 +125,8 @@ export default function SummerCampRegistration() {
   const location = useLocation();
   const isAdmin = location.pathname === '/admin/register/summer-camp';
   const isPublic = !isAdmin;
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const cms = useLiveContent('summer-camp-registration', defaultContent);
   const content = useMemo(
     () => ({
@@ -143,6 +149,7 @@ export default function SummerCampRegistration() {
   );
 
   const {
+    control,
     register,
     handleSubmit,
     reset,
@@ -1306,9 +1313,25 @@ export default function SummerCampRegistration() {
             <label className="text-sm">Email<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" {...register('email')} /></label>
             <label className="text-sm">Name<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" {...register('guardianName')} /></label>
             <label className="text-sm">Relationship with child<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" {...register('relationship')} /></label>
-            <label className="text-sm">Mobile Number<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" {...register('mobileNumber')} /></label>
+            <PhoneInput
+              label="Mobile Number"
+              required
+              name="mobileNumber"
+              control={control}
+              error={errors?.mobileNumber?.message}
+              isDark={isDark}
+            />
             <label className="text-sm">Mother Tongue<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" {...register('motherTongue')} /></label>
-            <label className="text-sm">Country<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" {...register('country')} /></label>
+            <FormSelect
+              name="country"
+              control={control}
+              label="Country"
+              required
+              options={COUNTRY_OPTIONS}
+              placeholder="Select country"
+              error={errors?.country?.message}
+              isDark={isDark}
+            />
             <label className="text-sm">State<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" {...register('state')} /></label>
             <label className="text-sm">City/Town<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" {...register('city')} /></label>
             <label className="text-sm">Child Name<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" {...register('childName')} /></label>

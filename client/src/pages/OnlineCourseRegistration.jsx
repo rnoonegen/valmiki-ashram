@@ -56,6 +56,7 @@ const schema = z.object({
       z.object({
         name: z.string().min(1, 'Child name is required'),
         age: z.coerce.number().min(1, 'Age is required'),
+        gender: z.string().min(1, 'Gender is required'),
         dob: z.string().min(1, 'DOB is required'),
         school: z.string().min(1, 'Current school is required'),
         class: z.string().min(1, 'Current class is required'),
@@ -92,6 +93,7 @@ const defaultValues = {
     {
       name: '',
       age: '',
+      gender: '',
       dob: '',
       school: '',
       class: '',
@@ -195,6 +197,14 @@ export default function OnlineCourseRegistration() {
   const [adminItems, setAdminItems] = useState([]);
   const [adminPage, setAdminPage] = useState(1);
   const [selectedRegistration, setSelectedRegistration] = useState(null);
+  const [genderFilter, setGenderFilter] = useState('');
+  const [ageFilterMode, setAgeFilterMode] = useState('range');
+  const [ageSingle, setAgeSingle] = useState('');
+  const [ageMin, setAgeMin] = useState('');
+  const [ageMax, setAgeMax] = useState('');
+  const [selectedCourses, setSelectedCourses] = useState([]);
+  const [selectedSlots, setSelectedSlots] = useState([]);
+  const [filtersExpanded, setFiltersExpanded] = useState(true);
 
   const {
     control,
@@ -253,12 +263,94 @@ export default function OnlineCourseRegistration() {
     return JSON.stringify(nextPayload) !== JSON.stringify(content);
   }, [isAdmin, editor, content]);
 
+  const allCourseOptions = useMemo(() => {
+    const set = new Set();
+    adminItems.forEach((item) => {
+      (item.children || []).forEach((child) => {
+        (child.courses || []).forEach((course) => {
+          if (course?.courseName) set.add(course.courseName);
+        });
+      });
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [adminItems]);
+
+  const allSlotOptions = useMemo(() => {
+    const set = new Set();
+    adminItems.forEach((item) => {
+      (item.children || []).forEach((child) => {
+        (child.courses || []).forEach((course) => {
+          if (course?.timeSlotIST) set.add(course.timeSlotIST);
+        });
+      });
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [adminItems]);
+
+  const allGenderOptions = useMemo(() => {
+    const set = new Set();
+    adminItems.forEach((item) => {
+      (item.children || []).forEach((child) => {
+        if (child?.gender) set.add(String(child.gender));
+      });
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [adminItems]);
+
+  const filteredAdminItems = useMemo(() => {
+    return adminItems.filter((item) => {
+      const children = Array.isArray(item.children) ? item.children : [];
+      const allCourses = children.flatMap((child) => (child.courses || []).map((c) => c.courseName).filter(Boolean));
+      const allSlots = children.flatMap((child) => (child.courses || []).map((c) => c.timeSlotIST).filter(Boolean));
+      const allAges = children.map((child) => Number(child.age)).filter((age) => Number.isFinite(age));
+      const allGenders = children.map((child) => String(child.gender || '').trim()).filter(Boolean);
+
+      if (genderFilter && !allGenders.includes(genderFilter)) return false;
+      if (selectedCourses.length && !selectedCourses.some((course) => allCourses.includes(course))) {
+        return false;
+      }
+      if (selectedSlots.length && !selectedSlots.some((slot) => allSlots.includes(slot))) {
+        return false;
+      }
+
+      if (ageFilterMode === 'single' && String(ageSingle).trim()) {
+        const target = Number(ageSingle);
+        if (!Number.isFinite(target) || !allAges.includes(target)) return false;
+      }
+
+      if (ageFilterMode === 'range') {
+        const min = String(ageMin).trim() === '' ? null : Number(ageMin);
+        const max = String(ageMax).trim() === '' ? null : Number(ageMax);
+        if (min !== null && !Number.isFinite(min)) return false;
+        if (max !== null && !Number.isFinite(max)) return false;
+        if (min !== null || max !== null) {
+          const hasAgeInRange = allAges.some((age) => {
+            if (min !== null && age < min) return false;
+            if (max !== null && age > max) return false;
+            return true;
+          });
+          if (!hasAgeInRange) return false;
+        }
+      }
+
+      return true;
+    });
+  }, [adminItems, genderFilter, selectedCourses, selectedSlots, ageFilterMode, ageSingle, ageMin, ageMax]);
+
+  const hasAnyFilterApplied =
+    Boolean(genderFilter) ||
+    Boolean(String(ageSingle).trim()) ||
+    Boolean(String(ageMin).trim()) ||
+    Boolean(String(ageMax).trim()) ||
+    selectedCourses.length > 0 ||
+    selectedSlots.length > 0;
+
   const adminItemsPerPage = 10;
-  const adminTotalPages = Math.max(1, Math.ceil(adminItems.length / adminItemsPerPage));
+  const adminTotalPages = Math.max(1, Math.ceil(filteredAdminItems.length / adminItemsPerPage));
   const paginatedAdminItems = useMemo(() => {
     const start = (adminPage - 1) * adminItemsPerPage;
-    return adminItems.slice(start, start + adminItemsPerPage);
-  }, [adminItems, adminPage]);
+    return filteredAdminItems.slice(start, start + adminItemsPerPage);
+  }, [filteredAdminItems, adminPage]);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -275,7 +367,7 @@ export default function OnlineCourseRegistration() {
 
   useEffect(() => {
     setAdminPage(1);
-  }, [adminTab]);
+  }, [adminTab, genderFilter, ageFilterMode, ageSingle, ageMin, ageMax, selectedCourses, selectedSlots]);
 
   const onSubmit = async (values) => {
     const enriched = {
@@ -492,42 +584,271 @@ export default function OnlineCourseRegistration() {
             <div className="mb-4 flex items-center justify-between gap-3">
               <h2 className="heading-card">All Registrations</h2>
               <p className="text-xs text-prose-muted">
-                Total: <span className="font-semibold">{adminItems.length}</span>
+                Showing <span className="font-semibold">{filteredAdminItems.length}</span> of{' '}
+                <span className="font-semibold">{adminItems.length}</span>
               </p>
             </div>
-            <div className="space-y-3">
-              {paginatedAdminItems.map((item) => (
-                <article
-                  key={item._id}
-                  className="rounded-xl border border-neutral-200 p-4 dark:border-neutral-700"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-neutral-900 dark:text-neutral-100">
-                        {item.parents?.parent1?.name || 'Parent'} ({item.parents?.parent1?.email || '-'})
-                      </p>
-                      <p className="mt-1 text-sm text-prose-muted">
-                        Children: {Array.isArray(item.children) ? item.children.length : 0} | Country: {item.address?.country || '-'}
-                      </p>
-                      <p className="text-sm text-prose-muted">
-                        Submitted: {item.createdAt ? new Date(item.createdAt).toLocaleString() : '-'}
-                      </p>
-                    </div>
+            <div className="mb-4 rounded-xl border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-700 dark:bg-neutral-800/40">
+              <button
+                type="button"
+                onClick={() => setFiltersExpanded((prev) => !prev)}
+                className="inline-flex items-center gap-2 rounded-lg border border-accent/30 bg-accent/10 px-3 py-2 text-sm font-semibold text-accent dark:border-emerald-500/30 dark:bg-emerald-900/30 dark:text-emerald-200"
+              >
+                {filtersExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                Filters
+              </button>
+              {!filtersExpanded ? (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {genderFilter ? (
                     <button
                       type="button"
-                      onClick={() => setSelectedRegistration(item)}
-                      className="rounded-md bg-sky-100 px-2 py-1 text-xs font-medium text-sky-700 dark:bg-sky-900/40 dark:text-sky-300"
+                      onClick={() => setGenderFilter('')}
+                      className="inline-flex items-center gap-1 rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs text-neutral-700 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200"
                     >
-                      View Details
+                      Gender: {genderFilter}
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  ) : null}
+                  {ageFilterMode === 'single' && String(ageSingle).trim() ? (
+                    <button
+                      type="button"
+                      onClick={() => setAgeSingle('')}
+                      className="inline-flex items-center gap-1 rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs text-neutral-700 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200"
+                    >
+                      Age: {ageSingle}
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  ) : null}
+                  {ageFilterMode === 'range' && (String(ageMin).trim() || String(ageMax).trim()) ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAgeMin('');
+                        setAgeMax('');
+                      }}
+                      className="inline-flex items-center gap-1 rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs text-neutral-700 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200"
+                    >
+                      Age: {ageMin || '-'} to {ageMax || '-'}
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  ) : null}
+                  {selectedCourses.map((course) => (
+                    <button
+                      key={`chip-course-${course}`}
+                      type="button"
+                      onClick={() =>
+                        setSelectedCourses((prev) => prev.filter((value) => value !== course))
+                      }
+                      className="inline-flex items-center gap-1 rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs text-neutral-700 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200"
+                    >
+                      Course: {course}
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  ))}
+                  {selectedSlots.map((slot) => (
+                    <button
+                      key={`chip-slot-${slot}`}
+                      type="button"
+                      onClick={() =>
+                        setSelectedSlots((prev) => prev.filter((value) => value !== slot))
+                      }
+                      className="inline-flex items-center gap-1 rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs text-neutral-700 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200"
+                    >
+                      Slot: {slot}
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  ))}
+                  {!hasAnyFilterApplied ? (
+                    <p className="text-xs text-prose-muted">No filters applied.</p>
+                  ) : null}
+                </div>
+              ) : null}
+              {filtersExpanded ? (
+                <div className="mt-3 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+                  <label className="text-sm">
+                    Gender
+                    <select
+                      className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                      value={genderFilter}
+                      onChange={(e) => setGenderFilter(e.target.value)}
+                    >
+                      <option value="">All</option>
+                      {allGenderOptions.map((gender) => (
+                        <option key={gender} value={gender}>
+                          {gender}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <div className="text-sm">
+                    Age
+                    <div className="mt-1 flex items-center gap-2">
+                      <select
+                        className="w-28 rounded-lg border border-neutral-300 px-2 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                        value={ageFilterMode}
+                        onChange={(e) => setAgeFilterMode(e.target.value)}
+                      >
+                        <option value="range">Range</option>
+                        <option value="single">Single</option>
+                      </select>
+                      {ageFilterMode === 'single' ? (
+                        <input
+                          type="number"
+                          min="1"
+                          className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                          placeholder="Age"
+                          value={ageSingle}
+                          onChange={(e) => setAgeSingle(e.target.value)}
+                        />
+                      ) : (
+                        <>
+                          <input
+                            type="number"
+                            min="1"
+                            className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                            placeholder="Min"
+                            value={ageMin}
+                            onChange={(e) => setAgeMin(e.target.value)}
+                          />
+                          <input
+                            type="number"
+                            min="1"
+                            className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                            placeholder="Max"
+                            value={ageMax}
+                            onChange={(e) => setAgeMax(e.target.value)}
+                          />
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <label className="text-sm">
+                    Courses (multi)
+                    <select
+                      multiple
+                      className="mt-1 h-24 w-full rounded-lg border border-neutral-300 px-2 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                      value={selectedCourses}
+                      onChange={(e) =>
+                        setSelectedCourses(Array.from(e.target.selectedOptions).map((opt) => opt.value))
+                      }
+                    >
+                      {allCourseOptions.map((course) => (
+                        <option key={course} value={course}>
+                          {course}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="text-sm">
+                    Time Slots (multi)
+                    <select
+                      multiple
+                      className="mt-1 h-24 w-full rounded-lg border border-neutral-300 px-2 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                      value={selectedSlots}
+                      onChange={(e) =>
+                        setSelectedSlots(Array.from(e.target.selectedOptions).map((opt) => opt.value))
+                      }
+                    >
+                      {allSlotOptions.map((slot) => (
+                        <option key={slot} value={slot}>
+                          {slot}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <div className="md:col-span-2 lg:col-span-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setGenderFilter('');
+                        setAgeFilterMode('range');
+                        setAgeSingle('');
+                        setAgeMin('');
+                        setAgeMax('');
+                        setSelectedCourses([]);
+                        setSelectedSlots([]);
+                      }}
+                      className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs font-medium text-neutral-700 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200"
+                    >
+                      Clear Filters
                     </button>
                   </div>
-                </article>
-              ))}
-              {!adminItems.length ? (
+                </div>
+              ) : null}
+            </div>
+            <div className="space-y-3">
+              {paginatedAdminItems.map((item) => {
+                const children = Array.isArray(item.children) ? item.children : [];
+                const genders = Array.from(
+                  new Set(children.map((child) => String(child?.gender || '').trim()).filter(Boolean))
+                );
+                const ages = children
+                  .map((child) => Number(child?.age))
+                  .filter((age) => Number.isFinite(age));
+                const ageSummary = ages.length
+                  ? `${Math.min(...ages)}-${Math.max(...ages)}`
+                  : '-';
+                const courseList = Array.from(
+                  new Set(
+                    children.flatMap((child) =>
+                      (child.courses || []).map((course) => String(course?.courseName || '').trim())
+                    ).filter(Boolean)
+                  )
+                );
+                const slotList = Array.from(
+                  new Set(
+                    children.flatMap((child) =>
+                      (child.courses || []).map((course) => String(course?.timeSlotIST || '').trim())
+                    ).filter(Boolean)
+                  )
+                );
+                return (
+                  <article
+                    key={item._id}
+                    className="rounded-xl border border-neutral-200 p-4 dark:border-neutral-700"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-neutral-900 dark:text-neutral-100">
+                          {item.parents?.parent1?.name || 'Parent'} ({item.parents?.parent1?.email || '-'})
+                        </p>
+                        <p className="text-sm text-prose-muted">
+                          Parent 1 Phone: {item.parents?.parent1?.phone || '-'} | Children: {children.length} | Country: {item.address?.country || '-'}
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
+                            Gender: {genders.length ? genders.join(', ') : '-'}
+                          </span>
+                          <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
+                            Age: {ageSummary}
+                          </span>
+                          <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
+                            Courses: {courseList.length ? courseList.join(', ') : '-'}
+                          </span>
+                          <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
+                            Slots: {slotList.length ? slotList.join(', ') : '-'}
+                          </span>
+                        </div>
+                        <p className="mt-2 text-sm text-prose-muted">
+                          Submitted: {item.createdAt ? new Date(item.createdAt).toLocaleString() : '-'}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedRegistration(item)}
+                        className="rounded-md bg-sky-100 px-2 py-1 text-xs font-medium text-sky-700 dark:bg-sky-900/40 dark:text-sky-300"
+                      >
+                        View Details
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+              {!filteredAdminItems.length ? (
                 <p className="text-sm text-prose-muted">No online course registrations yet.</p>
               ) : null}
             </div>
-            {adminItems.length > adminItemsPerPage ? (
+            {filteredAdminItems.length > adminItemsPerPage ? (
               <div className="mt-4 flex items-center justify-between text-xs text-prose-muted">
                 <p>
                   Page {adminPage} of {adminTotalPages}
@@ -721,6 +1042,7 @@ export default function OnlineCourseRegistration() {
                   append({
                     name: '',
                     age: '',
+                    gender: '',
                     dob: '',
                     school: '',
                     class: '',

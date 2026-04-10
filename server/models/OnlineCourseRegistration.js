@@ -13,6 +13,7 @@ const childSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
     age: { type: Number, required: true, min: 1 },
+    gender: { type: String, required: true, trim: true },
     dob: { type: String, required: true, trim: true },
     school: { type: String, required: true, trim: true },
     class: { type: String, required: true, trim: true },

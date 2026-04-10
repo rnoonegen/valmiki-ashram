@@ -100,6 +100,7 @@ function normalizeOnlineCoursePayload(payload = {}) {
     children: children.map((child) => ({
       name: String(child?.name || '').trim(),
       age: Number(child?.age),
+      gender: String(child?.gender || '').trim(),
       dob: String(child?.dob || '').trim(),
       school: String(child?.school || '').trim(),
       class: String(child?.class || '').trim(),
@@ -132,6 +133,7 @@ function validateOnlineCourseRequired(data) {
       !child.name ||
       !Number.isFinite(child.age) ||
       child.age < 1 ||
+      !child.gender ||
       !child.dob ||
       !child.school ||
       !child.class ||
