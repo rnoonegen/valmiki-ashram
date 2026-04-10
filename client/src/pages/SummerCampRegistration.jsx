@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Pencil, Plus, Save, Trash2, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, Pencil, Plus, Save, Trash2, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
@@ -42,6 +42,10 @@ const defaultContent = {
     'A Gurukul-inspired weekly summer camp focused on discipline, confidence, cultural grounding, and joy.',
   formTitle: 'Register Now',
   formNote: '',
+  registrationMode: 'built-in-form',
+  googleFormUrl: '',
+  googleFormButtonLabel: 'Register Now',
+  googleFormHelperText: 'Continue your registration using our secure Google Form.',
   statusMessages: {
     open: {
       title: 'Registrations are currently open',
@@ -171,6 +175,7 @@ export default function SummerCampRegistration() {
   const [adminTab, setAdminTab] = useState('registration-form');
   const [contentEditorStateTab, setContentEditorStateTab] = useState('empty');
   const [stateEditorOpen, setStateEditorOpen] = useState(false);
+  const [adminBuiltInPreviewExpanded, setAdminBuiltInPreviewExpanded] = useState(true);
   const [selectedCampId, setSelectedCampId] = useState('');
   const [selectedAdminCampId, setSelectedAdminCampId] = useState('');
   const [adminRegistrationsPage, setAdminRegistrationsPage] = useState(1);
@@ -189,6 +194,7 @@ export default function SummerCampRegistration() {
         : 'empty';
   const isRegistrationOpen = registrationState === 'open';
   const selectedCamp = registrationCamps.find((c) => c.id === selectedCampId) || null;
+  const isGoogleFormMode = content.registrationMode === 'google-form';
   const statusTemplates = {
     ...defaultContent.statusMessages,
     ...(content.statusMessages || {}),
@@ -242,6 +248,18 @@ export default function SummerCampRegistration() {
     isAdmin && showRegistrationFormTab && contentEditorStateTab !== 'form-blueprint';
   const isAdminBlueprintPreviewOnly =
     isAdmin && showRegistrationFormTab && contentEditorStateTab === 'form-blueprint' && !stateEditorOpen;
+  const adminBlueprintMode =
+    contentEditorStateTab === 'form-blueprint'
+      ? contentEditor?.registrationMode || content.registrationMode || defaultContent.registrationMode
+      : content.registrationMode || defaultContent.registrationMode;
+  const isGoogleBlueprintMode =
+    adminBlueprintMode === 'google-form' || adminBlueprintMode === 'google-form-link';
+  const showAdminBuiltInPreviewControls =
+    isAdmin &&
+    showRegistrationFormTab &&
+    contentEditorStateTab === 'form-blueprint' &&
+    stateEditorOpen &&
+    !isGoogleBlueprintMode;
 
   useEffect(() => {
     if (isAdmin) {
@@ -374,6 +392,13 @@ export default function SummerCampRegistration() {
       subtitle: content.subtitle,
       formTitle: content.formTitle || defaultContent.formTitle,
       formNote: content.formNote || '',
+      registrationMode: content.registrationMode || defaultContent.registrationMode,
+      googleFormUrl: content.googleFormUrl || '',
+      googleFormButtonLabel:
+        content.googleFormButtonLabel && content.googleFormButtonLabel !== 'Open Google Form'
+          ? content.googleFormButtonLabel
+          : defaultContent.googleFormButtonLabel,
+      googleFormHelperText: content.googleFormHelperText || defaultContent.googleFormHelperText,
       openTitle: statusTemplates.open?.title || '',
       openMessage: statusTemplates.open?.message || '',
       openCtaLabel: statusTemplates.open?.ctaLabel || '',
@@ -414,6 +439,13 @@ export default function SummerCampRegistration() {
       subtitle: contentEditor.subtitle,
       formTitle: contentEditor.formTitle || defaultContent.formTitle,
       formNote: contentEditor.formNote || '',
+      registrationMode: contentEditor.registrationMode || defaultContent.registrationMode,
+      googleFormUrl: String(contentEditor.googleFormUrl || '').trim(),
+      googleFormButtonLabel:
+        contentEditor.googleFormButtonLabel && contentEditor.googleFormButtonLabel !== 'Open Google Form'
+          ? contentEditor.googleFormButtonLabel
+          : defaultContent.googleFormButtonLabel,
+      googleFormHelperText: contentEditor.googleFormHelperText || defaultContent.googleFormHelperText,
       statusMessages: {
         open: {
           title: contentEditor.openTitle || '',
@@ -514,7 +546,20 @@ export default function SummerCampRegistration() {
   const openCampEditor = (camp) => {
     setCampEditor(
       camp
-        ? { ...camp, isNew: false }
+        ? {
+            ...camp,
+            ageGuidelinesText: (camp.ageGuidelines || content.ageGuidelines || []).join('\n'),
+            highlightsText: (camp.highlights || content.highlights || []).join('\n'),
+            batchesText: (camp.batches || content.batches || []).join('\n'),
+            pricing: camp.pricing || content.pricing,
+            residencePricing: camp.residencePricing || content.residencePricing,
+            bankName: camp.payment?.bankName || content.payment.bankName,
+            accountHolder: camp.payment?.accountHolder || content.payment.accountHolder,
+            accountNumber: camp.payment?.accountNumber || content.payment.accountNumber,
+            ifsc: camp.payment?.ifsc || content.payment.ifsc,
+            transactionHint: camp.transactionHint || content.transactionHint,
+            isNew: false,
+          }
         : {
             id: `camp-${Date.now()}`,
             title: '',
@@ -522,6 +567,16 @@ export default function SummerCampRegistration() {
             year: '',
             status: 'open',
             note: '',
+            ageGuidelinesText: content.ageGuidelines.join('\n'),
+            highlightsText: content.highlights.join('\n'),
+            batchesText: content.batches.join('\n'),
+            pricing: content.pricing,
+            residencePricing: content.residencePricing,
+            bankName: content.payment.bankName,
+            accountHolder: content.payment.accountHolder,
+            accountNumber: content.payment.accountNumber,
+            ifsc: content.payment.ifsc,
+            transactionHint: content.transactionHint,
             isNew: true,
           }
     );
@@ -537,11 +592,31 @@ export default function SummerCampRegistration() {
       setStatus({ type: 'error', message: 'Camp title, subtitle, and year are required.' });
       return;
     }
+    const normalizedCamp = {
+      id: campEditor.id,
+      title: String(campEditor.title || '').trim(),
+      subtitle: String(campEditor.subtitle || '').trim(),
+      year: String(campEditor.year || '').trim(),
+      status: campEditor.status,
+      note: String(campEditor.note || '').trim(),
+      ageGuidelines: toLines(campEditor.ageGuidelinesText),
+      highlights: toLines(campEditor.highlightsText),
+      batches: toLines(campEditor.batchesText),
+      pricing: String(campEditor.pricing || '').trim(),
+      residencePricing: String(campEditor.residencePricing || '').trim(),
+      payment: {
+        bankName: String(campEditor.bankName || '').trim(),
+        accountHolder: String(campEditor.accountHolder || '').trim(),
+        accountNumber: String(campEditor.accountNumber || '').trim(),
+        ifsc: String(campEditor.ifsc || '').trim(),
+      },
+      transactionHint: String(campEditor.transactionHint || '').trim(),
+    };
     let nextCamps = [...registrationCamps];
     if (campEditor.isNew) {
-      nextCamps = [campEditor, ...nextCamps];
+      nextCamps = [normalizedCamp, ...nextCamps];
     } else {
-      nextCamps = nextCamps.map((c) => (c.id === campEditor.id ? { ...campEditor } : c));
+      nextCamps = nextCamps.map((c) => (c.id === campEditor.id ? normalizedCamp : c));
     }
     const openCount = nextCamps.filter((c) => c.status === 'open').length;
     const upcomingCount = nextCamps.filter((c) => c.status === 'upcoming').length;
@@ -614,6 +689,50 @@ export default function SummerCampRegistration() {
   };
 
   const stripYearFromTitle = (text = '') => String(text).replace(/\s+\d{4}\s*$/, '').trim();
+  const toLines = (value) =>
+    String(value || '')
+      .split('\n')
+      .map((x) => x.trim())
+      .filter(Boolean);
+  const activeBuiltInCamp =
+    isPublic && selectedCamp && selectedCamp.status === 'open'
+      ? selectedCamp
+      : isAdmin
+        ? selectedCamp || openCamp || null
+        : null;
+  const activeCampContent = activeBuiltInCamp
+    ? {
+        ageGuidelines:
+          Array.isArray(activeBuiltInCamp.ageGuidelines) && activeBuiltInCamp.ageGuidelines.length
+            ? activeBuiltInCamp.ageGuidelines
+            : content.ageGuidelines,
+        highlights:
+          Array.isArray(activeBuiltInCamp.highlights) && activeBuiltInCamp.highlights.length
+            ? activeBuiltInCamp.highlights
+            : content.highlights,
+        batches:
+          Array.isArray(activeBuiltInCamp.batches) && activeBuiltInCamp.batches.length
+            ? activeBuiltInCamp.batches
+            : content.batches,
+        pricing: activeBuiltInCamp.pricing || content.pricing,
+        residencePricing: activeBuiltInCamp.residencePricing || content.residencePricing,
+        payment: {
+          bankName: activeBuiltInCamp.payment?.bankName || content.payment.bankName,
+          accountHolder: activeBuiltInCamp.payment?.accountHolder || content.payment.accountHolder,
+          accountNumber: activeBuiltInCamp.payment?.accountNumber || content.payment.accountNumber,
+          ifsc: activeBuiltInCamp.payment?.ifsc || content.payment.ifsc,
+        },
+        transactionHint: activeBuiltInCamp.transactionHint || content.transactionHint,
+      }
+    : {
+        ageGuidelines: content.ageGuidelines,
+        highlights: content.highlights,
+        batches: content.batches,
+        pricing: content.pricing,
+        residencePricing: content.residencePricing,
+        payment: content.payment,
+        transactionHint: content.transactionHint,
+      };
   const campStatusStyle = (state) => {
     if (state === 'open') {
       return 'border-emerald-300 bg-emerald-50/80 dark:border-emerald-700/70 dark:bg-emerald-950/20';
@@ -801,13 +920,36 @@ export default function SummerCampRegistration() {
                   {camp.year ? <p className="mt-1 text-sm text-prose-muted">Year: {camp.year}</p> : null}
                   {camp.note ? <p className="mt-2 text-sm text-prose">{camp.note}</p> : null}
                   {camp.status === 'open' ? (
-                    <button
-                      type="button"
-                      onClick={() => setSelectedCampId(camp.id)}
-                      className="mt-4 inline-flex rounded-lg bg-accent px-4 py-2 text-sm text-white dark:bg-emerald-700"
-                    >
-                      Register
-                    </button>
+                    isGoogleFormMode ? (
+                      content.googleFormUrl ? (
+                        <a
+                          href={content.googleFormUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-4 inline-flex rounded-lg bg-accent px-4 py-2 text-sm text-white dark:bg-emerald-700"
+                        >
+                          {content.googleFormButtonLabel && content.googleFormButtonLabel !== 'Open Google Form'
+                            ? content.googleFormButtonLabel
+                            : defaultContent.googleFormButtonLabel}
+                        </a>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled
+                          className="mt-4 inline-flex rounded-lg bg-neutral-300 px-4 py-2 text-sm text-neutral-700 dark:bg-neutral-700 dark:text-neutral-200"
+                        >
+                          Google Form URL Not Set
+                        </button>
+                      )
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedCampId(camp.id)}
+                        className="mt-4 inline-flex rounded-lg bg-accent px-4 py-2 text-sm text-white dark:bg-emerald-700"
+                      >
+                        Register
+                      </button>
+                    )
                   ) : camp.status === 'upcoming' ? (
                     <p className="mt-4 text-sm font-medium text-sky-800 dark:text-sky-300">Stay tuned. Registration opens soon.</p>
                   ) : (
@@ -934,6 +1076,33 @@ export default function SummerCampRegistration() {
                 </button>
               ))}
             </div>
+            {contentEditorStateTab === 'form-blueprint' && contentEditor ? (
+              <div className="mt-4 rounded-xl border border-neutral-300 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-900/70">
+                <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">Registration Form Mode</p>
+                <div className="mt-3 flex flex-wrap gap-4">
+                  <label className="inline-flex items-center gap-2 text-sm text-neutral-800 dark:text-neutral-200">
+                    <input
+                      type="radio"
+                      name="registrationMode"
+                      value="built-in-form"
+                      checked={(contentEditor.registrationMode || defaultContent.registrationMode) === 'built-in-form'}
+                      onChange={(e) => setContentEditor((p) => ({ ...p, registrationMode: e.target.value }))}
+                    />
+                    Built-in Form
+                  </label>
+                  <label className="inline-flex items-center gap-2 text-sm text-neutral-800 dark:text-neutral-200">
+                    <input
+                      type="radio"
+                      name="registrationMode"
+                      value="google-form"
+                      checked={(contentEditor.registrationMode || defaultContent.registrationMode) === 'google-form'}
+                      onChange={(e) => setContentEditor((p) => ({ ...p, registrationMode: e.target.value }))}
+                    />
+                    Google Form Link
+                  </label>
+                </div>
+              </div>
+            ) : null}
             {contentEditorStateTab !== 'form-blueprint' ? (
               <div className="mt-4 rounded-2xl border border-neutral-300 bg-neutral-50 p-5 dark:border-neutral-700 dark:bg-neutral-900/70">
                 <div className="mb-3 flex items-center justify-between gap-3">
@@ -999,7 +1168,8 @@ export default function SummerCampRegistration() {
                       Open state user flow preview
                     </p>
                     <p className="mt-1 text-emerald-800 dark:text-emerald-100/90">
-                      Users will see an open camp card with a Register button. Clicking Register reveals the form.
+                      Users will see an open camp card with a Register button. Clicking Register reveals
+                      {contentEditor.registrationMode === 'google-form' ? ' the Google Form link.' : ' the built-in form.'}
                     </p>
                   </div>
                 ) : null}
@@ -1092,144 +1262,214 @@ export default function SummerCampRegistration() {
                     </button>
                   </div>
                   <div className="rounded-2xl border border-amber-300 bg-amber-50/80 p-5 dark:border-amber-700/70 dark:bg-amber-950/20">
-                    <h4 className="text-3xl font-bold text-accent dark:text-emerald-200">
-                      {contentEditor.title || defaultContent.title}
-                    </h4>
-                    <p className="mt-2 text-prose">
-                      {contentEditor.subtitle || defaultContent.subtitle}
-                    </p>
-                    <section className="mt-5 grid gap-6 lg:grid-cols-2">
-                      <article className="rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
-                        <h2 className="heading-card">Age Guidelines</h2>
-                        <ul className="mt-3 list-disc space-y-2 pl-5 text-prose marker:text-accent dark:marker:text-emerald-500">
-                          {String(contentEditor.ageGuidelinesText || '').split('\n').map((x) => x.trim()).filter(Boolean).map((line) => (
-                            <li key={line}>{line}</li>
-                          ))}
-                        </ul>
-                      </article>
-                      <article className="rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
-                        <h2 className="heading-card">Batches</h2>
-                        <ul className="mt-3 space-y-2 text-prose">
-                          {String(contentEditor.batchesText || '').split('\n').map((x) => x.trim()).filter(Boolean).map((line) => (
-                            <li key={line} className="rounded-lg bg-neutral-100 px-3 py-2 dark:bg-neutral-800">{line}</li>
-                          ))}
-                        </ul>
-                      </article>
-                    </section>
-                    <div className="mt-6 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
+                    {contentEditor.registrationMode !== 'google-form' ? (
+                      <>
+                        <h4 className="text-3xl font-bold text-accent dark:text-emerald-200">
+                          {contentEditor.title || defaultContent.title}
+                        </h4>
+                        <p className="mt-2 text-prose">
+                          {contentEditor.subtitle || defaultContent.subtitle}
+                        </p>
+                      </>
+                    ) : null}
+                    {contentEditor.registrationMode !== 'google-form' ? (
+                      <section className="mt-5 grid gap-6 lg:grid-cols-2">
+                        <article className="rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
+                          <h2 className="heading-card">Age Guidelines</h2>
+                          <ul className="mt-3 list-disc space-y-2 pl-5 text-prose marker:text-accent dark:marker:text-emerald-500">
+                            {String(contentEditor.ageGuidelinesText || '').split('\n').map((x) => x.trim()).filter(Boolean).map((line) => (
+                              <li key={line}>{line}</li>
+                            ))}
+                          </ul>
+                        </article>
+                        <article className="rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
+                          <h2 className="heading-card">Batches</h2>
+                          <ul className="mt-3 space-y-2 text-prose">
+                            {String(contentEditor.batchesText || '').split('\n').map((x) => x.trim()).filter(Boolean).map((line) => (
+                              <li key={line} className="rounded-lg bg-neutral-100 px-3 py-2 dark:bg-neutral-800">{line}</li>
+                            ))}
+                          </ul>
+                        </article>
+                      </section>
+                    ) : null}
+                    <div
+                      className={
+                        contentEditor.registrationMode === 'google-form'
+                          ? 'mt-6'
+                          : 'mt-6 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-900'
+                      }
+                    >
                       <p className="heading-section">
                         {contentEditor.formTitle || defaultContent.formTitle}
                       </p>
                       {contentEditor.formNote ? (
                         <p className="mt-2 text-sm text-prose-muted">{contentEditor.formNote}</p>
                       ) : null}
-                      <div className="mt-5 grid gap-4 md:grid-cols-2">
-                        <label className="text-sm">Email<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
-                        <label className="text-sm">Name<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
-                        <label className="text-sm">Relationship with child<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
-                        <label className="text-sm">Mobile Number<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
-                        <label className="text-sm">Mother Tongue<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
-                        <label className="text-sm">Country<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
-                        <label className="text-sm">State<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
-                        <label className="text-sm">City/Town<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
-                        <label className="text-sm">Child Name<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
-                        <label className="text-sm">Child Age<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
-                        <label className="text-sm">Gender
-                          <select disabled className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950">
-                            <option value="">Select</option>
-                          </select>
-                        </label>
-                        <label className="text-sm">School Name<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
-                        <label className="text-sm">Current Class/Standard<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
-                        <label className="text-sm">Family Members Staying
-                          <select disabled className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950">
-                            <option value="">Choose</option>
-                          </select>
-                        </label>
-                      </div>
-                      <div className="mt-5">
-                        <p className="mb-2 text-sm font-medium text-neutral-800 dark:text-neutral-200">Which batch are you interested in?</p>
-                        <div className="grid gap-2 md:grid-cols-2">
-                          {String(contentEditor.batchesText || '').split('\n').map((x) => x.trim()).filter(Boolean).map((line) => (
-                            <label key={line} className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 px-3 py-2 text-sm opacity-70 dark:border-neutral-700">
-                              <input type="checkbox" disabled />
-                              {line}
+                      {contentEditor.registrationMode === 'google-form' ? (
+                        <>
+                          <p className="mt-4 text-sm text-prose-muted">
+                            {contentEditor.googleFormHelperText || defaultContent.googleFormHelperText}
+                          </p>
+                          <button
+                            type="button"
+                            disabled
+                            className="mt-4 inline-flex rounded-lg bg-accent px-5 py-2.5 text-sm text-white opacity-60 dark:bg-emerald-700"
+                          >
+                            {contentEditor.googleFormButtonLabel && contentEditor.googleFormButtonLabel !== 'Open Google Form'
+                              ? contentEditor.googleFormButtonLabel
+                              : defaultContent.googleFormButtonLabel}
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <div className="mt-5 grid gap-4 md:grid-cols-2">
+                            <label className="text-sm">Email<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
+                            <label className="text-sm">Name<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
+                            <label className="text-sm">Relationship with child<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
+                            <label className="text-sm">Mobile Number<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
+                            <label className="text-sm">Mother Tongue<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
+                            <label className="text-sm">Country<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
+                            <label className="text-sm">State<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
+                            <label className="text-sm">City/Town<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
+                            <label className="text-sm">Child Name<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
+                            <label className="text-sm">Child Age<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
+                            <label className="text-sm">Gender
+                              <select disabled className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950">
+                                <option value="">Select</option>
+                              </select>
                             </label>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="mt-5 grid gap-4 md:grid-cols-2">
-                        <label className="text-sm">How did you hear about us?
-                          <select disabled className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950">
-                            <option value="">Choose</option>
-                          </select>
-                        </label>
-                        <label className="text-sm">Other Source<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
-                      </div>
-                      <label className="mt-5 block text-sm">Transaction Note
-                        <input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" />
-                      </label>
-                      <label className="mt-4 block text-sm">Payment Screenshot URL (optional)
-                        <input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" />
-                      </label>
-                      <div className="mt-6">
-                        <button
-                          type="button"
-                          disabled
-                          className="inline-flex rounded-lg bg-accent px-5 py-2.5 text-sm text-white opacity-60 dark:bg-emerald-700"
-                        >
-                          Submit Registration
-                        </button>
-                      </div>
+                            <label className="text-sm">School Name<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
+                            <label className="text-sm">Current Class/Standard<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
+                            <label className="text-sm">Family Members Staying
+                              <select disabled className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950">
+                                <option value="">Choose</option>
+                              </select>
+                            </label>
+                          </div>
+                          <div className="mt-5">
+                            <p className="mb-2 text-sm font-medium text-neutral-800 dark:text-neutral-200">Which batch are you interested in?</p>
+                            <div className="grid gap-2 md:grid-cols-2">
+                              {String(contentEditor.batchesText || '').split('\n').map((x) => x.trim()).filter(Boolean).map((line) => (
+                                <label key={line} className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 px-3 py-2 text-sm opacity-70 dark:border-neutral-700">
+                                  <input type="checkbox" disabled />
+                                  {line}
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="mt-5 grid gap-4 md:grid-cols-2">
+                            <label className="text-sm">How did you hear about us?
+                              <select disabled className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950">
+                                <option value="">Choose</option>
+                              </select>
+                            </label>
+                            <label className="text-sm">Other Source<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
+                          </div>
+                          <label className="mt-5 block text-sm">Transaction Note
+                            <input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" />
+                          </label>
+                          <label className="mt-4 block text-sm">Payment Screenshot URL (optional)
+                            <input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" />
+                          </label>
+                          <div className="mt-6">
+                            <button
+                              type="button"
+                              disabled
+                              className="inline-flex rounded-lg bg-accent px-5 py-2.5 text-sm text-white opacity-60 dark:bg-emerald-700"
+                            >
+                              Submit Registration
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
               ) : contentEditorStateTab === 'form-blueprint' ? (
                 <div className="mt-4 border-t border-neutral-200 pt-4 dark:border-neutral-700">
                   <h4 className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">Form Blueprint Content</h4>
-                  <div className="mt-3 grid gap-3 md:grid-cols-2">
-                    <label className="text-sm md:col-span-2">
-                      Title + Year
-                      <input
-                        className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
-                        value={contentEditor.title || ''}
-                        onChange={(e) => setContentEditor((p) => ({ ...p, title: e.target.value }))}
-                      />
-                    </label>
-                    <label className="text-sm md:col-span-2">
-                      Subtitle
-                      <textarea
-                        className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
-                        value={contentEditor.subtitle || ''}
-                        onChange={(e) => setContentEditor((p) => ({ ...p, subtitle: e.target.value }))}
-                      />
-                    </label>
-                  </div>
-                  <div className="mt-3 space-y-3">
-                    <label className="text-sm">Age Guidelines (one per line)
-                      <textarea className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={contentEditor.ageGuidelinesText} onChange={(e) => setContentEditor((p) => ({ ...p, ageGuidelinesText: e.target.value }))} />
-                    </label>
-                    <label className="text-sm">Batches (one per line)
-                      <textarea className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={contentEditor.batchesText} onChange={(e) => setContentEditor((p) => ({ ...p, batchesText: e.target.value }))} />
-                    </label>
-                    <div className="rounded-xl border border-neutral-300 p-4 dark:border-neutral-700">
-                      <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">Register Now Form</p>
-                      <label className="mt-3 block text-sm">
-                        Form Title
+                  {contentEditor.registrationMode !== 'google-form' ? (
+                    <div className="mt-3 grid gap-3 md:grid-cols-2">
+                      <label className="text-sm md:col-span-2">
+                        Title + Year
                         <input
                           className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
-                          value={contentEditor.formTitle || ''}
-                          onChange={(e) => setContentEditor((p) => ({ ...p, formTitle: e.target.value }))}
+                          value={contentEditor.title || ''}
+                          onChange={(e) => setContentEditor((p) => ({ ...p, title: e.target.value }))}
                         />
                       </label>
-                      <label className="mt-3 block text-sm">
-                        Form Subtitle/Note
+                      <label className="text-sm md:col-span-2">
+                        Subtitle
                         <textarea
                           className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
-                          value={contentEditor.formNote || ''}
-                          onChange={(e) => setContentEditor((p) => ({ ...p, formNote: e.target.value }))}
+                          value={contentEditor.subtitle || ''}
+                          onChange={(e) => setContentEditor((p) => ({ ...p, subtitle: e.target.value }))}
                         />
                       </label>
+                    </div>
+                  ) : null}
+                  <div className="mt-3 space-y-3">
+                    {contentEditor.registrationMode !== 'google-form' ? (
+                      <>
+                        <label className="text-sm">Age Guidelines (one per line)
+                          <textarea className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={contentEditor.ageGuidelinesText} onChange={(e) => setContentEditor((p) => ({ ...p, ageGuidelinesText: e.target.value }))} />
+                        </label>
+                        <label className="text-sm">Batches (one per line)
+                          <textarea className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={contentEditor.batchesText} onChange={(e) => setContentEditor((p) => ({ ...p, batchesText: e.target.value }))} />
+                        </label>
+                      </>
+                    ) : null}
+                    <div className="rounded-xl border border-neutral-300 p-4 dark:border-neutral-700">
+                      <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">Register Now Form</p>
+                      {contentEditor.registrationMode !== 'google-form' ? (
+                        <>
+                          <label className="mt-3 block text-sm">
+                            Form Title
+                            <input
+                              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                              value={contentEditor.formTitle || ''}
+                              onChange={(e) => setContentEditor((p) => ({ ...p, formTitle: e.target.value }))}
+                            />
+                          </label>
+                          <label className="mt-3 block text-sm">
+                            Form Subtitle/Note
+                            <textarea
+                              className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                              value={contentEditor.formNote || ''}
+                              onChange={(e) => setContentEditor((p) => ({ ...p, formNote: e.target.value }))}
+                            />
+                          </label>
+                        </>
+                      ) : null}
+                      {contentEditor.registrationMode === 'google-form' ? (
+                        <>
+                          <label className="mt-3 block text-sm">
+                            Google Form URL
+                            <input
+                              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                              value={contentEditor.googleFormUrl || ''}
+                              onChange={(e) => setContentEditor((p) => ({ ...p, googleFormUrl: e.target.value }))}
+                              placeholder="https://forms.gle/..."
+                            />
+                          </label>
+                          <label className="mt-3 block text-sm">
+                            Google Form Button Label
+                            <input
+                              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                              value={contentEditor.googleFormButtonLabel || ''}
+                              onChange={(e) => setContentEditor((p) => ({ ...p, googleFormButtonLabel: e.target.value }))}
+                            />
+                          </label>
+                          <label className="mt-3 block text-sm">
+                            Helper Text
+                            <textarea
+                              className="mt-1 h-16 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                              value={contentEditor.googleFormHelperText || ''}
+                              onChange={(e) => setContentEditor((p) => ({ ...p, googleFormHelperText: e.target.value }))}
+                            />
+                          </label>
+                        </>
+                      ) : null}
                     </div>
                     <div className="flex justify-end">
                       <button
@@ -1259,20 +1499,45 @@ export default function SummerCampRegistration() {
             </div>
           </section>
         ) : null}
+        {showAdminBuiltInPreviewControls ? (
+          <section className="mb-0 rounded-t-2xl rounded-b-none border border-neutral-200 border-b-0 bg-white p-4 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
+            <button
+              type="button"
+              onClick={() => setAdminBuiltInPreviewExpanded((prev) => !prev)}
+              className="inline-flex items-center gap-2 rounded-xl border border-accent/30 bg-accent/10 px-4 py-2 text-sm font-semibold text-accent hover:bg-accent/15 dark:border-emerald-500/30 dark:bg-emerald-900/30 dark:text-emerald-200 dark:hover:bg-emerald-900/40"
+            >
+              {adminBuiltInPreviewExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              Preview
+            </button>
+            {!adminBuiltInPreviewExpanded ? (
+              <div className="mt-3 rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-prose-muted dark:border-neutral-700 dark:bg-neutral-900/70">
+                Preview is collapsed while editing. Click <span className="font-medium">Preview</span> to expand and view the user-facing form.
+              </div>
+            ) : null}
+          </section>
+        ) : null}
         {!isAdminStatePreviewOnly &&
         !isAdminBlueprintPreviewOnly &&
-        !(isPublic && registrationState === 'closed') ? (
-        <section className="grid gap-6 lg:grid-cols-2">
+        (isAdmin
+          ? !isGoogleBlueprintMode && (!showAdminBuiltInPreviewControls || adminBuiltInPreviewExpanded)
+          : (isPublic && !isGoogleFormMode && selectedCamp && selectedCamp.status === 'open')) ? (
+        <section
+          className={`grid gap-6 lg:grid-cols-2 ${
+            showAdminBuiltInPreviewControls
+              ? 'border-x border-neutral-200 bg-white px-4 py-4 dark:border-neutral-700 dark:bg-neutral-900'
+              : ''
+          }`}
+        >
           <article className="rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
             <h2 className="heading-card">Age Guidelines</h2>
             <ul className="mt-3 list-disc space-y-2 pl-5 text-prose marker:text-accent dark:marker:text-emerald-500">
-              {content.ageGuidelines.map((line) => (
+              {activeCampContent.ageGuidelines.map((line) => (
                 <li key={line}>{line}</li>
               ))}
             </ul>
             <h3 className="mt-5 text-lg font-semibold text-accent dark:text-emerald-200">Camp Highlights</h3>
             <ul className="mt-3 list-disc space-y-2 pl-5 text-prose marker:text-accent dark:marker:text-emerald-500">
-              {content.highlights.map((line) => (
+              {activeCampContent.highlights.map((line) => (
                 <li key={line}>{line}</li>
               ))}
             </ul>
@@ -1281,27 +1546,40 @@ export default function SummerCampRegistration() {
           <article className="rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
             <h2 className="heading-card">Batches</h2>
             <ul className="mt-3 space-y-2 text-prose">
-              {content.batches.map((batch) => (
+              {activeCampContent.batches.map((batch) => (
                 <li key={batch} className="rounded-lg bg-neutral-100 px-3 py-2 dark:bg-neutral-800">
                   {batch}
                 </li>
               ))}
             </ul>
-            <p className="mt-5 text-prose">{content.pricing}</p>
-            <p className="mt-2 text-prose">{content.residencePricing}</p>
+            <p className="mt-5 text-prose">{activeCampContent.pricing}</p>
+            <p className="mt-2 text-prose">{activeCampContent.residencePricing}</p>
             <div className="mt-4 rounded-xl border border-primary-muted/60 bg-primary/25 p-4 text-sm dark:border-emerald-800/50 dark:bg-emerald-950/20">
-              <p><span className="font-semibold">Bank Name:</span> {content.payment.bankName}</p>
-              <p><span className="font-semibold">Account Holder:</span> {content.payment.accountHolder}</p>
-              <p><span className="font-semibold">Account Number:</span> {content.payment.accountNumber}</p>
-              <p><span className="font-semibold">IFSC:</span> {content.payment.ifsc}</p>
-              <p className="mt-2"><span className="font-semibold">Transaction Note:</span> {content.transactionHint}</p>
+              <p><span className="font-semibold">Bank Name:</span> {activeCampContent.payment.bankName}</p>
+              <p><span className="font-semibold">Account Holder:</span> {activeCampContent.payment.accountHolder}</p>
+              <p><span className="font-semibold">Account Number:</span> {activeCampContent.payment.accountNumber}</p>
+              <p><span className="font-semibold">IFSC:</span> {activeCampContent.payment.ifsc}</p>
+              <p className="mt-2"><span className="font-semibold">Transaction Note:</span> {activeCampContent.transactionHint}</p>
             </div>
           </article>
         </section>
         ) : null}
 
-        {!isAdminStatePreviewOnly && !isAdminBlueprintPreviewOnly && (isAdmin || (isPublic && selectedCamp && selectedCamp.status === 'open')) ? (
-        <form ref={registrationFormRef} onSubmit={handleSubmit(onSubmit)} className="mt-8 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
+        {!isAdminStatePreviewOnly &&
+        !isAdminBlueprintPreviewOnly &&
+        (isAdmin
+          ? !isGoogleBlueprintMode && (!showAdminBuiltInPreviewControls || adminBuiltInPreviewExpanded)
+          : (isPublic && selectedCamp && selectedCamp.status === 'open' && !isGoogleFormMode)) ? (
+        <form
+          ref={registrationFormRef}
+          onSubmit={handleSubmit(onSubmit)}
+          className={`${
+            showAdminBuiltInPreviewControls
+              ? 'rounded-b-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-900'
+              : 'mt-8 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-900'
+          }`}
+        >
+          <fieldset disabled={isAdmin} className={isAdmin ? 'opacity-90' : ''}>
           <h2 className="heading-section">{content.formTitle || defaultContent.formTitle}</h2>
           {content.formNote ? <p className="mt-2 text-sm text-prose-muted">{content.formNote}</p> : null}
           {isPublic && selectedCamp ? (
@@ -1353,7 +1631,7 @@ export default function SummerCampRegistration() {
           <div className="mt-5">
             <p className="mb-2 text-sm font-medium text-neutral-800 dark:text-neutral-200">Which batch are you interested in?</p>
             <div className="grid gap-2 md:grid-cols-2">
-              {content.batches.map((batch) => {
+              {activeCampContent.batches.map((batch) => {
                 const checked = (watch('interestedBatches') || []).includes(batch);
                 return (
                   <label key={batch} className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 px-3 py-2 text-sm dark:border-neutral-700">
@@ -1388,7 +1666,7 @@ export default function SummerCampRegistration() {
           </div>
 
           <label className="mt-5 block text-sm">Transaction Note
-            <input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" placeholder={content.transactionHint} {...register('transactionNote')} />
+            <input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" placeholder={activeCampContent.transactionHint} {...register('transactionNote')} />
           </label>
           <label className="mt-4 block text-sm">Payment Screenshot URL (optional)
             <input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" placeholder="Paste uploaded payment screenshot link" {...register('paymentScreenshotUrl')} />
@@ -1398,7 +1676,7 @@ export default function SummerCampRegistration() {
             <p className="mt-3 text-sm text-rose-600">Please fill all required fields correctly.</p>
           ) : null}
           <div className="mt-6 flex flex-wrap items-center gap-2">
-            <button type="submit" disabled={isSubmitting || (isPublic && !(selectedCamp && selectedCamp.status === 'open'))} className="inline-flex rounded-lg bg-accent px-5 py-2.5 text-sm text-white disabled:opacity-60 dark:bg-emerald-700">
+            <button type="submit" disabled={isAdmin || isSubmitting || (isPublic && !(selectedCamp && selectedCamp.status === 'open'))} className="inline-flex rounded-lg bg-accent px-5 py-2.5 text-sm text-white disabled:opacity-60 dark:bg-emerald-700">
               {isSubmitting ? 'Submitting...' : 'Submit Registration'}
             </button>
             {isPublic ? (
@@ -1412,6 +1690,7 @@ export default function SummerCampRegistration() {
               </button>
             ) : null}
           </div>
+          </fieldset>
         </form>
         ) : null}
         </>
@@ -1638,6 +1917,76 @@ export default function SummerCampRegistration() {
                   />
                 </label>
               ) : null}
+              <label className="block text-sm">Age Guidelines (one per line)
+                <textarea
+                  className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  value={campEditor.ageGuidelinesText || ''}
+                  onChange={(e) => setCampEditor((p) => ({ ...p, ageGuidelinesText: e.target.value }))}
+                />
+              </label>
+              <label className="block text-sm">Camp Highlights (one per line)
+                <textarea
+                  className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  value={campEditor.highlightsText || ''}
+                  onChange={(e) => setCampEditor((p) => ({ ...p, highlightsText: e.target.value }))}
+                />
+              </label>
+              <label className="block text-sm">Batches (one per line)
+                <textarea
+                  className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  value={campEditor.batchesText || ''}
+                  onChange={(e) => setCampEditor((p) => ({ ...p, batchesText: e.target.value }))}
+                />
+              </label>
+              <label className="block text-sm">Registration Pricing
+                <input
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  value={campEditor.pricing || ''}
+                  onChange={(e) => setCampEditor((p) => ({ ...p, pricing: e.target.value }))}
+                />
+              </label>
+              <label className="block text-sm">Residential Pricing
+                <input
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  value={campEditor.residencePricing || ''}
+                  onChange={(e) => setCampEditor((p) => ({ ...p, residencePricing: e.target.value }))}
+                />
+              </label>
+              <label className="block text-sm">Bank Name
+                <input
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  value={campEditor.bankName || ''}
+                  onChange={(e) => setCampEditor((p) => ({ ...p, bankName: e.target.value }))}
+                />
+              </label>
+              <label className="block text-sm">Account Holder
+                <input
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  value={campEditor.accountHolder || ''}
+                  onChange={(e) => setCampEditor((p) => ({ ...p, accountHolder: e.target.value }))}
+                />
+              </label>
+              <label className="block text-sm">Account Number
+                <input
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  value={campEditor.accountNumber || ''}
+                  onChange={(e) => setCampEditor((p) => ({ ...p, accountNumber: e.target.value }))}
+                />
+              </label>
+              <label className="block text-sm">IFSC
+                <input
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  value={campEditor.ifsc || ''}
+                  onChange={(e) => setCampEditor((p) => ({ ...p, ifsc: e.target.value }))}
+                />
+              </label>
+              <label className="block text-sm">Transaction Note Hint
+                <input
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  value={campEditor.transactionHint || ''}
+                  onChange={(e) => setCampEditor((p) => ({ ...p, transactionHint: e.target.value }))}
+                />
+              </label>
             </div>
             <div className="mt-4 flex gap-2">
               <button type="button" onClick={saveCampEditor} className="inline-flex items-center gap-1 rounded-lg bg-accent px-4 py-2 text-sm text-white dark:bg-emerald-700"><Save className="h-4 w-4" /> Save</button>
