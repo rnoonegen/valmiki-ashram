@@ -177,6 +177,16 @@ export default function Home() {
   const displayPhilosophy =
     display.philosophyContent || defaultPhilosophyContent;
 
+  const whatsappNumberDigits = (
+    process.env.REACT_APP_WHATSAPP_NUMBER || ""
+  ).replace(/\D/g, "");
+  const whatsappChatHref =
+    whatsappNumberDigits.length > 0
+      ? `https://wa.me/${whatsappNumberDigits}?text=${encodeURIComponent(
+          "Hello, I came from the Valmiki Ashram website.",
+        )}`
+      : null;
+
   const saveHomeContent = async (nextContent) => {
     await adminRequest("/api/admin/content/home", {
       method: "PUT",
@@ -348,16 +358,16 @@ export default function Home() {
     await saveHomeContent(next);
   };
 
-  const addPhilosophyImage = async (imageUrl) => {
-    const images = [...(displayPhilosophy.images || [])];
-    images.push(imageUrl);
-    const next = {
-      ...draft,
-      philosophyContent: { ...displayPhilosophy, images },
-    };
-    setDraft(next);
-    await saveHomeContent(next);
-  };
+  // const addPhilosophyImage = async (imageUrl) => {
+  //   const images = [...(displayPhilosophy.images || [])];
+  //   images.push(imageUrl);
+  //   const next = {
+  //     ...draft,
+  //     philosophyContent: { ...displayPhilosophy, images },
+  //   };
+  //   setDraft(next);
+  //   await saveHomeContent(next);
+  // };
 
   const deletePhilosophyImage = async (index) => {
     const images = (displayPhilosophy.images || []).filter(
@@ -471,6 +481,21 @@ export default function Home() {
                 />
                 Join the WhatsApp Community to stay updated
               </motion.a>
+              {whatsappChatHref ? (
+                <motion.a
+                  href={whatsappChatHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="link-app inline-flex items-center gap-2"
+                  {...fade}
+                >
+                  <FaWhatsapp
+                    className="h-5 w-5 shrink-0 text-[#25D366]"
+                    aria-hidden
+                  />
+                  Chat with us on WhatsApp
+                </motion.a>
+              ) : null}
             </div>
           </div>
         </Container>

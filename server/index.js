@@ -9,6 +9,7 @@ const adminRoutes = require('./routes/admin');
 const contentRoutes = require('./routes/content');
 const curriculumRoutes = require('./routes/curriculum');
 const registrationRoutes = require('./routes/registrations');
+const contestsRoutes = require('./routes/contests');
 
 const app = express();
 const server = http.createServer(app);
@@ -38,6 +39,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/curriculum', curriculumRoutes);
 app.use('/api/registrations', registrationRoutes);
+app.use('/api/contests', contestsRoutes);
 
 io.on('connection', (socket) => {
   socket.emit('socket:connected', { id: socket.id, ts: Date.now() });
