@@ -25,6 +25,7 @@ import ValmikiAshram from "../pages/ValmikiAshram";
 import WinterCampRegistration from "../pages/WinterCampRegistration";
 import WinterCamp from "../pages/WinterCamp";
 import WinterCampSchedule from "../pages/WinterCampSchedule";
+import WinterCampDetail from "../pages/WinterCampDetail";
 
 export default function AppRoutes() {
   return (
@@ -37,6 +38,7 @@ export default function AppRoutes() {
         <Route path="gallery" element={<Gallery />} />
         <Route path="programs" element={<Programs />} />
         <Route path="winter-camp" element={<WinterCamp />} />
+        <Route path="winter-camp/:galleryId" element={<WinterCampDetail />} />
         <Route
           path="register/winter-camp"
           element={<WinterCampRegistration />}
@@ -73,6 +75,7 @@ export default function AppRoutes() {
           <Route path="admin/faq" element={<FAQ />} />
           <Route path="admin/programs" element={<Programs />} />
           <Route path="admin/winter-camp" element={<WinterCamp />} />
+          <Route path="admin/winter-camp/:galleryId" element={<WinterCampDetail />} />
           <Route
             path="admin/winter-camp/schedule"
             element={<WinterCampSchedule />}
