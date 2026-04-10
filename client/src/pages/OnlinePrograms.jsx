@@ -145,6 +145,7 @@ function cloneSectionForEditor(section) {
 export default function OnlinePrograms() {
   const location = useLocation();
   const isAdmin = location.pathname === '/admin/online-programs';
+  const registerPath = isAdmin ? '/admin/register/online-course' : '/register/online-course';
   const cms = useLiveContent('online-programs', defaultContent);
   const [draft, setDraft] = useState(defaultContent);
   const [sectionEditor, setSectionEditor] = useState(null);
@@ -312,7 +313,7 @@ export default function OnlinePrograms() {
           </p>
 
           <div className="mt-6 flex flex-wrap gap-3">
-            <Button to="/register/online-course" variant="primary">
+            <Button to={registerPath} variant="primary">
               Register Now
             </Button>
             <Button to="/contact" variant="outline">
@@ -457,7 +458,7 @@ export default function OnlinePrograms() {
               </div>
             </div>
             <div className="mt-5 flex flex-wrap justify-center gap-3">
-              <Button to="/register/online-course" variant="primary">
+              <Button to={registerPath} variant="primary">
                 Register Now
               </Button>
               <Button to="/contact" variant="outline">

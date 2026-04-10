@@ -1,5 +1,6 @@
 const express = require('express');
 const SummerCampRegistration = require('../models/SummerCampRegistration');
+const OnlineCourseRegistration = require('../models/OnlineCourseRegistration');
 const { authRequired } = require('../middleware/auth');
 
 const router = express.Router();
@@ -67,6 +68,85 @@ function validateRequired(data) {
   return '';
 }
 
+function normalizeOnlineCoursePayload(payload = {}) {
+  const parent1 = payload?.parents?.parent1 || {};
+  const parent2 = payload?.parents?.parent2 || {};
+  const address = payload?.address || {};
+  const occupation = payload?.occupation || {};
+  const children = Array.isArray(payload?.children) ? payload.children : [];
+  return {
+    parents: {
+      parent1: {
+        name: String(parent1.name || '').trim(),
+        email: String(parent1.email || '').trim(),
+        phone: String(parent1.phone || '').trim(),
+      },
+      parent2: {
+        name: String(parent2.name || '').trim(),
+        email: String(parent2.email || '').trim(),
+        phone: String(parent2.phone || '').trim(),
+      },
+    },
+    address: {
+      country: String(address.country || '').trim(),
+      city: String(address.city || '').trim(),
+      address: String(address.address || '').trim(),
+      zipcode: String(address.zipcode || '').trim(),
+    },
+    occupation: {
+      role: String(occupation.role || '').trim(),
+      type: String(occupation.type || '').trim(),
+    },
+    children: children.map((child) => ({
+      name: String(child?.name || '').trim(),
+      age: Number(child?.age),
+      gender: String(child?.gender || '').trim(),
+      dob: String(child?.dob || '').trim(),
+      school: String(child?.school || '').trim(),
+      class: String(child?.class || '').trim(),
+      courses: Array.isArray(child?.courses)
+        ? child.courses.map((course) => ({
+            courseName: String(course?.courseName || '').trim(),
+            timeSlotIST: String(course?.timeSlotIST || '').trim(),
+            localTime: String(course?.localTime || '').trim(),
+          }))
+        : [],
+    })),
+  };
+}
+
+function validateOnlineCourseRequired(data) {
+  if (!data.parents.parent1.name || !data.parents.parent1.email || !data.parents.parent1.phone) {
+    return 'Parent 1 details are required.';
+  }
+  if (!data.address.country || !data.address.city || !data.address.address || !data.address.zipcode) {
+    return 'Address details are required.';
+  }
+  if (!data.occupation.role || !data.occupation.type) {
+    return 'Occupation details are required.';
+  }
+  if (!Array.isArray(data.children) || !data.children.length) {
+    return 'At least one child is required.';
+  }
+  const invalidChild = data.children.find(
+    (child) =>
+      !child.name ||
+      !Number.isFinite(child.age) ||
+      child.age < 1 ||
+      !child.gender ||
+      !child.dob ||
+      !child.school ||
+      !child.class ||
+      !Array.isArray(child.courses) ||
+      !child.courses.length ||
+      child.courses.some((course) => !course.courseName || !course.timeSlotIST)
+  );
+  if (invalidChild) {
+    return 'Child details are incomplete.';
+  }
+  return '';
+}
+
 router.post('/summer-camp', async (req, res) => {
   const data = normalizePayload(req.body || {});
   const error = validateRequired(data);
@@ -123,6 +203,21 @@ router.delete('/admin/summer-camp/:id', authRequired, async (req, res) => {
   const io = req.app.get('io');
   io?.emit('registrations:updated', { action: 'deleted', id: String(req.params.id), source: 'admin' });
   return res.json({ ok: true });
+});
+
+router.post('/online-course', async (req, res) => {
+  const data = normalizeOnlineCoursePayload(req.body || {});
+  const error = validateOnlineCourseRequired(data);
+  if (error) {
+    return res.status(400).json({ message: error });
+  }
+  const row = await OnlineCourseRegistration.create(data);
+  return res.status(201).json({ item: row });
+});
+
+router.get('/admin/online-course', authRequired, async (req, res) => {
+  const items = await OnlineCourseRegistration.find({}).sort({ createdAt: -1 }).lean();
+  return res.json({ items });
 });
 
 module.exports = router;

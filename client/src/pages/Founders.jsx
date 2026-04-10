@@ -25,6 +25,9 @@ export default function Founders() {
   const cms = useLiveContent('founders', {});
   const [draft, setDraft] = useState(cms);
   useEffect(() => setDraft(cms), [cms]);
+  const hasUnsavedPhotoChanges =
+    (draft.rameshImage || '') !== (cms.rameshImage || '') ||
+    (draft.swapnaImage || '') !== (cms.swapnaImage || '');
   const rameshImage = cms.rameshImage || imgRamesh;
   const swapnaImage = cms.swapnaImage || imgSwapna;
   const displayRamesh = isAdmin ? draft.rameshImage || imgRamesh : rameshImage;
@@ -176,7 +179,7 @@ export default function Founders() {
           </motion.section>
         </div>
       </Container>
-      {isAdmin ? (
+      {isAdmin && hasUnsavedPhotoChanges ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
           <div className="pointer-events-auto w-full max-w-sm rounded-2xl border border-neutral-200 bg-white p-5 shadow-xl dark:border-neutral-700 dark:bg-neutral-900">
             <p className="mb-4 text-sm text-neutral-600 dark:text-neutral-300">

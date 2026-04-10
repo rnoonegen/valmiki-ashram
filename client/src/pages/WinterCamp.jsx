@@ -415,6 +415,10 @@ const defaultChecklistCampContent = {
   },
 };
 
+const fallbackLegacyContent = {
+  previousGalleries: [],
+};
+
 function buildRemindersClosingBlocks(rawReminders) {
   const merged = {
     ...defaultChecklistCampContent.reminders,
@@ -446,7 +450,14 @@ export default function WinterCamp() {
     batchesCamp: defaultBatchesCampContent,
     highlightsCamp: defaultHighlightsCampContent,
     checklistCamp: defaultChecklistCampContent,
+    previousGalleries: [],
   });
+  const registrationCms = useLiveContent("winter-camp-registration", {
+    registrationCamps: [],
+  });
+  const registrationCamps = Array.isArray(registrationCms?.registrationCamps)
+    ? registrationCms.registrationCamps
+    : [];
   const [draft, setDraft] = useState(cms);
   const [aboutEditor, setAboutEditor] = useState(null);
   const [batchesEditor, setBatchesEditor] = useState(null);
@@ -454,6 +465,8 @@ export default function WinterCamp() {
   const [checklistCategoriesEditor, setChecklistCategoriesEditor] =
     useState(null);
   const [remindersEditor, setRemindersEditor] = useState(null);
+  const [galleryEditor, setGalleryEditor] = useState(null);
+  const [status, setStatus] = useState({ type: "", message: "" });
 
   useEffect(() => setDraft(cms), [cms]);
 
@@ -465,6 +478,15 @@ export default function WinterCamp() {
   };
 
   const display = isAdmin ? draft : cms;
+  const usedRegistrationCampIds = useMemo(
+    () =>
+      new Set(
+        ((display?.previousGalleries || []) || [])
+          .map((gallery) => gallery.registrationCampId)
+          .filter(Boolean)
+      ),
+    [display?.previousGalleries]
+  );
   const aboutCamp = {
     ...defaultAboutCampContent,
     ...(display.aboutCamp || {}),
@@ -526,6 +548,14 @@ export default function WinterCamp() {
         display.checklistCamp?.reminders
       ),
     },
+  };
+
+  const legacyPage = {
+    ...fallbackLegacyContent,
+    ...(display || {}),
+    previousGalleries: Array.isArray(display?.previousGalleries)
+      ? display.previousGalleries
+      : fallbackLegacyContent.previousGalleries,
   };
 
   const openAboutEditor = () => {
@@ -761,6 +791,77 @@ export default function WinterCamp() {
     setDraft(next);
     await saveWinterCampContent(next);
     setRemindersEditor(null);
+  };
+
+  const openGalleryEditor = (index) => {
+    const item = legacyPage.previousGalleries?.[index];
+    setGalleryEditor({
+      index,
+      isNew: !item,
+      id: item?.id || `winter-gallery-${Date.now()}`,
+      registrationCampId: item?.registrationCampId || "",
+      registrationCampYear:
+        item?.registrationCampYear ||
+        registrationCamps.find((camp) => camp.id === item?.registrationCampId)
+          ?.year ||
+        "",
+      title: item?.title || "",
+      description: item?.description || "",
+      longDescription: item?.longDescription || "",
+      contentBlocksText: Array.isArray(item?.contentBlocks)
+        ? item.contentBlocks.join("\n")
+        : "",
+      images: Array.isArray(item?.images) ? item.images : [],
+    });
+  };
+
+  const saveGalleryEditor = async () => {
+    if (!galleryEditor) return;
+    if (galleryEditor.isNew && !galleryEditor.registrationCampId) {
+      setStatus({ type: "error", message: "Please select a winter camp." });
+      return;
+    }
+    if (!String(galleryEditor.title || "").trim()) {
+      setStatus({ type: "error", message: "Gallery title is required." });
+      return;
+    }
+    const galleries = [...(legacyPage.previousGalleries || [])];
+    const item = {
+      id: galleryEditor.id,
+      registrationCampId: galleryEditor.registrationCampId || "",
+      registrationCampYear:
+        galleryEditor.registrationCampYear ||
+        registrationCamps.find((camp) => camp.id === galleryEditor.registrationCampId)
+          ?.year ||
+        "",
+      title: galleryEditor.title.trim(),
+      description: galleryEditor.description.trim(),
+      longDescription: String(galleryEditor.longDescription || "").trim(),
+      contentBlocks: String(galleryEditor.contentBlocksText || "")
+        .split("\n")
+        .map((x) => x.trim())
+        .filter(Boolean),
+      images: galleryEditor.images || [],
+    };
+    if (galleryEditor.isNew) galleries.unshift(item);
+    else galleries[galleryEditor.index] = item;
+    const next = { ...draft, previousGalleries: galleries };
+    setDraft(next);
+    await saveWinterCampContent(next);
+    setStatus({ type: "success", message: "Winter camp gallery updated." });
+    setGalleryEditor(null);
+  };
+
+  const deleteGallery = async (index) => {
+    const next = {
+      ...draft,
+      previousGalleries: (legacyPage.previousGalleries || []).filter(
+        (_, i) => i !== index
+      ),
+    };
+    setDraft(next);
+    await saveWinterCampContent(next);
+    setStatus({ type: "success", message: "Winter camp gallery deleted." });
   };
 
   const renderChecklistEntry = (entry, index) => {
@@ -1298,6 +1399,113 @@ export default function WinterCamp() {
             {content}
           </div>
         </div>
+        <section className="mt-10">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h3 className="text-xl font-semibold text-prose">
+              Previous Winter Camp Galleries
+            </h3>
+            {isAdmin ? (
+              <button
+                type="button"
+                onClick={() => openGalleryEditor()}
+                className="inline-flex items-center gap-1 rounded-full bg-accent px-4 py-2 text-sm text-white dark:bg-emerald-700"
+              >
+                <Plus className="h-4 w-4" /> Add Gallery
+              </button>
+            ) : null}
+          </div>
+          <div className="grid gap-5 md:grid-cols-2">
+            {(legacyPage.previousGalleries || []).map((gallery, index) => {
+              const detailPath = isAdmin
+                ? `/admin/winter-camp/${gallery.id}`
+                : `/winter-camp/${gallery.id}`;
+              const cover = gallery.images?.[0] || "";
+              const stack = (gallery.images || []).slice(1, 3);
+              return (
+                <article
+                  key={gallery.id || index}
+                  className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <Link to={detailPath} className="min-w-0 flex-1">
+                      <h4 className="font-semibold text-accent dark:text-emerald-200">
+                        {gallery.title}
+                      </h4>
+                      <p className="mt-1 text-xs text-prose-muted">
+                        Winter:{" "}
+                        {gallery.registrationCampYear ||
+                          registrationCamps.find(
+                            (camp) => camp.id === gallery.registrationCampId
+                          )?.year ||
+                          "-"}
+                      </p>
+                      <p className="mt-1 text-sm text-prose-muted">
+                        {gallery.description}
+                      </p>
+                    </Link>
+                    {isAdmin ? (
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          onClick={() => openGalleryEditor(index)}
+                          className="rounded-md bg-neutral-100 p-1.5 text-accent dark:bg-neutral-800 dark:text-emerald-200"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteGallery(index)}
+                          className="rounded-md bg-rose-100 p-1.5 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                  <Link to={detailPath} className="mt-3 block">
+                    <div className="relative h-48 rounded-xl bg-neutral-100 p-2 dark:bg-neutral-800">
+                      {stack.map((img, i) => (
+                        <img
+                          key={`${img}-${i}`}
+                          src={img}
+                          alt={`${gallery.title} stacked ${i + 1}`}
+                          className="absolute h-[calc(100%-16px)] w-[calc(100%-16px)] rounded-lg object-cover opacity-60"
+                          style={{
+                            top: 8 + (i + 1) * 6,
+                            left: 8 + (i + 1) * 6,
+                            zIndex: 10 + i,
+                          }}
+                        />
+                      ))}
+                      {cover ? (
+                        <img
+                          src={cover}
+                          alt={gallery.title}
+                          className="relative z-30 h-full w-full rounded-lg object-contain bg-white dark:bg-neutral-900"
+                        />
+                      ) : (
+                        <div className="relative z-30 flex h-full w-full items-center justify-center rounded-lg border border-dashed border-neutral-300 text-sm text-prose-muted dark:border-neutral-600">
+                          No cover image
+                        </div>
+                      )}
+                    </div>
+                  </Link>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+        {status.message ? (
+          <div
+            className={`fixed left-1/2 top-24 z-50 -translate-x-1/2 rounded-lg px-3 py-2 text-sm shadow-lg ${
+              status.type === "error"
+                ? "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
+                : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+            }`}
+          >
+            {status.message}
+          </div>
+        ) : null}
       </Container>
 
       {isAdmin && checklistCategoriesEditor ? (
@@ -2343,6 +2551,163 @@ export default function WinterCamp() {
               <button
                 type="button"
                 onClick={() => setAboutEditor(null)}
+                className="inline-flex items-center gap-1 rounded-lg bg-neutral-200 px-4 py-2 text-sm text-neutral-800 dark:bg-neutral-700 dark:text-neutral-100"
+              >
+                <X className="h-4 w-4" /> Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {galleryEditor ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/40 p-4">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
+            <h3 className="text-lg font-semibold text-accent dark:text-emerald-200">
+              {galleryEditor.isNew ? "Add" : "Edit"} Gallery
+            </h3>
+            <div className="mt-4 space-y-3">
+              {galleryEditor.isNew ? (
+                <label className="block text-sm">
+                  Select Winter Camp
+                  <select
+                    className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                    value={galleryEditor.registrationCampId}
+                    onChange={(e) => {
+                      const selectedCampId = e.target.value;
+                      const selectedCamp = registrationCamps.find(
+                        (camp) => camp.id === selectedCampId
+                      );
+                      setGalleryEditor((p) => ({
+                        ...p,
+                        registrationCampId: selectedCampId,
+                        registrationCampYear: selectedCamp?.year || "",
+                        id: selectedCampId
+                          ? `winter-gallery-${selectedCampId}`
+                          : p.id,
+                        title: selectedCamp?.title || p.title,
+                        description: selectedCamp?.subtitle || p.description,
+                      }));
+                    }}
+                  >
+                    <option value="">Choose winter camp</option>
+                    {registrationCamps.map((camp) => {
+                      const alreadyUsed = usedRegistrationCampIds.has(camp.id);
+                      return (
+                        <option
+                          key={camp.id}
+                          value={camp.id}
+                          disabled={alreadyUsed}
+                        >
+                          {camp.title} {camp.year ? `(${camp.year})` : ""}{" "}
+                          {alreadyUsed ? " - already added" : ""}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </label>
+              ) : null}
+              <label className="block text-sm">
+                Title
+                <input
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  value={galleryEditor.title}
+                  onChange={(e) =>
+                    setGalleryEditor((p) => ({ ...p, title: e.target.value }))
+                  }
+                />
+              </label>
+              <label className="block text-sm">
+                Description
+                <textarea
+                  className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  value={galleryEditor.description}
+                  onChange={(e) =>
+                    setGalleryEditor((p) => ({
+                      ...p,
+                      description: e.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <label className="block text-sm">
+                Detailed Intro
+                <textarea
+                  className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  value={galleryEditor.longDescription}
+                  onChange={(e) =>
+                    setGalleryEditor((p) => ({
+                      ...p,
+                      longDescription: e.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <label className="block text-sm">
+                Content Points (one per line)
+                <textarea
+                  className="mt-1 h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  value={galleryEditor.contentBlocksText}
+                  onChange={(e) =>
+                    setGalleryEditor((p) => ({
+                      ...p,
+                      contentBlocksText: e.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <div>
+                <p className="mb-2 text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                  Gallery Images
+                </p>
+                <ImageUploader
+                  folder="winter-camp"
+                  buttonText="Add Images"
+                  multiple
+                  onUploaded={(asset) =>
+                    setGalleryEditor((p) => ({
+                      ...p,
+                      images: [...(p.images || []), asset.url],
+                    }))
+                  }
+                />
+                {(galleryEditor.images || []).length ? (
+                  <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                    {galleryEditor.images.map((img, i) => (
+                      <div key={`${img}-${i}`} className="relative shrink-0">
+                        <img
+                          src={img}
+                          alt="Gallery preview"
+                          className="h-20 w-36 rounded-lg object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setGalleryEditor((p) => ({
+                              ...p,
+                              images: p.images.filter((_, idx) => idx !== i),
+                            }))
+                          }
+                          className="absolute right-1 top-1 rounded bg-black/60 px-1 text-xs text-white"
+                        >
+                          x
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={saveGalleryEditor}
+                className="inline-flex items-center gap-1 rounded-lg bg-accent px-4 py-2 text-sm text-white dark:bg-emerald-700"
+              >
+                <Save className="h-4 w-4" /> Save
+              </button>
+              <button
+                type="button"
+                onClick={() => setGalleryEditor(null)}
                 className="inline-flex items-center gap-1 rounded-lg bg-neutral-200 px-4 py-2 text-sm text-neutral-800 dark:bg-neutral-700 dark:text-neutral-100"
               >
                 <X className="h-4 w-4" /> Cancel
