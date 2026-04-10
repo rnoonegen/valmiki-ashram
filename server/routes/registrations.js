@@ -1,5 +1,6 @@
 const express = require('express');
 const SummerCampRegistration = require('../models/SummerCampRegistration');
+const WinterCampRegistration = require('../models/WinterCampRegistration');
 const OnlineCourseRegistration = require('../models/OnlineCourseRegistration');
 const { authRequired } = require('../middleware/auth');
 
@@ -197,6 +198,64 @@ router.put('/admin/summer-camp/:id', authRequired, async (req, res) => {
 
 router.delete('/admin/summer-camp/:id', authRequired, async (req, res) => {
   const row = await SummerCampRegistration.findByIdAndDelete(req.params.id).lean();
+  if (!row) {
+    return res.status(404).json({ message: 'Registration not found.' });
+  }
+  const io = req.app.get('io');
+  io?.emit('registrations:updated', { action: 'deleted', id: String(req.params.id), source: 'admin' });
+  return res.json({ ok: true });
+});
+
+router.post('/winter-camp', async (req, res) => {
+  const data = normalizePayload(req.body || {});
+  const error = validateRequired(data);
+  if (error) {
+    return res.status(400).json({ message: error });
+  }
+  const row = await WinterCampRegistration.create(data);
+  const io = req.app.get('io');
+  io?.emit('registrations:updated', { action: 'created', item: row, source: 'public' });
+  return res.status(201).json({ item: row });
+});
+
+router.get('/admin/winter-camp', authRequired, async (req, res) => {
+  const items = await WinterCampRegistration.find({}).sort({ createdAt: -1 }).lean();
+  return res.json({ items });
+});
+
+router.post('/admin/winter-camp', authRequired, async (req, res) => {
+  const data = normalizePayload({ ...(req.body || {}), createdByAdmin: true });
+  const error = validateRequired(data);
+  if (error) {
+    return res.status(400).json({ message: error });
+  }
+  const row = await WinterCampRegistration.create(data);
+  const io = req.app.get('io');
+  io?.emit('registrations:updated', { action: 'created', item: row, source: 'admin' });
+  return res.status(201).json({ item: row });
+});
+
+router.put('/admin/winter-camp/:id', authRequired, async (req, res) => {
+  const data = normalizePayload(req.body || {});
+  const error = validateRequired(data);
+  if (error) {
+    return res.status(400).json({ message: error });
+  }
+  const row = await WinterCampRegistration.findByIdAndUpdate(
+    req.params.id,
+    data,
+    { returnDocument: 'after' }
+  ).lean();
+  if (!row) {
+    return res.status(404).json({ message: 'Registration not found.' });
+  }
+  const io = req.app.get('io');
+  io?.emit('registrations:updated', { action: 'updated', item: row, source: 'admin' });
+  return res.json({ item: row });
+});
+
+router.delete('/admin/winter-camp/:id', authRequired, async (req, res) => {
+  const row = await WinterCampRegistration.findByIdAndDelete(req.params.id).lean();
   if (!row) {
     return res.status(404).json({ message: 'Registration not found.' });
   }

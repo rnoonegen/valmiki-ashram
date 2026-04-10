@@ -36,10 +36,11 @@ const schema = z.object({
   sourceOther: z.string().optional(),
 });
 
-const defaultContent = {
-  title: 'Valmiki Ashram Summer Camp Registration',
+function createDefaultContent(campLabel, campLabelLower) {
+  return {
+  title: `Valmiki Ashram ${campLabel} Registration`,
   subtitle:
-    'A Gurukul-inspired weekly summer camp focused on discipline, confidence, cultural grounding, and joy.',
+    `A Gurukul-inspired weekly ${campLabelLower} focused on discipline, confidence, cultural grounding, and joy.`,
   formTitle: 'Register Now',
   formNote: '',
   registrationMode: 'built-in-form',
@@ -70,7 +71,7 @@ const defaultContent = {
     },
     empty: {
       title: 'No registration is available right now',
-      message: 'A new summer camp registration cycle has not been published yet.',
+      message: `A new ${campLabelLower} registration cycle has not been published yet.`,
       ctaLabel: 'Get in Touch',
       ctaLink: '/contact',
       blocks: [],
@@ -99,8 +100,9 @@ const defaultContent = {
     accountNumber: '60160320009',
     ifsc: 'MAHB0001420',
   },
-  transactionHint: 'Summer Camp - Batch # and Child/Children Name',
+  transactionHint: `${campLabel} - Batch # and Child/Children Name`,
 };
+}
 
 const defaultValues = {
   email: '',
@@ -125,13 +127,22 @@ const defaultValues = {
 };
 const registrationSocket = io(getApiBase(), { autoConnect: true });
 
-export default function SummerCampRegistration() {
+export default function SummerCampRegistration({ variant = 'summer' }) {
+  const isWinterVariant = variant === 'winter';
+  const campLabel = isWinterVariant ? 'Winter Camp' : 'Summer Camp';
+  const campLabelLower = isWinterVariant ? 'winter camp' : 'summer camp';
+  const adminPath = isWinterVariant ? '/admin/register/winter-camp' : '/admin/register/summer-camp';
+  const cmsPageKey = isWinterVariant ? 'winter-camp-registration' : 'summer-camp-registration';
+  const publicRegistrationApi = isWinterVariant ? '/api/registrations/winter-camp' : '/api/registrations/summer-camp';
+  const adminRegistrationsApiBase = isWinterVariant ? '/api/registrations/admin/winter-camp' : '/api/registrations/admin/summer-camp';
+  const adminContentApi = `/api/admin/content/${cmsPageKey}`;
+  const defaultContent = useMemo(() => createDefaultContent(campLabel, campLabelLower), [campLabel, campLabelLower]);
   const location = useLocation();
-  const isAdmin = location.pathname === '/admin/register/summer-camp';
+  const isAdmin = location.pathname === adminPath;
   const isPublic = !isAdmin;
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-  const cms = useLiveContent('summer-camp-registration', defaultContent);
+  const cms = useLiveContent(cmsPageKey, defaultContent);
   const content = useMemo(
     () => ({
       ...defaultContent,
@@ -327,7 +338,7 @@ export default function SummerCampRegistration() {
   const loadAdminItems = async () => {
     if (!isAdmin) return;
     try {
-      const res = await adminRequest('/api/registrations/admin/summer-camp');
+      const res = await adminRequest(adminRegistrationsApiBase);
       setAdminItems(res?.items || []);
     } catch (error) {
       setStatus({ type: 'error', message: error.message || 'Unable to load registrations.' });
@@ -367,11 +378,11 @@ export default function SummerCampRegistration() {
   const onSubmit = async (values) => {
     const submitCamp = selectedCamp && selectedCamp.status === 'open' ? selectedCamp : openCamp;
     if (!submitCamp) {
-      setStatus({ type: 'error', message: 'No open summer camp registration is currently configured.' });
+      setStatus({ type: 'error', message: `No open ${campLabelLower} registration is currently configured.` });
       return;
     }
     try {
-      await apiRequest('/api/registrations/summer-camp', {
+      await apiRequest(publicRegistrationApi, {
         method: 'POST',
         body: JSON.stringify({
           ...values,
@@ -500,7 +511,7 @@ export default function SummerCampRegistration() {
       registrationCamps,
     };
     try {
-      await adminRequest('/api/admin/content/summer-camp-registration', {
+      await adminRequest(adminContentApi, {
         method: 'PUT',
         body: JSON.stringify({ content: payload }),
       });
@@ -625,7 +636,7 @@ export default function SummerCampRegistration() {
       return;
     }
     try {
-      await adminRequest('/api/admin/content/summer-camp-registration', {
+      await adminRequest(adminContentApi, {
         method: 'PUT',
         body: JSON.stringify({ content: { ...content, registrationCamps: nextCamps } }),
       });
@@ -639,7 +650,7 @@ export default function SummerCampRegistration() {
   const deleteCamp = async (campId) => {
     const nextCamps = registrationCamps.filter((c) => c.id !== campId);
     try {
-      await adminRequest('/api/admin/content/summer-camp-registration', {
+      await adminRequest(adminContentApi, {
         method: 'PUT',
         body: JSON.stringify({ content: { ...content, registrationCamps: nextCamps } }),
       });
@@ -660,12 +671,12 @@ export default function SummerCampRegistration() {
     };
     try {
       if (entryEditor._id) {
-        await adminRequest(`/api/registrations/admin/summer-camp/${entryEditor._id}`, {
+        await adminRequest(`${adminRegistrationsApiBase}/${entryEditor._id}`, {
           method: 'PUT',
           body: JSON.stringify(payload),
         });
       } else {
-        await adminRequest('/api/registrations/admin/summer-camp', {
+        await adminRequest(adminRegistrationsApiBase, {
           method: 'POST',
           body: JSON.stringify(payload),
         });
@@ -680,7 +691,7 @@ export default function SummerCampRegistration() {
 
   const deleteEntry = async (id) => {
     try {
-      await adminRequest(`/api/registrations/admin/summer-camp/${id}`, { method: 'DELETE' });
+      await adminRequest(`${adminRegistrationsApiBase}/${id}`, { method: 'DELETE' });
       await loadAdminItems();
       setStatus({ type: 'success', message: 'Registration deleted.' });
     } catch (error) {
@@ -890,7 +901,7 @@ export default function SummerCampRegistration() {
               No registrations available right now
             </h2>
             <p className="mt-3 max-w-3xl text-prose">
-              Get in touch with us and we&apos;ll post updates here when the next summer camp registration opens.
+              {`Get in touch with us and we'll post updates here when the next ${campLabelLower} registration opens.`}
             </p>
             <a
               href="/contact"
@@ -1126,7 +1137,7 @@ export default function SummerCampRegistration() {
                       {previewStateData.title || 'No registrations available right now'}
                     </h2>
                     <p className="mt-3 max-w-3xl text-prose">
-                      {previewStateData.message || 'Get in touch with us and we\'ll post updates here when the next summer camp registration opens.'}
+                      {previewStateData.message || `Get in touch with us and we'll post updates here when the next ${campLabelLower} registration opens.`}
                     </p>
                     <a
                       href={previewStateData.ctaLink || '/contact'}
@@ -1700,13 +1711,6 @@ export default function SummerCampRegistration() {
           <section className="mt-10 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
             <div className="mb-4 flex items-center justify-between gap-3">
               <h2 className="heading-section">Submitted Registrations</h2>
-              <button
-                type="button"
-                onClick={() => openEntryEditor(null)}
-                className="inline-flex items-center gap-1 rounded-full bg-accent px-4 py-2 text-sm text-white dark:bg-emerald-700"
-              >
-                <Plus className="h-4 w-4" /> Add Entry
-              </button>
             </div>
             <div className="mb-4">
               <label className="text-sm">
