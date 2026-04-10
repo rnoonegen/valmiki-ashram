@@ -16,6 +16,7 @@ import Founders from "../pages/Founders";
 import Gallery from "../pages/Gallery";
 import Gurukulam from "../pages/Gurukulam";
 import Home from "../pages/Home";
+import NotFound from "../pages/NotFound";
 import OnlineCourseRegistration from "../pages/OnlineCourseRegistration";
 import OnlinePrograms from "../pages/OnlinePrograms";
 import Programs from "../pages/Programs";
@@ -24,7 +25,6 @@ import SummerCamp from "../pages/SummerCamp";
 import SummerCampDetail from "../pages/SummerCampDetail";
 import SummerCampSchedule from "../pages/SummerCampSchedule";
 import Terms from "../pages/Terms";
-import ValmikiAshram from "../pages/ValmikiAshram";
 import WinterCampRegistration from "../pages/WinterCampRegistration";
 import WinterCamp from "../pages/WinterCamp";
 import WinterCampSchedule from "../pages/WinterCampSchedule";
@@ -37,7 +37,6 @@ export default function AppRoutes() {
         <Route index element={<Home />} />
         <Route path="about" element={<About />} />
         <Route path="founders" element={<Founders />} />
-        <Route path="valmiki-ashram" element={<ValmikiAshram />} />
         <Route path="gallery" element={<Gallery />} />
         <Route path="programs" element={<Programs />} />
         <Route path="winter-camp" element={<WinterCamp />} />
@@ -68,6 +67,7 @@ export default function AppRoutes() {
         <Route path="terms" element={<Terms />} />
         <Route path="winter-camp/schedule" element={<WinterCampSchedule />} />
         <Route path="summer-camp/schedule" element={<SummerCampSchedule />} />
+        <Route path="*" element={<NotFound />} />
         {/* <Route path="nri-summer" element={<NRI Summer Camp />} /> */}
       </Route>
       <Route path="admin-login" element={<AdminLogin />} />
@@ -112,6 +112,7 @@ export default function AppRoutes() {
           <Route path="admin/contests" element={<AdminContests />} />
           <Route path="admin/contests/:contestId" element={<ContestDetails />} />
           <Route path="admin/contests/:contestId/register" element={<ContestRegistration />} />
+          <Route path="admin/*" element={<NotFound />} />
         </Route>
       </Route>
     </Routes>

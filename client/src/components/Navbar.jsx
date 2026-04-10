@@ -15,7 +15,6 @@ import ThemeToggle from './ThemeToggle';
 const aboutItems = [
   { to: '/about', label: 'Overview', end: true },
   { to: '/founders', label: 'Founders' },
-  { to: '/valmiki-ashram', label: 'Valmiki Ashram' },
 ];
 
 const programItems = [

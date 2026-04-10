@@ -219,7 +219,7 @@ export default function Admission() {
                   <li key={point}>{point}</li>
                 ))}
               </ul>
-              <div className="mt-5">
+              <div className="mt-auto pt-5">
                 <Link
                   to={card.to}
                   className="inline-flex rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover:bg-accent-light dark:bg-emerald-700 dark:hover:bg-emerald-600"
