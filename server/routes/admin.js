@@ -5,6 +5,8 @@ const { ADMIN_PASSWORD, ADMIN_USERNAME } = require('../config/admin');
 const { authRequired } = require('../middleware/auth');
 const PageContent = require('../models/PageContent');
 const MediaAsset = require('../models/MediaAsset');
+const Contest = require('../models/Contest');
+const ContestRegistration = require('../models/ContestRegistration');
 const { uploadImage, deleteImage } = require('../services/s3');
 
 const router = express.Router();
@@ -204,6 +206,89 @@ router.delete('/media/:id', authRequired, async (req, res) => {
 router.get('/gallery-assets', authRequired, async (req, res) => {
   const assets = await MediaAsset.find({ folder: 'gallery' }).sort({ createdAt: -1 }).lean();
   return res.json({ items: assets });
+});
+
+router.get('/contests', authRequired, async (req, res) => {
+  const items = await Contest.find({})
+    .sort({ createdAt: -1 })
+    .lean();
+
+  const ids = items.map((item) => item._id);
+  const counts = await ContestRegistration.aggregate([
+    { $match: { contest: { $in: ids } } },
+    { $group: { _id: '$contest', count: { $sum: 1 } } },
+  ]);
+  const countMap = new Map(counts.map((row) => [String(row._id), row.count]));
+  const withCounts = items.map((item) => ({
+    ...item,
+    registrationCount: countMap.get(String(item._id)) || 0,
+  }));
+
+  return res.json({ items: withCounts });
+});
+
+router.get('/contests/:id', authRequired, async (req, res) => {
+  const contest = await Contest.findById(req.params.id).lean();
+  if (!contest) return res.status(404).json({ message: 'Contest not found' });
+  return res.json({ contest });
+});
+
+router.post('/contests', authRequired, async (req, res) => {
+  const body = req.body || {};
+  const title = String(body.title || '').trim();
+  if (!title) return res.status(400).json({ message: 'Title is required' });
+
+  const contest = await Contest.create({
+    title,
+    description: body.description || '',
+    submitDate: body.submitDate || null,
+    resultDate: body.resultDate || null,
+    heroImages: Array.isArray(body.heroImages) ? body.heroImages : [],
+    heroVideoLinks: Array.isArray(body.heroVideoLinks) ? body.heroVideoLinks : [],
+    registerButtonText: body.registerButtonText || 'Register Now',
+    registerMode: body.registerMode === 'google' ? 'google' : 'internal',
+    googleFormUrl: body.googleFormUrl || '',
+    sections: Array.isArray(body.sections) ? body.sections : [],
+    isPublished: body.isPublished !== false,
+    updatedBy: req.admin?.username || 'admin',
+  });
+
+  return res.status(201).json({ contest });
+});
+
+router.put('/contests/:id', authRequired, async (req, res) => {
+  const body = req.body || {};
+  const contest = await Contest.findById(req.params.id);
+  if (!contest) return res.status(404).json({ message: 'Contest not found' });
+
+  const nextTitle = String(body.title || contest.title).trim();
+  if (!nextTitle) return res.status(400).json({ message: 'Title is required' });
+
+  contest.title = nextTitle;
+  contest.description = body.description || '';
+  contest.submitDate = body.submitDate || null;
+  contest.resultDate = body.resultDate || null;
+  contest.heroImages = Array.isArray(body.heroImages) ? body.heroImages : [];
+  contest.heroVideoLinks = Array.isArray(body.heroVideoLinks) ? body.heroVideoLinks : [];
+  contest.registerButtonText = body.registerButtonText || 'Register Now';
+  contest.registerMode = body.registerMode === 'google' ? 'google' : 'internal';
+  contest.googleFormUrl = body.googleFormUrl || '';
+  contest.sections = Array.isArray(body.sections) ? body.sections : [];
+  contest.isPublished = body.isPublished !== false;
+  contest.updatedBy = req.admin?.username || 'admin';
+  await contest.save();
+
+  return res.json({ contest });
+});
+
+router.get('/contests/:id/registrations', authRequired, async (req, res) => {
+  const contest = await Contest.findById(req.params.id).lean();
+  if (!contest) return res.status(404).json({ message: 'Contest not found' });
+
+  const items = await ContestRegistration.find({ contest: contest._id })
+    .sort({ createdAt: -1 })
+    .lean();
+  return res.json({ contest: { id: contest._id, title: contest.title }, items });
 });
 
 module.exports = router;

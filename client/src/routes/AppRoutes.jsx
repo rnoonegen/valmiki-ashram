@@ -4,7 +4,10 @@ import Layout from "../components/Layout";
 import About from "../pages/About";
 import Admission from "../pages/Admission";
 import AdminLogin from "../pages/AdminLogin";
+import AdminContests from "../pages/AdminContests";
 import ContactUs from "../pages/ContactUs";
+import ContestDetails from "../pages/ContestDetails";
+import ContestRegistration from "../pages/ContestRegistration";
 import Contests from "../pages/Contests";
 import Curriculum from "../pages/Curriculum";
 import FAQ from "../pages/FAQ";
@@ -52,6 +55,8 @@ export default function AppRoutes() {
         <Route path="gurukulam" element={<Gurukulam />} />
         <Route path="admission" element={<Admission />} />
         <Route path="contests" element={<Contests />} />
+        <Route path="contests/:contestId" element={<ContestDetails />} />
+        <Route path="contests/:contestId/register" element={<ContestRegistration />} />
         <Route path="curriculum" element={<Curriculum />} />
         <Route path="contact" element={<ContactUs />} />
         <Route path="faq" element={<FAQ />} />
@@ -89,6 +94,9 @@ export default function AppRoutes() {
             element={<SummerCampRegistration />}
           />
           <Route path="admin/curriculum" element={<Curriculum />} />
+          <Route path="admin/contests" element={<AdminContests />} />
+          <Route path="admin/contests/:contestId" element={<ContestDetails />} />
+          <Route path="admin/contests/:contestId/register" element={<ContestRegistration />} />
         </Route>
       </Route>
     </Routes>

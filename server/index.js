@@ -8,6 +8,7 @@ const connectMongoDB = require('./utils/db');
 const adminRoutes = require('./routes/admin');
 const contentRoutes = require('./routes/content');
 const curriculumRoutes = require('./routes/curriculum');
+const contestsRoutes = require('./routes/contests');
 
 const app = express();
 const server = http.createServer(app);
@@ -36,6 +37,7 @@ app.get('/', (req, res) => {
 app.use('/api/admin', adminRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/curriculum', curriculumRoutes);
+app.use('/api/contests', contestsRoutes);
 
 io.on('connection', (socket) => {
   socket.emit('socket:connected', { id: socket.id, ts: Date.now() });
