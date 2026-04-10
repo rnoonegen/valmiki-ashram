@@ -89,6 +89,10 @@ export default function AppRoutes() {
           />
           <Route path="admin/online-programs" element={<OnlinePrograms />} />
           <Route
+            path="admin/register/online-course"
+            element={<OnlineCourseRegistration />}
+          />
+          <Route
             path="admin/register/summer-camp"
             element={<SummerCampRegistration />}
           />

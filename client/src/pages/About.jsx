@@ -63,6 +63,9 @@ export default function About() {
   const cms = useLiveContent('about', {});
   const [draft, setDraft] = useState(cms);
   useEffect(() => setDraft(cms), [cms]);
+  const hasUnsavedPhotoChanges =
+    (draft.founderImage1 || '') !== (cms.founderImage1 || '') ||
+    (draft.founderImage2 || '') !== (cms.founderImage2 || '');
   const founderOne = cms.founderImage1 || founderImg;
   const founderTwo = cms.founderImage2 || founderImg2;
   const displayOne = isAdmin ? draft.founderImage1 || founderImg : founderOne;
@@ -215,7 +218,7 @@ export default function About() {
           </div>
         </Container>
       </section>
-      {isAdmin ? (
+      {isAdmin && hasUnsavedPhotoChanges ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
           <div className="pointer-events-auto w-full max-w-sm rounded-2xl border border-neutral-200 bg-white p-5 shadow-xl dark:border-neutral-700 dark:bg-neutral-900">
             <p className="mb-4 text-sm text-neutral-600 dark:text-neutral-300">

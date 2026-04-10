@@ -115,7 +115,6 @@ const defaultValues = {
   source: '',
   sourceOther: '',
 };
-const USER_REG_HISTORY_KEY = 'summer-camp-registrations-history-v1';
 const registrationSocket = io(getApiBase(), { autoConnect: true });
 
 export default function SummerCampRegistration() {
@@ -169,16 +168,6 @@ export default function SummerCampRegistration() {
   const [selectedAdminCampId, setSelectedAdminCampId] = useState('');
   const [adminRegistrationsPage, setAdminRegistrationsPage] = useState(1);
   const [campHistoryPage, setCampHistoryPage] = useState(1);
-  const [userRegistrationHistory, setUserRegistrationHistory] = useState(() => {
-    try {
-      if (typeof window === 'undefined') return [];
-      const raw = window.localStorage.getItem(USER_REG_HISTORY_KEY);
-      const parsed = raw ? JSON.parse(raw) : [];
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (_error) {
-      return [];
-    }
-  });
   const registrationFormRef = useRef(null);
   const source = watch('source');
   const registrationCamps = Array.isArray(content.registrationCamps) ? content.registrationCamps : [];
@@ -278,15 +267,6 @@ export default function SummerCampRegistration() {
   }, [status.message]);
 
   useEffect(() => {
-    try {
-      if (typeof window === 'undefined') return;
-      window.localStorage.setItem(USER_REG_HISTORY_KEY, JSON.stringify(userRegistrationHistory));
-    } catch (_error) {
-      // Ignore storage failures silently.
-    }
-  }, [userRegistrationHistory]);
-
-  useEffect(() => {
     if (!showCampHistoryTab) return;
     const hasSelected = registrationCamps.some((camp) => camp.id === selectedAdminCampId);
     if (hasSelected) return;
@@ -374,19 +354,6 @@ export default function SummerCampRegistration() {
           registrationCampTitle: submitCamp.title,
         }),
       });
-      setUserRegistrationHistory((prev) => [
-        {
-          id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-          registrationCampId: submitCamp.id,
-          registrationCampTitle: submitCamp.title,
-          registrationCampYear: submitCamp.year || '',
-          childName: values.childName,
-          guardianName: values.guardianName,
-          mobileNumber: values.mobileNumber,
-          createdAt: new Date().toISOString(),
-        },
-        ...prev.filter((item) => item.registrationCampId !== submitCamp.id || item.childName !== values.childName).slice(0, 19),
-      ]);
       setStatus({ type: 'success', message: 'Registration submitted successfully.' });
       reset(defaultValues);
     } catch (error) {
@@ -702,32 +669,6 @@ export default function SummerCampRegistration() {
             </div>
             <p className="mt-3 max-w-4xl text-prose">{content.subtitle}</p>
           </header>
-        ) : null}
-
-        {isPublic && userRegistrationHistory.length ? (
-          <section className="mb-8 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
-            <h2 className="heading-card">Your Registered Camps</h2>
-            <p className="mt-2 text-xs text-prose-muted">
-              Saved on this device for quick reference.
-            </p>
-            <div className="mt-4 space-y-3">
-              {userRegistrationHistory.map((item) => (
-                <article key={item.id} className="rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
-                  <p className="font-semibold text-neutral-900 dark:text-neutral-100">{item.registrationCampTitle || 'Summer Camp Registration'}</p>
-                  <p className="mt-1 text-sm text-prose-muted">
-                    Summer: {item.registrationCampYear || registrationCamps.find((camp) => camp.id === item.registrationCampId)?.year || (String(item.registrationCampTitle || '').match(/\b\d{4}\b/)?.[0] || '-')}
-                  </p>
-                  <p className="mt-1 text-sm text-prose-muted">
-                    Child: {item.childName || '-'} | Guardian: {item.guardianName || '-'}
-                  </p>
-                  <p className="text-sm text-prose-muted">Mobile: {item.mobileNumber || '-'}</p>
-                  <p className="mt-1 text-xs text-prose-muted">
-                    Submitted: {item.createdAt ? new Date(item.createdAt).toLocaleString() : '-'}
-                  </p>
-                </article>
-              ))}
-            </div>
-          </section>
         ) : null}
 
         {showAddCampTab ? (
