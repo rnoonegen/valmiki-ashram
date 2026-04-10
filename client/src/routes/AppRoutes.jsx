@@ -74,6 +74,7 @@ export default function AppRoutes() {
           <Route path="admin/gallery" element={<Gallery />} />
           <Route path="admin/faq" element={<FAQ />} />
           <Route path="admin/programs" element={<Programs />} />
+          <Route path="admin/admission" element={<Admission />} />
           <Route path="admin/winter-camp" element={<WinterCamp />} />
           <Route path="admin/winter-camp/:galleryId" element={<WinterCampDetail />} />
           <Route
