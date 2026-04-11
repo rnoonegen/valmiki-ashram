@@ -114,7 +114,7 @@ export default function ContestDetails() {
     <PageFade>
       <Container className="py-12 md:py-16">
         {loading ? <p className="text-prose-muted">Loading contest...</p> : null}
-        {!loading && error ? <p className="text-rose-600">{error}</p> : null}
+        {!loading && error ? <p className="text-rose-600 dark:text-rose-400">{error}</p> : null}
         {!loading && !error && contest ? (
           <div className="space-y-10">
             <header className="rounded-2xl border border-neutral-200 bg-white/90 p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-900/90">
@@ -128,24 +128,45 @@ export default function ContestDetails() {
                 {contest.submitDate ? <p>Submit Date: {new Date(contest.submitDate).toLocaleDateString()}</p> : null}
                 {contest.resultDate ? <p>Result Date: {new Date(contest.resultDate).toLocaleDateString()}</p> : null}
               </div>
-              <div className="mt-4">
-                {contest.registerMode === 'google' ? (
-                  <a
-                    href={contest.googleFormUrl || '#'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex rounded-lg bg-accent px-5 py-2.5 text-white hover:opacity-90 dark:bg-emerald-700"
-                  >
-                    {contest.registerButtonText || 'Register Now'}
-                  </a>
-                ) : (
-                  <Link
-                    to={registerPath}
-                    className="inline-flex rounded-lg bg-accent px-5 py-2.5 text-white hover:opacity-90 dark:bg-emerald-700"
-                  >
-                    {contest.registerButtonText || 'Register Now'}
-                  </Link>
-                )}
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+                {contest.registrationOpen === false ? (
+                  <p className="text-sm font-medium text-amber-800 dark:text-amber-200">Registration is closed.</p>
+                ) : null}
+                <div>
+                  {contest.registerMode === 'google' ? (
+                    contest.registrationOpen !== false ? (
+                      <a
+                        href={contest.googleFormUrl || '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex rounded-lg bg-accent px-5 py-2.5 text-white hover:opacity-90 dark:bg-emerald-700"
+                      >
+                        {contest.registerButtonText || 'Register Now'}
+                      </a>
+                    ) : (
+                      <span
+                        aria-disabled="true"
+                        className="inline-flex cursor-not-allowed rounded-lg bg-neutral-400 px-5 py-2.5 text-white opacity-90 dark:bg-neutral-600"
+                      >
+                        {contest.registerButtonText || 'Register Now'}
+                      </span>
+                    )
+                  ) : contest.registrationOpen !== false ? (
+                    <Link
+                      to={registerPath}
+                      className="inline-flex rounded-lg bg-accent px-5 py-2.5 text-white hover:opacity-90 dark:bg-emerald-700"
+                    >
+                      {contest.registerButtonText || 'Register Now'}
+                    </Link>
+                  ) : (
+                    <span
+                      aria-disabled="true"
+                      className="inline-flex cursor-not-allowed rounded-lg bg-neutral-400 px-5 py-2.5 text-white opacity-90 dark:bg-neutral-600"
+                    >
+                      {contest.registerButtonText || 'Register Now'}
+                    </span>
+                  )}
+                </div>
               </div>
             </header>
 
