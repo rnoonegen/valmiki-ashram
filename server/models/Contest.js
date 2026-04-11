@@ -33,7 +33,7 @@ const contestSchema = new mongoose.Schema(
     },
     googleFormUrl: { type: String, default: '' },
     sections: [sectionSchema],
-    isPublished: { type: Boolean, default: true },
+    registrationOpen: { type: Boolean, default: true },
     updatedBy: { type: String, default: 'admin' },
   },
   { timestamps: true }

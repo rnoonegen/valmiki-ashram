@@ -37,6 +37,8 @@ export default function ContestRegistration() {
     [contest]
   );
 
+  const registrationOpen = contest?.registrationOpen !== false;
+
   const togglePlatform = (value) => {
     setForm((prev) => {
       const exists = prev.socialPlatforms.includes(value);
@@ -78,12 +80,16 @@ export default function ContestRegistration() {
     <PageFade>
       <Container className="py-12 md:py-16">
         {loading ? <p className="text-prose-muted">Loading registration form...</p> : null}
-        {!loading && error ? <p className="text-rose-600">{error}</p> : null}
+        {!loading && error ? <p className="text-rose-600 dark:text-rose-400">{error}</p> : null}
         {!loading && contest ? (
           <div className="mx-auto max-w-3xl rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
-            <h1 className="heading-page">{contest.title} Registration</h1>
-            {useGoogle ? (
-              <div className="mt-5 space-y-3">
+            <h1 className="heading-page border-b border-neutral-200 pb-5 dark:border-neutral-700">{contest.title}</h1>
+            {!registrationOpen ? (
+              <p className="mt-6 text-sm font-medium text-amber-800 dark:text-amber-200">
+                Registration is closed for this contest. You cannot submit a form at this time.
+              </p>
+            ) : useGoogle ? (
+              <div className="mt-6 space-y-3">
                 <p className="text-prose">This contest uses Google Form registration.</p>
                 <a
                   href={contest.googleFormUrl}
@@ -99,7 +105,7 @@ export default function ContestRegistration() {
                 <input
                   required
                   placeholder="Full Name"
-                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:[color-scheme:dark]"
                   value={form.fullName}
                   onChange={(e) => setForm((p) => ({ ...p, fullName: e.target.value }))}
                 />
@@ -107,30 +113,30 @@ export default function ContestRegistration() {
                   required
                   type="email"
                   placeholder="Email"
-                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:[color-scheme:dark]"
                   value={form.email}
                   onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
                 />
                 <input
                   required
                   placeholder="Mobile Number"
-                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:[color-scheme:dark]"
                   value={form.mobileNumber}
                   onChange={(e) => setForm((p) => ({ ...p, mobileNumber: e.target.value }))}
                 />
-                <label className="block text-sm">
+                <label className="block text-sm text-neutral-800 dark:text-neutral-200">
                   <input
                     type="checkbox"
-                    className="mr-2"
+                    className="mr-2 accent-accent dark:accent-emerald-500"
                     checked={form.watchedRulesVideo}
                     onChange={(e) => setForm((p) => ({ ...p, watchedRulesVideo: e.target.checked }))}
                   />
                   Have you watched the official contest rules video?
                 </label>
-                <label className="block text-sm">
+                <label className="block text-sm text-neutral-800 dark:text-neutral-200">
                   <input
                     type="checkbox"
-                    className="mr-2"
+                    className="mr-2 accent-accent dark:accent-emerald-500"
                     checked={form.joinedArattaiCommunity}
                     onChange={(e) => setForm((p) => ({ ...p, joinedArattaiCommunity: e.target.checked }))}
                   />
@@ -139,18 +145,18 @@ export default function ContestRegistration() {
                 <input
                   required
                   placeholder="Short video link"
-                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:[color-scheme:dark]"
                   value={form.shortVideoLink}
                   onChange={(e) => setForm((p) => ({ ...p, shortVideoLink: e.target.value }))}
                 />
                 <div>
-                  <p className="mb-2 text-sm font-medium">Social media platforms</p>
+                  <p className="mb-2 text-sm font-medium text-neutral-800 dark:text-neutral-200">Social media platforms</p>
                   <div className="grid gap-2 sm:grid-cols-2">
                     {platformOptions.map((item) => (
-                      <label key={item} className="text-sm">
+                      <label key={item} className="text-sm text-neutral-800 dark:text-neutral-200">
                         <input
                           type="checkbox"
-                          className="mr-2"
+                          className="mr-2 accent-accent dark:accent-emerald-500"
                           checked={form.socialPlatforms.includes(item)}
                           onChange={() => togglePlatform(item)}
                         />
@@ -162,12 +168,14 @@ export default function ContestRegistration() {
                 <textarea
                   placeholder="Brief summary of your strategy"
                   rows={5}
-                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:[color-scheme:dark]"
                   value={form.strategySummary}
                   onChange={(e) => setForm((p) => ({ ...p, strategySummary: e.target.value }))}
                 />
-                {message ? <p className="text-sm text-emerald-600">{message}</p> : null}
-                {error ? <p className="text-sm text-rose-600">{error}</p> : null}
+                {message ? (
+                  <p className="text-sm text-emerald-600 dark:text-emerald-400">{message}</p>
+                ) : null}
+                {error ? <p className="text-sm text-rose-600 dark:text-rose-400">{error}</p> : null}
                 <button
                   type="submit"
                   className="rounded-lg bg-accent px-4 py-2 text-white hover:opacity-90 dark:bg-emerald-700"

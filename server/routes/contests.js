@@ -1,29 +1,35 @@
 const express = require('express');
 const Contest = require('../models/Contest');
 const ContestRegistration = require('../models/ContestRegistration');
+const { isRegistrationOpen, attachRegistrationOpen } = require('../utils/contestRegistrationOpen');
 
 const router = express.Router();
 
 router.get('/', async (req, res) => {
-  const items = await Contest.find({ isPublished: true })
+  const items = await Contest.find({})
     .sort({ createdAt: -1 })
-    .select('title description submitDate resultDate heroImages registerMode registerButtonText createdAt')
+    .select(
+      'title description submitDate resultDate heroImages registerMode registerButtonText createdAt registrationOpen isPublished'
+    )
     .lean();
-  return res.json({ items });
+  return res.json({ items: items.map((item) => attachRegistrationOpen(item)) });
 });
 
 router.get('/:id', async (req, res) => {
-  const contest = await Contest.findOne({ _id: req.params.id, isPublished: true }).lean();
+  const contest = await Contest.findById(req.params.id).lean();
   if (!contest) {
     return res.status(404).json({ message: 'Contest not found' });
   }
-  return res.json({ contest });
+  return res.json({ contest: attachRegistrationOpen(contest) });
 });
 
 router.post('/:id/register', async (req, res) => {
-  const contest = await Contest.findOne({ _id: req.params.id, isPublished: true });
+  const contest = await Contest.findById(req.params.id);
   if (!contest) {
     return res.status(404).json({ message: 'Contest not found' });
+  }
+  if (!isRegistrationOpen(contest)) {
+    return res.status(403).json({ message: 'Registration is closed for this contest.' });
   }
   if (contest.registerMode !== 'internal') {
     return res.status(400).json({ message: 'This contest uses external registration.' });
