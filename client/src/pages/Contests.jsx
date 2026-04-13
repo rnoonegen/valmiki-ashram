@@ -68,7 +68,11 @@ export default function Contests() {
                       <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-900 dark:bg-amber-950/50 dark:text-amber-200">
                         Registration closed
                       </span>
-                    ) : null}
+                    ) : (
+                      <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200">
+                        Registration open
+                      </span>
+                    )}
                   </div>
                   <div className="mt-2 min-w-0 space-y-1 text-sm text-prose-muted">
                     {contest.submitDate ? (
