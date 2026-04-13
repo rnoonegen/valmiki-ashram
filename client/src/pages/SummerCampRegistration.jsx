@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronDown, ChevronUp, Pencil, Plus, Save, Trash2, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, Pencil, Plus, Save, Trash2, Upload, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useFieldArray, useForm } from 'react-hook-form';
 import { useLocation } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import { z } from 'zod';
@@ -15,21 +15,33 @@ import { COUNTRY_OPTIONS } from '../data/registrationOptions';
 import useLiveContent from '../hooks/useLiveContent';
 
 const schema = z.object({
-  email: z.string().email('Enter a valid email'),
-  guardianName: z.string().min(1, 'Name is required'),
+  parentEmail: z.string().email('Enter a valid email'),
+  parentName: z.string().min(1, 'Parent name is required'),
   relationship: z.string().min(1, 'Relationship is required'),
   mobileNumber: z.string().min(7, 'Mobile number is required'),
   motherTongue: z.string().min(1, 'Mother tongue is required'),
   country: z.string().min(1, 'Country is required'),
   state: z.string().min(1, 'State is required'),
   city: z.string().min(1, 'City is required'),
-  childName: z.string().min(1, 'Child name is required'),
-  childAge: z.coerce.number().min(1).max(21),
-  gender: z.string().min(1, 'Gender is required'),
-  schoolName: z.string().min(1, 'School name is required'),
-  currentClass: z.string().min(1, 'Current class is required'),
-  interestedBatches: z.array(z.string()).min(1, 'Select at least one batch'),
-  familyMembersStaying: z.string().min(1, 'Select family members count'),
+  children: z.array(
+    z.object({
+      name: z.string().min(1, 'Child name is required'),
+      age: z.coerce.number().min(1).max(21),
+      gender: z.string().min(1, 'Gender is required'),
+      dob: z.string().min(1, 'DOB is required'),
+      school: z.string().min(1, 'Current school is required'),
+      currentClass: z.string().min(1, 'Current class is required'),
+      schoolName: z.string().optional(),
+      interestedBatches: z.array(z.string()).min(1, 'Select at least one batch'),
+    })
+  ).min(1, 'Add at least one child'),
+  familyMembers: z.array(
+    z.object({
+      name: z.string().min(1, 'Family member name is required'),
+      relationWithChild: z.string().min(1, 'Relation with child is required'),
+      stayingDays: z.coerce.number().min(1, 'Days must be at least 1'),
+    })
+  ).default([]),
   transactionNote: z.string().optional(),
   paymentScreenshotUrl: z.string().url('Enter valid URL').optional().or(z.literal('')),
   source: z.string().min(1, 'Please choose one source'),
@@ -92,6 +104,14 @@ function createDefaultContent(campLabel, campLabelLower) {
     'Batch 3: May 3rd - May 9th',
     'Batch 4: May 10th - May 16th',
   ],
+  batchDays: {
+    'Batch 1: April 19th - April 25th': 7,
+    'Batch 2: April 26th - May 2nd': 7,
+    'Batch 3: May 3rd - May 9th': 7,
+    'Batch 4: May 10th - May 16th': 7,
+  },
+  registrationFee: 999,
+  perPersonPerDayPrice: 1999,
   pricing: 'Registration: Rs 999 per family (non-refundable)',
   residencePricing: 'Residential (Per day/person): Rs 1,999 (minimum stay of 1 week)',
   payment: {
@@ -105,25 +125,163 @@ function createDefaultContent(campLabel, campLabelLower) {
 }
 
 const defaultValues = {
-  email: '',
-  guardianName: '',
+  parentEmail: '',
+  parentName: '',
   relationship: '',
   mobileNumber: '',
   motherTongue: '',
   country: '',
   state: '',
   city: '',
-  childName: '',
-  childAge: '',
-  gender: '',
-  schoolName: '',
-  currentClass: '',
-  interestedBatches: [],
-  familyMembersStaying: '',
+  children: [
+    {
+      name: '',
+      age: '',
+      gender: '',
+      dob: '',
+      school: '',
+      currentClass: '',
+      interestedBatches: [],
+    },
+  ],
+  familyMembers: [],
   transactionNote: '',
   paymentScreenshotUrl: '',
   source: '',
   sourceOther: '',
+};
+
+const toINRCurrency = (amount) =>
+  `Rs ${Number(amount || 0).toLocaleString('en-IN')}`;
+
+const normalizeBatchDays = (rows, fallbackBatches, fallbackMap) => {
+  const map = {};
+  (fallbackBatches || []).forEach((batch) => {
+    const fallback = Number(fallbackMap?.[batch]);
+    map[batch] = Number.isFinite(fallback) && fallback > 0 ? fallback : 7;
+  });
+  if (!rows || typeof rows !== 'object') return map;
+  Object.entries(rows).forEach(([batch, days]) => {
+    const n = Number(days);
+    if (batch && Number.isFinite(n) && n > 0) map[batch] = n;
+  });
+  return map;
+};
+
+const toBatchRows = (batches = [], batchDays = {}, batchConfigs = []) => {
+  if (Array.isArray(batchConfigs) && batchConfigs.length) {
+    return batchConfigs.map((row, index) => ({
+      id: String(row?.id || `batch-${Date.now()}-${index}`),
+      label: String(row?.label || '').trim(),
+      startDate: String(row?.startDate || '').trim(),
+      endDate: String(row?.endDate || '').trim(),
+      days: Number(row?.days) || Number(batchDays?.[row?.label]) || 7,
+    }));
+  }
+  return (batches || []).map((batch, index) => ({
+    id: `batch-${Date.now()}-${index}`,
+    label: String(batch || '').trim(),
+    startDate: '',
+    endDate: '',
+    days: Number(batchDays?.[batch]) || 7,
+  }));
+};
+
+const buildBatchPayload = (rows = []) => {
+  const normalized = rows
+    .map((row, index) => ({
+      id: String(row?.id || `batch-${Date.now()}-${index}`),
+      label: String(row?.label || '').trim(),
+      startDate: String(row?.startDate || '').trim(),
+      endDate: String(row?.endDate || '').trim(),
+      days: Number(row?.days) || 0,
+    }))
+    .filter((row) => row.label);
+  const batches = normalized.map((row) => row.label);
+  const batchDays = {};
+  normalized.forEach((row) => {
+    batchDays[row.label] = row.days > 0 ? row.days : 1;
+  });
+  return { batchRows: normalized, batches, batchDays };
+};
+
+const formatBatchDisplayDate = (value) => {
+  const date = parseDateInput(value);
+  if (!date) return '';
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const month = months[date.getUTCMonth()];
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  const year = String(date.getUTCFullYear()).slice(-2);
+  return `${month} ${day} '${year}`;
+};
+
+const validateBatchRows = (rows = []) => {
+  if (!Array.isArray(rows) || !rows.length) return 'Please add at least one batch.';
+  let previousEndDate = null;
+  for (let i = 0; i < rows.length; i += 1) {
+    const row = rows[i];
+    const rowLabel = `Batch ${i + 1}`;
+    if (!String(row?.label || '').trim()) return `${rowLabel}: name is required.`;
+    if (!String(row?.startDate || '').trim() || !String(row?.endDate || '').trim()) {
+      return `${rowLabel}: start and end date are required.`;
+    }
+    if (Number(row?.days) < 1) return `${rowLabel}: days must be at least 1.`;
+    const start = new Date(row.startDate);
+    const end = new Date(row.endDate);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      return `${rowLabel}: enter valid dates.`;
+    }
+    if (start >= end) {
+      return `${rowLabel}: start date must be before end date.`;
+    }
+    if (previousEndDate && previousEndDate >= start) {
+      return `${rowLabel}: start date must be after previous batch end date.`;
+    }
+    previousEndDate = end;
+  }
+  return '';
+};
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+const parseDateInput = (value) => {
+  const text = String(value || '').trim();
+  if (!text) return null;
+  const [year, month, day] = text.split('-').map((v) => Number(v));
+  if (!year || !month || !day) return null;
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const formatDateInput = (date) => {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
+  return date.toISOString().slice(0, 10);
+};
+
+const addDays = (date, days) => {
+  const next = new Date(date.getTime());
+  next.setUTCDate(next.getUTCDate() + days);
+  return next;
+};
+
+const buildBatchRowUpdate = (row, field, value) => {
+  const next = { ...row, [field]: value };
+  const start = parseDateInput(field === 'startDate' ? value : row?.startDate);
+  const end = parseDateInput(field === 'endDate' ? value : row?.endDate);
+  const rawDays = Number(field === 'days' ? value : row?.days);
+
+  if ((field === 'startDate' || field === 'days') && start && Number.isFinite(rawDays) && rawDays > 0) {
+    next.days = rawDays;
+    next.endDate = formatDateInput(addDays(start, rawDays));
+    return next;
+  }
+
+  if (field === 'endDate' && start && end) {
+    const diff = Math.round((end.getTime() - start.getTime()) / MS_PER_DAY);
+    next.days = Math.max(1, diff);
+  }
+
+  return next;
 };
 const registrationSocket = io(getApiBase(), { autoConnect: true });
 
@@ -149,6 +307,11 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
       ...(cms || {}),
       payment: { ...defaultContent.payment, ...(cms?.payment || {}) },
       batches: Array.isArray(cms?.batches) && cms.batches.length ? cms.batches : defaultContent.batches,
+      batchDays: normalizeBatchDays(
+        cms?.batchDays,
+        Array.isArray(cms?.batches) && cms.batches.length ? cms.batches : defaultContent.batches,
+        defaultContent.batchDays
+      ),
       ageGuidelines:
         Array.isArray(cms?.ageGuidelines) && cms.ageGuidelines.length
           ? cms.ageGuidelines
@@ -176,6 +339,14 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
     resolver: zodResolver(schema),
     defaultValues,
   });
+  const { fields: childFields, append: appendChild, remove: removeChild } = useFieldArray({
+    control,
+    name: 'children',
+  });
+  const { fields: familyFields, append: appendFamily, remove: removeFamily } = useFieldArray({
+    control,
+    name: 'familyMembers',
+  });
 
   const [status, setStatus] = useState({ type: '', message: '' });
   const [adminItems, setAdminItems] = useState([]);
@@ -191,8 +362,11 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
   const [selectedAdminCampId, setSelectedAdminCampId] = useState('');
   const [adminRegistrationsPage, setAdminRegistrationsPage] = useState(1);
   const [campHistoryPage, setCampHistoryPage] = useState(1);
+  const [uploadingPayment, setUploadingPayment] = useState(false);
+  const [paymentUploadError, setPaymentUploadError] = useState('');
   const registrationFormRef = useRef(null);
   const source = watch('source');
+  const paymentScreenshotUrl = watch('paymentScreenshotUrl');
   const registrationCamps = Array.isArray(content.registrationCamps) ? content.registrationCamps : [];
   const openCamp = registrationCamps.find((c) => c.status === 'open') || null;
   const upcomingCamp = registrationCamps.find((c) => c.status === 'upcoming') || null;
@@ -290,7 +464,7 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
     }
     requestAnimationFrame(() => {
       registrationFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      setFocus('email');
+      setFocus('parentEmail');
     });
   }, [isPublic, selectedCampId, selectedCamp, setFocus]);
 
@@ -386,6 +560,15 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
         method: 'POST',
         body: JSON.stringify({
           ...values,
+          children: (values.children || []).map((child) => ({
+            ...child,
+            schoolName: String(child?.schoolName || child?.school || '').trim(),
+          })),
+          registrationFee: Number(activeCampContent.registrationFee || 0),
+          perPersonPerDayPrice: Number(activeCampContent.perPersonPerDayPrice || 0),
+          childStayDaysTotal,
+          familyStayDaysTotal,
+          totalAmountPayable,
           registrationCampId: submitCamp.id,
           registrationCampTitle: submitCamp.title,
         }),
@@ -394,6 +577,38 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
       reset(defaultValues);
     } catch (error) {
       setStatus({ type: 'error', message: error.message || 'Failed to submit registration.' });
+    }
+  };
+
+  const handlePaymentScreenshotUpload = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    try {
+      setUploadingPayment(true);
+      setPaymentUploadError('');
+      const formData = new FormData();
+      formData.append('image', file);
+      const res = await fetch(`${getApiBase()}/api/registrations/upload-payment-screenshot`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (!res.ok) {
+        let message = 'Unable to upload image.';
+        try {
+          const body = await res.json();
+          message = body?.message || message;
+        } catch (error) {
+          // no-op
+        }
+        throw new Error(message);
+      }
+      const data = await res.json();
+      setValue('paymentScreenshotUrl', data?.url || '', { shouldValidate: true, shouldDirty: true });
+    } catch (error) {
+      setPaymentUploadError(error.message || 'Unable to upload image.');
+    } finally {
+      setUploadingPayment(false);
     }
   };
 
@@ -432,7 +647,9 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
       emptyBlocksText: Array.isArray(statusTemplates.empty?.blocks) ? statusTemplates.empty.blocks.join('\n') : '',
       ageGuidelinesText: content.ageGuidelines.join('\n'),
       highlightsText: content.highlights.join('\n'),
-      batchesText: content.batches.join('\n'),
+      batchRows: toBatchRows(content.batches, content.batchDays, content.batchConfigs),
+      registrationFee: String(content.registrationFee ?? defaultContent.registrationFee),
+      perPersonPerDayPrice: String(content.perPersonPerDayPrice ?? defaultContent.perPersonPerDayPrice),
       pricing: content.pricing,
       residencePricing: content.residencePricing,
       bankName: content.payment.bankName,
@@ -445,6 +662,12 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
 
   const saveContentEditor = async () => {
     if (!contentEditor) return;
+    const batchError = validateBatchRows(contentEditor.batchRows || []);
+    if (batchError) {
+      setStatus({ type: 'error', message: batchError });
+      return;
+    }
+    const batchPayload = buildBatchPayload(contentEditor.batchRows || []);
     const payload = {
       title: contentEditor.title,
       subtitle: contentEditor.subtitle,
@@ -495,10 +718,12 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
         .split('\n')
         .map((x) => x.trim())
         .filter(Boolean),
-      batches: String(contentEditor.batchesText || '')
-        .split('\n')
-        .map((x) => x.trim())
-        .filter(Boolean),
+      batches: batchPayload.batches,
+      batchDays: batchPayload.batchDays,
+      batchConfigs: batchPayload.batchRows,
+      registrationFee: Number(contentEditor.registrationFee) || defaultContent.registrationFee,
+      perPersonPerDayPrice:
+        Number(contentEditor.perPersonPerDayPrice) || defaultContent.perPersonPerDayPrice,
       pricing: contentEditor.pricing,
       residencePricing: contentEditor.residencePricing,
       payment: {
@@ -561,7 +786,17 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
             ...camp,
             ageGuidelinesText: (camp.ageGuidelines || content.ageGuidelines || []).join('\n'),
             highlightsText: (camp.highlights || content.highlights || []).join('\n'),
-            batchesText: (camp.batches || content.batches || []).join('\n'),
+            batchRows: toBatchRows(
+              camp.batches || content.batches || [],
+              camp.batchDays || content.batchDays || {},
+              camp.batchConfigs || []
+            ),
+            registrationFee: String(
+              camp.registrationFee ?? content.registrationFee ?? defaultContent.registrationFee
+            ),
+            perPersonPerDayPrice: String(
+              camp.perPersonPerDayPrice ?? content.perPersonPerDayPrice ?? defaultContent.perPersonPerDayPrice
+            ),
             pricing: camp.pricing || content.pricing,
             residencePricing: camp.residencePricing || content.residencePricing,
             bankName: camp.payment?.bankName || content.payment.bankName,
@@ -580,7 +815,11 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
             note: '',
             ageGuidelinesText: content.ageGuidelines.join('\n'),
             highlightsText: content.highlights.join('\n'),
-            batchesText: content.batches.join('\n'),
+            batchRows: toBatchRows(content.batches, content.batchDays, content.batchConfigs),
+            registrationFee: String(content.registrationFee ?? defaultContent.registrationFee),
+            perPersonPerDayPrice: String(
+              content.perPersonPerDayPrice ?? defaultContent.perPersonPerDayPrice
+            ),
             pricing: content.pricing,
             residencePricing: content.residencePricing,
             bankName: content.payment.bankName,
@@ -603,6 +842,12 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
       setStatus({ type: 'error', message: 'Camp title, subtitle, and year are required.' });
       return;
     }
+    const batchError = validateBatchRows(campEditor.batchRows || []);
+    if (batchError) {
+      setStatus({ type: 'error', message: batchError });
+      return;
+    }
+    const batchPayload = buildBatchPayload(campEditor.batchRows || []);
     const normalizedCamp = {
       id: campEditor.id,
       title: String(campEditor.title || '').trim(),
@@ -612,7 +857,12 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
       note: String(campEditor.note || '').trim(),
       ageGuidelines: toLines(campEditor.ageGuidelinesText),
       highlights: toLines(campEditor.highlightsText),
-      batches: toLines(campEditor.batchesText),
+      batches: batchPayload.batches,
+      batchDays: batchPayload.batchDays,
+      batchConfigs: batchPayload.batchRows,
+      registrationFee: Number(campEditor.registrationFee) || defaultContent.registrationFee,
+      perPersonPerDayPrice:
+        Number(campEditor.perPersonPerDayPrice) || defaultContent.perPersonPerDayPrice,
       pricing: String(campEditor.pricing || '').trim(),
       residencePricing: String(campEditor.residencePricing || '').trim(),
       payment: {
@@ -725,6 +975,23 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
           Array.isArray(activeBuiltInCamp.batches) && activeBuiltInCamp.batches.length
             ? activeBuiltInCamp.batches
             : content.batches,
+        batchConfigs:
+          Array.isArray(activeBuiltInCamp.batchConfigs) && activeBuiltInCamp.batchConfigs.length
+            ? activeBuiltInCamp.batchConfigs
+            : Array.isArray(content.batchConfigs)
+              ? content.batchConfigs
+              : [],
+        batchDays: normalizeBatchDays(
+          activeBuiltInCamp.batchDays || content.batchDays,
+          Array.isArray(activeBuiltInCamp.batches) && activeBuiltInCamp.batches.length
+            ? activeBuiltInCamp.batches
+            : content.batches,
+          defaultContent.batchDays
+        ),
+        registrationFee: Number(activeBuiltInCamp.registrationFee ?? content.registrationFee ?? defaultContent.registrationFee),
+        perPersonPerDayPrice: Number(
+          activeBuiltInCamp.perPersonPerDayPrice ?? content.perPersonPerDayPrice ?? defaultContent.perPersonPerDayPrice
+        ),
         pricing: activeBuiltInCamp.pricing || content.pricing,
         residencePricing: activeBuiltInCamp.residencePricing || content.residencePricing,
         payment: {
@@ -739,11 +1006,96 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
         ageGuidelines: content.ageGuidelines,
         highlights: content.highlights,
         batches: content.batches,
+        batchConfigs: Array.isArray(content.batchConfigs) ? content.batchConfigs : [],
+        batchDays: normalizeBatchDays(content.batchDays, content.batches, defaultContent.batchDays),
+        registrationFee: Number(content.registrationFee ?? defaultContent.registrationFee),
+        perPersonPerDayPrice: Number(content.perPersonPerDayPrice ?? defaultContent.perPersonPerDayPrice),
         pricing: content.pricing,
         residencePricing: content.residencePricing,
         payment: content.payment,
         transactionHint: content.transactionHint,
       };
+  const batchLabelMap = useMemo(() => {
+    const map = {};
+    (activeCampContent.batchConfigs || []).forEach((row) => {
+      const key = String(row?.label || '').trim();
+      if (!key) return;
+      const start = formatBatchDisplayDate(row?.startDate);
+      const end = formatBatchDisplayDate(row?.endDate);
+      map[key] = start && end ? `${key} (${start} - ${end})` : key;
+    });
+    return map;
+  }, [activeCampContent.batchConfigs]);
+  const watchedChildren = watch('children') || [];
+  const watchedFamilyMembers = watch('familyMembers') || [];
+  const childPriceRows = watchedChildren.map((child, index) => {
+    const selected = Array.isArray(child?.interestedBatches) ? child.interestedBatches : [];
+    const days = selected.reduce((sum, batch) => sum + Number(activeCampContent.batchDays?.[batch] || 0), 0);
+    return {
+      label: child?.name ? `${child.name}` : `Child ${index + 1}`,
+      batches: selected.map((batch) => batchLabelMap[batch] || batch),
+      days,
+      amount: days * Number(activeCampContent.perPersonPerDayPrice || 0),
+    };
+  });
+  const familyPriceRows = watchedFamilyMembers.map((member, index) => {
+    const days = Number.isFinite(Number(member?.stayingDays)) ? Number(member.stayingDays) : 0;
+    return {
+      label: member?.name ? `${member.name}` : `Member ${index + 1}`,
+      relation: member?.relationWithChild || '-',
+      days,
+      amount: days * Number(activeCampContent.perPersonPerDayPrice || 0),
+    };
+  });
+  const childStayDaysTotal = watchedChildren.reduce((total, child) => {
+    const selected = Array.isArray(child?.interestedBatches) ? child.interestedBatches : [];
+    const days = selected.reduce((sum, batch) => sum + Number(activeCampContent.batchDays?.[batch] || 0), 0);
+    return total + days;
+  }, 0);
+  const familyStayDaysTotal = watchedFamilyMembers.reduce(
+    (sum, member) => sum + (Number.isFinite(Number(member?.stayingDays)) ? Number(member.stayingDays) : 0),
+    0
+  );
+  const totalAmountPayable =
+    Number(activeCampContent.registrationFee || 0) +
+    (childStayDaysTotal + familyStayDaysTotal) * Number(activeCampContent.perPersonPerDayPrice || 0);
+  const residentialAmount =
+    (childStayDaysTotal + familyStayDaysTotal) * Number(activeCampContent.perPersonPerDayPrice || 0);
+  const previewChildren =
+    Array.isArray(entryPreview?.children) && entryPreview.children.length
+      ? entryPreview.children
+      : entryPreview
+        ? [
+            {
+              name: entryPreview.childName || '',
+              age: entryPreview.childAge || '',
+              gender: entryPreview.gender || '',
+              school: entryPreview.school || entryPreview.schoolName || '',
+              currentClass: entryPreview.currentClass || '',
+              interestedBatches: Array.isArray(entryPreview.interestedBatches)
+                ? entryPreview.interestedBatches
+                : [],
+            },
+          ]
+        : [];
+  const previewFamilyMembers = Array.isArray(entryPreview?.familyMembers)
+    ? entryPreview.familyMembers
+    : [];
+  const previewCamp = registrationCamps.find((camp) => camp.id === entryPreview?.registrationCampId) || null;
+  const previewBatchDays = normalizeBatchDays(
+    previewCamp?.batchDays || content.batchDays || {},
+    previewCamp?.batches || content.batches || [],
+    defaultContent.batchDays
+  );
+  const previewChildStayDaysTotal = Number(entryPreview?.childStayDaysTotal || 0);
+  const previewFamilyStayDaysTotal = Number(entryPreview?.familyStayDaysTotal || 0);
+  const previewPerPersonPerDayPrice = Number(entryPreview?.perPersonPerDayPrice || 0);
+  const previewRegistrationFee = Number(entryPreview?.registrationFee || 0);
+  const previewResidentialAmount =
+    (previewChildStayDaysTotal + previewFamilyStayDaysTotal) * previewPerPersonPerDayPrice;
+  const previewTotalAmount =
+    Number(entryPreview?.totalAmountPayable || 0) ||
+    previewRegistrationFee + previewResidentialAmount;
   const campStatusStyle = (state) => {
     if (state === 'open') {
       return 'border-emerald-300 bg-emerald-50/80 dark:border-emerald-700/70 dark:bg-emerald-950/20';
@@ -1296,8 +1648,10 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                         <article className="rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
                           <h2 className="heading-card">Batches</h2>
                           <ul className="mt-3 space-y-2 text-prose">
-                            {String(contentEditor.batchesText || '').split('\n').map((x) => x.trim()).filter(Boolean).map((line) => (
-                              <li key={line} className="rounded-lg bg-neutral-100 px-3 py-2 dark:bg-neutral-800">{line}</li>
+                            {(contentEditor.batchRows || []).map((row, idx) => (
+                              <li key={row.id || idx} className="rounded-lg bg-neutral-100 px-3 py-2 dark:bg-neutral-800">
+                                {row.label} {row.startDate && row.endDate ? `(${row.startDate} to ${row.endDate})` : ''}
+                              </li>
                             ))}
                           </ul>
                         </article>
@@ -1334,8 +1688,8 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                       ) : (
                         <>
                           <div className="mt-5 grid gap-4 md:grid-cols-2">
-                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Email<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
-                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Name<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
+                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Parent Email<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
+                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Parent Name<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
                             <label className="text-sm text-neutral-800 dark:text-neutral-200">Relationship with child<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
                             <label className="text-sm text-neutral-800 dark:text-neutral-200">Mobile Number<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
                             <label className="text-sm text-neutral-800 dark:text-neutral-200">Mother Tongue<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
@@ -1360,10 +1714,10 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                           <div className="mt-5">
                             <p className="mb-2 text-sm font-medium text-neutral-800 dark:text-neutral-200">Which batch are you interested in?</p>
                             <div className="grid gap-2 md:grid-cols-2">
-                              {String(contentEditor.batchesText || '').split('\n').map((x) => x.trim()).filter(Boolean).map((line) => (
-                                <label key={line} className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-800 opacity-70 dark:border-neutral-700 dark:text-neutral-200">
+                              {(contentEditor.batchRows || []).map((row, idx) => (
+                                <label key={row.id || idx} className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-800 opacity-70 dark:border-neutral-700 dark:text-neutral-200">
                                   <input type="checkbox" disabled />
-                                  {line}
+                                  {row.label}
                                 </label>
                               ))}
                             </div>
@@ -1425,9 +1779,60 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                         <label className="text-sm text-neutral-800 dark:text-neutral-200">Age Guidelines (one per line)
                           <textarea className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" value={contentEditor.ageGuidelinesText} onChange={(e) => setContentEditor((p) => ({ ...p, ageGuidelinesText: e.target.value }))} />
                         </label>
-                        <label className="text-sm text-neutral-800 dark:text-neutral-200">Batches (one per line)
-                          <textarea className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" value={contentEditor.batchesText} onChange={(e) => setContentEditor((p) => ({ ...p, batchesText: e.target.value }))} />
-                        </label>
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200">Batches</p>
+                          {(contentEditor.batchRows || []).map((row, idx) => (
+                            <div key={row.id || idx} className="grid gap-2 rounded-lg border border-neutral-200 p-3 sm:grid-cols-2 lg:grid-cols-5 dark:border-neutral-700">
+                              <input className="min-w-0 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" placeholder={`Batch ${idx + 1} Name`} value={row.label || `Batch ${idx + 1}`} onChange={(e) => setContentEditor((p) => ({ ...p, batchRows: (p.batchRows || []).map((it, i) => (i === idx ? { ...it, label: e.target.value } : it)) }))} />
+                              <input type="date" className="min-w-0 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" value={row.startDate || ''} onChange={(e) => setContentEditor((p) => ({ ...p, batchRows: (p.batchRows || []).map((it, i) => (i === idx ? buildBatchRowUpdate(it, 'startDate', e.target.value) : it)) }))} />
+                              <input type="date" className="min-w-0 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" value={row.endDate || ''} onChange={(e) => setContentEditor((p) => ({ ...p, batchRows: (p.batchRows || []).map((it, i) => (i === idx ? buildBatchRowUpdate(it, 'endDate', e.target.value) : it)) }))} />
+                              <input type="number" min="1" className="min-w-0 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" placeholder="Days" value={row.days || ''} onChange={(e) => setContentEditor((p) => ({ ...p, batchRows: (p.batchRows || []).map((it, i) => (i === idx ? buildBatchRowUpdate(it, 'days', e.target.value) : it)) }))} />
+                              <button type="button" onClick={() => setContentEditor((p) => ({ ...p, batchRows: (p.batchRows || []).filter((_, i) => i !== idx) }))} className="inline-flex w-full items-center justify-center rounded-lg bg-rose-100 px-3 py-2 text-rose-700 sm:col-span-2 lg:col-span-1 dark:bg-rose-900/40 dark:text-rose-300" aria-label={`Delete Batch ${idx + 1}`}>
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          ))}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setContentEditor((p) => {
+                                const rows = p.batchRows || [];
+                                const prev = rows.length ? rows[rows.length - 1] : null;
+                                const prevEnd = parseDateInput(prev?.endDate);
+                                const startDate = prevEnd ? formatDateInput(addDays(prevEnd, 1)) : '';
+                                const days = 7;
+                                const endDate =
+                                  startDate && parseDateInput(startDate)
+                                    ? formatDateInput(addDays(parseDateInput(startDate), days))
+                                    : '';
+                                return {
+                                  ...p,
+                                  batchRows: [
+                                    ...rows,
+                                    {
+                                      id: `batch-${Date.now()}`,
+                                      label: `Batch ${rows.length + 1}`,
+                                      startDate,
+                                      endDate,
+                                      days,
+                                    },
+                                  ],
+                                };
+                              })
+                            }
+                            className="rounded-lg bg-accent px-3 py-2 text-xs text-white dark:bg-emerald-700"
+                          >
+                            Add Batch
+                          </button>
+                        </div>
+                        <div className="grid gap-3 md:grid-cols-2">
+                          <label className="text-sm text-neutral-800 dark:text-neutral-200">Registration Fee (per family)
+                            <input type="number" min="0" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" value={contentEditor.registrationFee || ''} onChange={(e) => setContentEditor((p) => ({ ...p, registrationFee: e.target.value }))} />
+                          </label>
+                          <label className="text-sm text-neutral-800 dark:text-neutral-200">Per Person/Day Price
+                            <input type="number" min="0" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" value={contentEditor.perPersonPerDayPrice || ''} onChange={(e) => setContentEditor((p) => ({ ...p, perPersonPerDayPrice: e.target.value }))} />
+                          </label>
+                        </div>
                       </>
                     ) : null}
                     <div className="rounded-xl border border-neutral-300 p-4 dark:border-neutral-700">
@@ -1559,12 +1964,16 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
             <ul className="mt-3 space-y-2 text-prose">
               {activeCampContent.batches.map((batch) => (
                 <li key={batch} className="rounded-lg bg-neutral-100 px-3 py-2 dark:bg-neutral-800">
-                  {batch}
+                  {batchLabelMap[batch] || batch} ({activeCampContent.batchDays?.[batch] || 7} days)
                 </li>
               ))}
             </ul>
             <p className="mt-5 text-prose">{activeCampContent.pricing}</p>
             <p className="mt-2 text-prose">{activeCampContent.residencePricing}</p>
+            <div className="mt-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm dark:border-neutral-700 dark:bg-neutral-800/60">
+              <p>Registration (per family): <span className="font-semibold">{toINRCurrency(activeCampContent.registrationFee)}</span></p>
+              <p>Residential (per person/day): <span className="font-semibold">{toINRCurrency(activeCampContent.perPersonPerDayPrice)}</span></p>
+            </div>
             <div className="mt-4 rounded-xl border border-primary-muted/60 bg-primary/25 p-4 text-sm dark:border-emerald-800/50 dark:bg-emerald-950/20">
               <p><span className="font-semibold">Bank Name:</span> {activeCampContent.payment.bankName}</p>
               <p><span className="font-semibold">Account Holder:</span> {activeCampContent.payment.accountHolder}</p>
@@ -1599,8 +2008,8 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
             </p>
           ) : null}
           <div className="mt-5 grid gap-4 md:grid-cols-2">
-            <label className="text-sm text-neutral-800 dark:text-neutral-200">Email<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('email')} /></label>
-            <label className="text-sm text-neutral-800 dark:text-neutral-200">Name<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('guardianName')} /></label>
+            <label className="text-sm text-neutral-800 dark:text-neutral-200">Parent Email<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('parentEmail')} /></label>
+            <label className="text-sm text-neutral-800 dark:text-neutral-200">Parent Name<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('parentName')} /></label>
             <label className="text-sm text-neutral-800 dark:text-neutral-200">Relationship with child<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('relationship')} /></label>
             <PhoneInput
               label="Mobile Number"
@@ -1623,46 +2032,113 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
             />
             <label className="text-sm text-neutral-800 dark:text-neutral-200">State<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('state')} /></label>
             <label className="text-sm text-neutral-800 dark:text-neutral-200">City/Town<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('city')} /></label>
-            <label className="text-sm text-neutral-800 dark:text-neutral-200">Child Name<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('childName')} /></label>
-            <label className="text-sm text-neutral-800 dark:text-neutral-200">Child Age<input type="number" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('childAge')} /></label>
-            <label className="text-sm text-neutral-800 dark:text-neutral-200">Gender
-              <select className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('gender')}>
-                <option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option>
-              </select>
-            </label>
-            <label className="text-sm text-neutral-800 dark:text-neutral-200">School Name<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('schoolName')} /></label>
-            <label className="text-sm text-neutral-800 dark:text-neutral-200">Current Class/Standard<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('currentClass')} /></label>
-            <label className="text-sm text-neutral-800 dark:text-neutral-200">Family Members Staying
-              <select className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('familyMembersStaying')}>
-                <option value="">Choose</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="Above 5">Above 5</option>
-              </select>
-            </label>
+          </div>
+          <div className="mt-6 space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">Children ({childFields.length})</p>
+              <button
+                type="button"
+                onClick={() =>
+                  appendChild({
+                    name: '',
+                    age: '',
+                    gender: '',
+                    dob: '',
+                    school: '',
+                    currentClass: '',
+                    interestedBatches: [],
+                  })
+                }
+                className="rounded-lg bg-accent px-3 py-1.5 text-xs text-white dark:bg-emerald-700"
+              >
+                Add Child
+              </button>
+            </div>
+            {childFields.map((field, childIndex) => (
+              <div key={field.id} className="rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">Child {childIndex + 1}</p>
+                  {childFields.length > 1 ? (
+                    <button
+                      type="button"
+                      onClick={() => removeChild(childIndex)}
+                      className="inline-flex items-center justify-center rounded-md bg-rose-100 px-2 py-1 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
+                      aria-label={`Delete Child ${childIndex + 1}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  ) : null}
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="text-sm text-neutral-800 dark:text-neutral-200">Name<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" {...register(`children.${childIndex}.name`)} /></label>
+                  <label className="text-sm text-neutral-800 dark:text-neutral-200">Age<input type="number" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" {...register(`children.${childIndex}.age`)} /></label>
+                  <label className="text-sm text-neutral-800 dark:text-neutral-200">Gender
+                    <select className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" {...register(`children.${childIndex}.gender`)}>
+                      <option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option>
+                    </select>
+                  </label>
+                  <label className="text-sm text-neutral-800 dark:text-neutral-200">DOB<input type="date" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" {...register(`children.${childIndex}.dob`)} /></label>
+                  <label className="text-sm text-neutral-800 dark:text-neutral-200">School<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" {...register(`children.${childIndex}.school`)} /></label>
+                  <label className="text-sm text-neutral-800 dark:text-neutral-200">Current Class<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" {...register(`children.${childIndex}.currentClass`)} /></label>
+                </div>
+                <div className="mt-4">
+                  <p className="mb-2 text-sm font-medium text-neutral-800 dark:text-neutral-200">Select one or more batches</p>
+                  <div className="grid gap-2 md:grid-cols-2">
+                    {activeCampContent.batches.map((batch) => {
+                      const checked = (watch(`children.${childIndex}.interestedBatches`) || []).includes(batch);
+                      const daysForBatch = Number(activeCampContent.batchDays?.[batch] || 0);
+                      return (
+                        <label key={`${batch}-${childIndex}`} className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 px-3 py-2 text-sm dark:border-neutral-700">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) => {
+                              const prev = watch(`children.${childIndex}.interestedBatches`) || [];
+                              setValue(
+                                `children.${childIndex}.interestedBatches`,
+                                e.target.checked ? [...prev, batch] : prev.filter((x) => x !== batch),
+                                { shouldValidate: true }
+                              );
+                            }}
+                          />
+                          <span>{batchLabelMap[batch] || batch} ({daysForBatch} days)</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
 
-          <div className="mt-5">
-            <p className="mb-2 text-sm font-medium text-neutral-800 dark:text-neutral-200">Which batch are you interested in?</p>
-            <div className="grid gap-2 md:grid-cols-2">
-              {activeCampContent.batches.map((batch) => {
-                const checked = (watch('interestedBatches') || []).includes(batch);
-                return (
-                  <label key={batch} className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 px-3 py-2 text-sm dark:border-neutral-700">
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={(e) => {
-                        const prev = watch('interestedBatches') || [];
-                        setValue(
-                          'interestedBatches',
-                          e.target.checked ? [...prev, batch] : prev.filter((x) => x !== batch),
-                          { shouldValidate: true }
-                        );
-                      }}
-                    />
-                    {batch}
-                  </label>
-                );
-              })}
+          <div className="mt-6 space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">Family Members Staying with child ({familyFields.length})</p>
+              <button
+                type="button"
+                onClick={() => appendFamily({ name: '', relationWithChild: '', stayingDays: '' })}
+                className="rounded-lg bg-accent px-3 py-1.5 text-xs text-white dark:bg-emerald-700"
+              >
+                Add Family Member
+              </button>
             </div>
+            {familyFields.map((field, memberIndex) => (
+              <div key={field.id} className="grid gap-3 rounded-xl border border-neutral-200 p-4 md:grid-cols-3 dark:border-neutral-700">
+                <label className="text-sm text-neutral-800 dark:text-neutral-200">Name<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" {...register(`familyMembers.${memberIndex}.name`)} /></label>
+                <label className="text-sm text-neutral-800 dark:text-neutral-200">Relation with child<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" {...register(`familyMembers.${memberIndex}.relationWithChild`)} /></label>
+                <div className="flex items-end gap-2">
+                  <label className="w-full text-sm text-neutral-800 dark:text-neutral-200">Staying Days<input type="number" min="1" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" {...register(`familyMembers.${memberIndex}.stayingDays`)} /></label>
+                  <button
+                    type="button"
+                    onClick={() => removeFamily(memberIndex)}
+                    className="inline-flex items-center justify-center rounded-md bg-rose-100 px-2 py-2 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
+                    aria-label={`Delete Family Member ${memberIndex + 1}`}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
 
           <div className="mt-5 grid gap-4 md:grid-cols-2">
@@ -1682,6 +2158,86 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
           <label className="mt-4 block text-sm text-neutral-800 dark:text-neutral-200">Payment Screenshot URL (optional)
             <input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" placeholder="Paste uploaded payment screenshot link" {...register('paymentScreenshotUrl')} />
           </label>
+          <div className="mt-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-700 dark:bg-neutral-800/40">
+            <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200">Upload Payment Screenshot</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-accent px-3 py-2 text-xs font-medium text-white dark:bg-emerald-700">
+                <Upload className="h-4 w-4" />
+                {uploadingPayment ? 'Uploading...' : 'Choose Image'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePaymentScreenshotUpload}
+                  className="hidden"
+                  disabled={uploadingPayment}
+                />
+              </label>
+              {paymentScreenshotUrl ? (
+                <button
+                  type="button"
+                  onClick={() => setValue('paymentScreenshotUrl', '', { shouldValidate: true, shouldDirty: true })}
+                  className="inline-flex items-center gap-1 rounded-lg bg-rose-100 px-3 py-2 text-xs font-medium text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Remove Image
+                </button>
+              ) : null}
+            </div>
+            {paymentUploadError ? (
+              <p className="mt-2 text-xs text-rose-600 dark:text-rose-300">{paymentUploadError}</p>
+            ) : null}
+            {paymentScreenshotUrl ? (
+              <a
+                href={paymentScreenshotUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-block text-xs text-accent underline dark:text-emerald-300"
+              >
+                View uploaded screenshot
+              </a>
+            ) : null}
+          </div>
+          <div className="mt-4 rounded-xl border border-emerald-300 bg-emerald-50/70 p-4 text-sm dark:border-emerald-700/60 dark:bg-emerald-950/20">
+            <p>Registration fee (family): <span className="font-semibold">{toINRCurrency(activeCampContent.registrationFee)}</span></p>
+            <p>Children stay total: <span className="font-semibold">{childStayDaysTotal}</span> day(s)</p>
+            <p>Family stay total: <span className="font-semibold">{familyStayDaysTotal}</span> day(s)</p>
+            <p>Per person/day: <span className="font-semibold">{toINRCurrency(activeCampContent.perPersonPerDayPrice)}</span></p>
+            {childPriceRows.length ? (
+              <div className="mt-3 rounded-lg border border-emerald-200 bg-white/70 p-3 dark:border-emerald-800/50 dark:bg-neutral-900/40">
+                <p className="font-semibold text-emerald-900 dark:text-emerald-200">Children Breakdown</p>
+                <div className="mt-2 space-y-1">
+                  {childPriceRows.map((row, idx) => (
+                    <p key={`child-price-${idx}`} className="text-xs text-emerald-900 dark:text-emerald-100">
+                      {row.label}: {row.days} day(s) x {toINRCurrency(activeCampContent.perPersonPerDayPrice)} ={' '}
+                      <span className="font-semibold">{toINRCurrency(row.amount)}</span>
+                      {row.batches.length ? ` [${row.batches.join(', ')}]` : ''}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+            {familyPriceRows.length ? (
+              <div className="mt-3 rounded-lg border border-emerald-200 bg-white/70 p-3 dark:border-emerald-800/50 dark:bg-neutral-900/40">
+                <p className="font-semibold text-emerald-900 dark:text-emerald-200">Family Members Breakdown</p>
+                <div className="mt-2 space-y-1">
+                  {familyPriceRows.map((row, idx) => (
+                    <p key={`family-price-${idx}`} className="text-xs text-emerald-900 dark:text-emerald-100">
+                      {row.label} ({row.relation}): {row.days} day(s) x {toINRCurrency(activeCampContent.perPersonPerDayPrice)} ={' '}
+                      <span className="font-semibold">{toINRCurrency(row.amount)}</span>
+                    </p>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+            <p className="mt-3 text-xs text-emerald-900 dark:text-emerald-100">
+              Calculation: {toINRCurrency(activeCampContent.registrationFee)} + ({childStayDaysTotal} + {familyStayDaysTotal}) x{' '}
+              {toINRCurrency(activeCampContent.perPersonPerDayPrice)} = {toINRCurrency(activeCampContent.registrationFee)} +{' '}
+              {toINRCurrency(residentialAmount)}
+            </p>
+            <p className="mt-1 text-base font-semibold text-emerald-900 dark:text-emerald-200">
+              Total Amount to Pay: {toINRCurrency(totalAmountPayable)}
+            </p>
+          </div>
 
           {Object.values(errors).length ? (
             <p className="mt-3 text-sm text-rose-600">Please fill all required fields correctly.</p>
@@ -1741,8 +2297,14 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                 <article key={item._id} className="rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="font-semibold text-neutral-900 dark:text-neutral-100">{item.childName} ({item.childAge})</p>
-                      <p className="text-sm text-prose-muted">{item.guardianName} • {item.mobileNumber} • {item.email}</p>
+                      <p className="font-semibold text-neutral-900 dark:text-neutral-100">
+                        {Array.isArray(item.children) && item.children.length
+                          ? item.children
+                              .map((child) => `${child?.name || 'Child'} (${child?.age || '-'})`)
+                              .join(', ')
+                          : `${item.childName || 'Child'} (${item.childAge || '-'})`}
+                      </p>
+                      <p className="text-sm text-prose-muted">{item.parentName || item.guardianName} • {item.mobileNumber} • {item.parentEmail || item.email}</p>
                       <p className="text-sm text-prose">Camp: <span className="font-medium">{item.registrationCampTitle || '-'}</span></p>
                       <p className="mt-1 text-sm text-prose">Status: <span className="font-medium">{item.status}</span></p>
                     </div>
@@ -1819,52 +2381,110 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
 
       {entryPreview ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/40 p-4">
-          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
+          <div className="w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
             <h3 className="text-lg font-semibold text-accent dark:text-emerald-200">Registration Details</h3>
-            <div className="mt-4 grid gap-3 md:grid-cols-2 text-sm">
-              {[
-                ['Camp', entryPreview.registrationCampTitle],
-                ['Email', entryPreview.email],
-                ['Guardian Name', entryPreview.guardianName],
-                ['Relationship', entryPreview.relationship],
-                ['Mobile Number', entryPreview.mobileNumber],
-                ['Mother Tongue', entryPreview.motherTongue],
-                ['Country', entryPreview.country],
-                ['State', entryPreview.state],
-                ['City', entryPreview.city],
-                ['Child Name', entryPreview.childName],
-                ['Child Age', entryPreview.childAge],
-                ['Gender', entryPreview.gender],
-                ['School Name', entryPreview.schoolName],
-                ['Current Class', entryPreview.currentClass],
-                ['Family Members Staying', entryPreview.familyMembersStaying],
-                ['Source', entryPreview.source],
-                ['Source Other', entryPreview.sourceOther],
-                ['Status', entryPreview.status],
-              ].map(([label, value]) => (
-                <div key={label} className="rounded-lg border border-neutral-200 p-3 dark:border-neutral-700">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-prose-muted">{label}</p>
-                  <p className="mt-1 text-neutral-900 dark:text-neutral-100">{value || '-'}</p>
-                </div>
-              ))}
+            <div className="mt-4 rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
+              <p className="text-xs font-semibold uppercase tracking-wide text-prose-muted">Parent & Contact</p>
+              <div className="mt-3 grid gap-3 md:grid-cols-2 text-sm">
+                {[
+                  ['Camp', entryPreview.registrationCampTitle],
+                  ['Parent Email', entryPreview.parentEmail || entryPreview.email],
+                  ['Parent Name', entryPreview.parentName || entryPreview.guardianName],
+                  ['Relationship', entryPreview.relationship],
+                  ['Mobile Number', entryPreview.mobileNumber],
+                  ['Mother Tongue', entryPreview.motherTongue],
+                  ['Country', entryPreview.country],
+                  ['State', entryPreview.state],
+                  ['City', entryPreview.city],
+                  ['Source', entryPreview.source],
+                  ['Source Other', entryPreview.sourceOther],
+                  ['Status', entryPreview.status],
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-lg border border-neutral-200 p-3 dark:border-neutral-700">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-prose-muted">{label}</p>
+                    <p className="mt-1 text-neutral-900 dark:text-neutral-100">{value || '-'}</p>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="mt-3 space-y-3 text-sm">
-              <div className="rounded-lg border border-neutral-200 p-3 dark:border-neutral-700">
-                <p className="text-xs font-semibold uppercase tracking-wide text-prose-muted">Interested Batches</p>
-                <p className="mt-1 text-neutral-900 dark:text-neutral-100">
-                  {Array.isArray(entryPreview.interestedBatches) && entryPreview.interestedBatches.length
-                    ? entryPreview.interestedBatches.join(', ')
-                    : '-'}
+            <div className="mt-4 rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
+              <p className="text-xs font-semibold uppercase tracking-wide text-prose-muted">Children Details</p>
+              <div className="mt-3 space-y-3">
+                {previewChildren.map((child, idx) => (
+                  <div key={`preview-child-${idx}`} className="rounded-lg border border-neutral-200 p-3 text-sm dark:border-neutral-700">
+                    <p className="font-semibold text-neutral-900 dark:text-neutral-100">
+                      {child?.name || `Child ${idx + 1}`} ({child?.age || '-'})
+                    </p>
+                    <p className="mt-1 text-prose-muted">
+                      Gender: {child?.gender || '-'} | School: {child?.school || child?.schoolName || '-'} | Class: {child?.currentClass || '-'}
+                    </p>
+                    <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-prose-muted">Selected Batches</p>
+                    <p className="mt-1 text-neutral-900 dark:text-neutral-100">
+                      {Array.isArray(child?.interestedBatches) && child.interestedBatches.length
+                        ? child.interestedBatches
+                            .map((batch) => `${batch} (${previewBatchDays?.[batch] || 0} day(s))`)
+                            .join(', ')
+                        : '-'}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="mt-4 grid gap-4 lg:grid-cols-2">
+              <div className="rounded-xl border border-neutral-200 p-4 text-sm dark:border-neutral-700">
+                <p className="text-xs font-semibold uppercase tracking-wide text-prose-muted">Family Members Staying</p>
+                {previewFamilyMembers.length ? (
+                  <ul className="mt-2 space-y-2">
+                    {previewFamilyMembers.map((member, idx) => (
+                      <li key={`preview-family-${idx}`} className="rounded-lg border border-neutral-200 p-2 dark:border-neutral-700">
+                        <span className="font-medium text-neutral-900 dark:text-neutral-100">{member?.name || '-'}</span>{' '}
+                        ({member?.relationWithChild || '-'}, {member?.stayingDays || 0} day(s))
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-1 text-neutral-900 dark:text-neutral-100">-</p>
+                )}
+              </div>
+              <div className="rounded-xl border border-emerald-300 bg-emerald-50/70 p-4 text-sm dark:border-emerald-700/60 dark:bg-emerald-950/20">
+                <p className="text-xs font-semibold uppercase tracking-wide text-emerald-800 dark:text-emerald-200">Payment Breakdown</p>
+                <p className="mt-2">Registration fee (family): <span className="font-semibold">{toINRCurrency(previewRegistrationFee)}</span></p>
+                <p>Children stay total: <span className="font-semibold">{previewChildStayDaysTotal}</span> day(s)</p>
+                <p>Family stay total: <span className="font-semibold">{previewFamilyStayDaysTotal}</span> day(s)</p>
+                <p>Per person/day: <span className="font-semibold">{toINRCurrency(previewPerPersonPerDayPrice)}</span></p>
+                <p className="mt-1 text-xs text-emerald-900 dark:text-emerald-100">
+                  Formula: {toINRCurrency(previewRegistrationFee)} + ({previewChildStayDaysTotal} + {previewFamilyStayDaysTotal}) x {toINRCurrency(previewPerPersonPerDayPrice)} = {toINRCurrency(previewTotalAmount)}
+                </p>
+                <p className="mt-2 text-base font-semibold text-emerald-900 dark:text-emerald-200">
+                  Total Amount: {toINRCurrency(previewTotalAmount)}
                 </p>
               </div>
-              <div className="rounded-lg border border-neutral-200 p-3 dark:border-neutral-700">
-                <p className="text-xs font-semibold uppercase tracking-wide text-prose-muted">Transaction Note</p>
-                <p className="mt-1 text-neutral-900 dark:text-neutral-100">{entryPreview.transactionNote || '-'}</p>
-              </div>
-              <div className="rounded-lg border border-neutral-200 p-3 dark:border-neutral-700">
-                <p className="text-xs font-semibold uppercase tracking-wide text-prose-muted">Payment Screenshot URL</p>
-                <p className="mt-1 break-all text-neutral-900 dark:text-neutral-100">{entryPreview.paymentScreenshotUrl || '-'}</p>
-              </div>
+            </div>
+            <div className="mt-4 rounded-xl border border-neutral-200 p-4 text-sm dark:border-neutral-700">
+              <p className="text-xs font-semibold uppercase tracking-wide text-prose-muted">Transaction Note</p>
+              <p className="mt-1 text-neutral-900 dark:text-neutral-100">{entryPreview.transactionNote || '-'}</p>
+            </div>
+            <div className="mt-4 rounded-xl border border-neutral-200 p-4 text-sm dark:border-neutral-700">
+              <p className="text-xs font-semibold uppercase tracking-wide text-prose-muted">Payment Screenshot</p>
+              {entryPreview.paymentScreenshotUrl ? (
+                <div className="mt-2 space-y-2">
+                  <a
+                    href={entryPreview.paymentScreenshotUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block text-xs text-accent underline dark:text-emerald-300"
+                  >
+                    Open full image
+                  </a>
+                  <img
+                    src={entryPreview.paymentScreenshotUrl}
+                    alt="Payment screenshot"
+                    className="max-h-72 w-auto rounded-lg border border-neutral-200 object-contain dark:border-neutral-700"
+                  />
+                </div>
+              ) : (
+                <p className="mt-1 text-neutral-900 dark:text-neutral-100">-</p>
+              )}
             </div>
             <div className="mt-4 flex justify-end">
               <button type="button" onClick={() => setEntryPreview(null)} className="inline-flex items-center gap-1 rounded-lg bg-neutral-200 px-4 py-2 text-sm text-neutral-800 dark:bg-neutral-700 dark:text-neutral-100"><X className="h-4 w-4" /> Close</button>
@@ -1874,8 +2494,8 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
       ) : null}
 
       {campEditor ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/40 p-4">
-          <div className="w-full max-w-xl rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-hidden bg-black/40 px-4 py-6 sm:py-8">
+          <div className="w-full max-w-4xl max-h-[calc(100vh-3rem)] overflow-y-auto rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
             <h3 className="text-lg font-semibold text-accent dark:text-emerald-200">
               {campEditor.isNew ? 'Add Registration Camp' : 'Edit Registration Camp'}
             </h3>
@@ -1935,11 +2555,68 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                   onChange={(e) => setCampEditor((p) => ({ ...p, highlightsText: e.target.value }))}
                 />
               </label>
-              <label className="block text-sm text-neutral-800 dark:text-neutral-200">Batches (one per line)
-                <textarea
-                  className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
-                  value={campEditor.batchesText || ''}
-                  onChange={(e) => setCampEditor((p) => ({ ...p, batchesText: e.target.value }))}
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200">Batches</p>
+                {(campEditor.batchRows || []).map((row, idx) => (
+                  <div key={row.id || idx} className="grid gap-2 rounded-lg border border-neutral-200 p-3 sm:grid-cols-2 lg:grid-cols-5 dark:border-neutral-700">
+                    <input className="min-w-0 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" placeholder={`Batch ${idx + 1} Name`} value={row.label || `Batch ${idx + 1}`} onChange={(e) => setCampEditor((p) => ({ ...p, batchRows: (p.batchRows || []).map((it, i) => (i === idx ? { ...it, label: e.target.value } : it)) }))} />
+                    <input type="date" className="min-w-0 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" value={row.startDate || ''} onChange={(e) => setCampEditor((p) => ({ ...p, batchRows: (p.batchRows || []).map((it, i) => (i === idx ? buildBatchRowUpdate(it, 'startDate', e.target.value) : it)) }))} />
+                    <input type="date" className="min-w-0 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" value={row.endDate || ''} onChange={(e) => setCampEditor((p) => ({ ...p, batchRows: (p.batchRows || []).map((it, i) => (i === idx ? buildBatchRowUpdate(it, 'endDate', e.target.value) : it)) }))} />
+                    <input type="number" min="1" className="min-w-0 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" placeholder="Days" value={row.days || ''} onChange={(e) => setCampEditor((p) => ({ ...p, batchRows: (p.batchRows || []).map((it, i) => (i === idx ? buildBatchRowUpdate(it, 'days', e.target.value) : it)) }))} />
+                    <button type="button" onClick={() => setCampEditor((p) => ({ ...p, batchRows: (p.batchRows || []).filter((_, i) => i !== idx) }))} className="inline-flex w-full items-center justify-center rounded-lg bg-rose-100 px-3 py-2 text-rose-700 sm:col-span-2 lg:col-span-1 dark:bg-rose-900/40 dark:text-rose-300" aria-label={`Delete Batch ${idx + 1}`}>
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCampEditor((p) => {
+                      const rows = p.batchRows || [];
+                      const prev = rows.length ? rows[rows.length - 1] : null;
+                      const prevEnd = parseDateInput(prev?.endDate);
+                      const startDate = prevEnd ? formatDateInput(addDays(prevEnd, 1)) : '';
+                      const days = 7;
+                      const endDate =
+                        startDate && parseDateInput(startDate)
+                          ? formatDateInput(addDays(parseDateInput(startDate), days))
+                          : '';
+                      return {
+                        ...p,
+                        batchRows: [
+                          ...rows,
+                          {
+                            id: `batch-${Date.now()}`,
+                            label: `Batch ${rows.length + 1}`,
+                            startDate,
+                            endDate,
+                            days,
+                          },
+                        ],
+                      };
+                    })
+                  }
+                  className="rounded-lg bg-accent px-3 py-2 text-xs text-white dark:bg-emerald-700"
+                >
+                  Add Batch
+                </button>
+              </div>
+              <label className="block text-sm text-neutral-800 dark:text-neutral-200">Registration Fee (per family)
+                <input
+                  type="number"
+                  min="0"
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
+                  value={campEditor.registrationFee || ''}
+                  onChange={(e) => setCampEditor((p) => ({ ...p, registrationFee: e.target.value }))}
+                />
+              </label>
+              <label className="block text-sm text-neutral-800 dark:text-neutral-200">Per Person/Day Price
+                <input
+                  type="number"
+                  min="0"
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
+                  value={campEditor.perPersonPerDayPrice || ''}
+                  onChange={(e) => setCampEditor((p) => ({ ...p, perPersonPerDayPrice: e.target.value }))}
                 />
               </label>
               <label className="block text-sm text-neutral-800 dark:text-neutral-200">Registration Pricing

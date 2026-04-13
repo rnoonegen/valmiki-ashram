@@ -1,32 +1,84 @@
 const express = require('express');
+const multer = require('multer');
 const SummerCampRegistration = require('../models/SummerCampRegistration');
 const WinterCampRegistration = require('../models/WinterCampRegistration');
 const OnlineCourseRegistration = require('../models/OnlineCourseRegistration');
 const { authRequired } = require('../middleware/auth');
+const { uploadImage } = require('../services/s3');
 
 const router = express.Router();
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+});
 
 function normalizePayload(payload = {}) {
+  const children = Array.isArray(payload.children) ? payload.children : [];
+  let normalizedChildren = children.map((child) => ({
+    name: String(child?.name || '').trim(),
+    age: Number(child?.age),
+    gender: String(child?.gender || '').trim(),
+    dob: String(child?.dob || '').trim(),
+    school: String(child?.school || '').trim(),
+    currentClass: String(child?.currentClass || '').trim(),
+    schoolName: String(child?.schoolName || child?.school || '').trim(),
+    interestedBatches: Array.isArray(child?.interestedBatches)
+      ? child.interestedBatches.map((x) => String(x || '').trim()).filter(Boolean)
+      : [],
+  }));
+  if (!normalizedChildren.length && String(payload.childName || '').trim()) {
+    normalizedChildren = [
+      {
+        name: String(payload.childName || '').trim(),
+        age: Number(payload.childAge),
+        gender: String(payload.gender || '').trim(),
+        dob: String(payload.dob || '').trim(),
+        school: String(payload.school || payload.schoolName || '').trim(),
+        currentClass: String(payload.currentClass || '').trim(),
+        schoolName: String(payload.schoolName || '').trim(),
+        interestedBatches: Array.isArray(payload.interestedBatches)
+          ? payload.interestedBatches.map((x) => String(x || '').trim()).filter(Boolean)
+          : [],
+      },
+    ];
+  }
+  const firstChild = normalizedChildren[0] || {};
+  const familyMembers = Array.isArray(payload.familyMembers) ? payload.familyMembers : [];
   return {
     registrationCampId: String(payload.registrationCampId || '').trim(),
     registrationCampTitle: String(payload.registrationCampTitle || '').trim(),
-    email: String(payload.email || '').trim(),
-    guardianName: String(payload.guardianName || '').trim(),
+    parentEmail: String(payload.parentEmail || payload.email || '').trim(),
+    parentName: String(payload.parentName || payload.guardianName || '').trim(),
+    email: String(payload.email || payload.parentEmail || '').trim(),
+    guardianName: String(payload.guardianName || payload.parentName || '').trim(),
     relationship: String(payload.relationship || '').trim(),
     mobileNumber: String(payload.mobileNumber || '').trim(),
     motherTongue: String(payload.motherTongue || '').trim(),
     country: String(payload.country || '').trim(),
     state: String(payload.state || '').trim(),
     city: String(payload.city || '').trim(),
-    childName: String(payload.childName || '').trim(),
-    childAge: Number(payload.childAge),
-    gender: String(payload.gender || '').trim(),
-    schoolName: String(payload.schoolName || '').trim(),
-    currentClass: String(payload.currentClass || '').trim(),
+    childName: String(payload.childName || firstChild.name || '').trim(),
+    childAge: Number(payload.childAge ?? firstChild.age),
+    gender: String(payload.gender || firstChild.gender || '').trim(),
+    schoolName: String(payload.schoolName || firstChild.schoolName || '').trim(),
+    currentClass: String(payload.currentClass || firstChild.currentClass || '').trim(),
     interestedBatches: Array.isArray(payload.interestedBatches)
       ? payload.interestedBatches.map((x) => String(x).trim()).filter(Boolean)
-      : [],
+      : Array.isArray(firstChild.interestedBatches)
+        ? firstChild.interestedBatches
+        : [],
+    children: normalizedChildren,
+    familyMembers: familyMembers.map((member) => ({
+      name: String(member?.name || '').trim(),
+      relationWithChild: String(member?.relationWithChild || '').trim(),
+      stayingDays: Number(member?.stayingDays),
+    })),
     familyMembersStaying: String(payload.familyMembersStaying || '').trim(),
+    registrationFee: Number(payload.registrationFee) || 0,
+    perPersonPerDayPrice: Number(payload.perPersonPerDayPrice) || 0,
+    childStayDaysTotal: Number(payload.childStayDaysTotal) || 0,
+    familyStayDaysTotal: Number(payload.familyStayDaysTotal) || 0,
+    totalAmountPayable: Number(payload.totalAmountPayable) || 0,
     transactionNote: String(payload.transactionNote || '').trim(),
     paymentScreenshotUrl: String(payload.paymentScreenshotUrl || '').trim(),
     source: String(payload.source || '').trim(),
@@ -40,28 +92,46 @@ function validateRequired(data) {
   const requiredFields = [
     'registrationCampId',
     'registrationCampTitle',
-    'email',
-    'guardianName',
+    'parentEmail',
+    'parentName',
     'relationship',
     'mobileNumber',
     'motherTongue',
     'country',
     'state',
     'city',
-    'childName',
-    'gender',
-    'schoolName',
-    'currentClass',
-    'familyMembersStaying',
     'source',
   ];
   const missing = requiredFields.find((key) => !String(data[key] || '').trim());
   if (missing) return `${missing} is required.`;
-  if (!Number.isFinite(data.childAge) || data.childAge < 1 || data.childAge > 21) {
-    return 'Child age must be between 1 and 21.';
+  if (!Array.isArray(data.children) || !data.children.length) {
+    return 'At least one child is required.';
   }
-  if (!data.interestedBatches.length) {
-    return 'At least one batch selection is required.';
+  const invalidChild = data.children.find(
+    (child) =>
+      !child.name ||
+      !Number.isFinite(child.age) ||
+      child.age < 1 ||
+      child.age > 21 ||
+      !child.gender ||
+      !child.dob ||
+      !child.school ||
+      !child.currentClass ||
+      !Array.isArray(child.interestedBatches) ||
+      !child.interestedBatches.length
+  );
+  if (invalidChild) {
+    return 'Child details are incomplete.';
+  }
+  const invalidFamilyMember = (data.familyMembers || []).find(
+    (member) =>
+      !member.name ||
+      !member.relationWithChild ||
+      !Number.isFinite(member.stayingDays) ||
+      member.stayingDays < 1
+  );
+  if (invalidFamilyMember) {
+    return 'Family member details are incomplete.';
   }
   if (data.source === 'Other' && !data.sourceOther) {
     return 'Please provide source other details.';
@@ -147,6 +217,33 @@ function validateOnlineCourseRequired(data) {
   }
   return '';
 }
+
+router.post('/upload-payment-screenshot', (req, res) => {
+  upload.single('image')(req, res, async (err) => {
+    if (err?.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ message: 'Image size must be 10MB or less.' });
+    }
+    if (err) {
+      return res.status(400).json({ message: 'Invalid upload request.' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ message: 'Image file is required.' });
+    }
+    try {
+      const uploaded = await uploadImage({
+        fileBuffer: req.file.buffer,
+        mimeType: req.file.mimetype,
+        originalName: req.file.originalname,
+        folder: 'payments',
+      });
+      return res.status(201).json({ url: uploaded.url, key: uploaded.key });
+    } catch (uploadError) {
+      return res.status(uploadError?.status || 500).json({
+        message: uploadError?.message || 'Unable to upload payment screenshot.',
+      });
+    }
+  });
+});
 
 router.post('/summer-camp', async (req, res) => {
   const data = normalizePayload(req.body || {});
