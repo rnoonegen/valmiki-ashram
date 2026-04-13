@@ -28,7 +28,7 @@ Values below are what this app reads in code. For the **IP deployment**, server 
 |----------|--------------------------------------|----------------|
 | `PORT` | `5000` | Required by `server/index.js` (no default in code). |
 | `CLIENT_URL` | `http://139.59.6.209` | **Required** for CORS and Socket.IO in `server/index.js`. Must match the URL users open in the browser. |
-| `MONGO_URI` | `mongodb://mongo.valmiki.svc.cluster.local:27017/valmiki` | **Required** by `server/utils/db.js`. Matches the MongoDB Service defined in `deploy/kubernetes/mongo.yaml` (no auth; cluster-internal only). |
+| `MONGO_URI` | `mongodb://mongo:27017/valmiki` | **Required** by `server/utils/db.js`. Uses the in-cluster Service name `mongo` in namespace `valmiki` (see `deploy/kubernetes/mongo.yaml`). |
 | `ADMIN_JWT_SECRET` | `valmiki-admin-secret` | Default in `server/middleware/auth.js` and `server/routes/admin.js` if unset; Secret sets it explicitly. **Change this to a long random string before real production.** |
 | `MAX_UPLOAD_MB` | `25` | Default in `server/routes/admin.js` if unset. |
 | `S3_REGION` | *(empty string)* | `server/services/s3.js` — leave empty until DigitalOcean Spaces (or S3) is configured; admin uploads will error until these are set. |
