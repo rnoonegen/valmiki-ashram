@@ -282,38 +282,40 @@ export default function About() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-2xl rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="font-semibold">Edit Content</h3>
-              <button type="button" onClick={() => setEditor(null)}><X className="h-4 w-4" /></button>
+              <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">Edit Content</h3>
+              <button type="button" onClick={() => setEditor(null)} className="rounded-md p-1 text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800" aria-label="Close">
+                <X className="h-4 w-4" />
+              </button>
             </div>
             {editor.type === 'intro' ? (
               <div className="space-y-3">
-                <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={editor.introLabel} onChange={(e) => setEditor((p) => ({ ...p, introLabel: e.target.value }))} />
-                <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={editor.introTitle} onChange={(e) => setEditor((p) => ({ ...p, introTitle: e.target.value }))} />
+                <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100" value={editor.introLabel} onChange={(e) => setEditor((p) => ({ ...p, introLabel: e.target.value }))} />
+                <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100" value={editor.introTitle} onChange={(e) => setEditor((p) => ({ ...p, introTitle: e.target.value }))} />
               </div>
             ) : null}
             {editor.type === 'founders' ? (
               <div className="space-y-2">
-                <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={editor.foundersTitle} onChange={(e) => setEditor((p) => ({ ...p, foundersTitle: e.target.value }))} />
-                <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={editor.foundersSubtitle} onChange={(e) => setEditor((p) => ({ ...p, foundersSubtitle: e.target.value }))} />
-                <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={editor.founder1Name} onChange={(e) => setEditor((p) => ({ ...p, founder1Name: e.target.value }))} />
-                <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={editor.founder2Name} onChange={(e) => setEditor((p) => ({ ...p, founder2Name: e.target.value }))} />
-                <textarea className="h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={editor.foundersDescription} onChange={(e) => setEditor((p) => ({ ...p, foundersDescription: e.target.value }))} />
-                <textarea className="h-16 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={editor.foundersNote} onChange={(e) => setEditor((p) => ({ ...p, foundersNote: e.target.value }))} />
-                <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={editor.foundersButtonLabel} onChange={(e) => setEditor((p) => ({ ...p, foundersButtonLabel: e.target.value }))} />
-                <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={editor.foundersButtonLink} onChange={(e) => setEditor((p) => ({ ...p, foundersButtonLink: e.target.value }))} />
+                <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100" value={editor.foundersTitle} onChange={(e) => setEditor((p) => ({ ...p, foundersTitle: e.target.value }))} />
+                <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100" value={editor.foundersSubtitle} onChange={(e) => setEditor((p) => ({ ...p, foundersSubtitle: e.target.value }))} />
+                <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100" value={editor.founder1Name} onChange={(e) => setEditor((p) => ({ ...p, founder1Name: e.target.value }))} />
+                <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100" value={editor.founder2Name} onChange={(e) => setEditor((p) => ({ ...p, founder2Name: e.target.value }))} />
+                <textarea className="h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100" value={editor.foundersDescription} onChange={(e) => setEditor((p) => ({ ...p, foundersDescription: e.target.value }))} />
+                <textarea className="h-16 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100" value={editor.foundersNote} onChange={(e) => setEditor((p) => ({ ...p, foundersNote: e.target.value }))} />
+                <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100" value={editor.foundersButtonLabel} onChange={(e) => setEditor((p) => ({ ...p, foundersButtonLabel: e.target.value }))} />
+                <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100" value={editor.foundersButtonLink} onChange={(e) => setEditor((p) => ({ ...p, foundersButtonLink: e.target.value }))} />
               </div>
             ) : null}
             {(editor.type === 'highlight' || editor.type === 'whyCard') ? (
               <div className="space-y-3">
-                <select className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={editor.icon} onChange={(e) => setEditor((p) => ({ ...p, icon: e.target.value }))}>
+                <select className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100" value={editor.icon} onChange={(e) => setEditor((p) => ({ ...p, icon: e.target.value }))}>
                   {iconNames.map((name) => <option key={name} value={name}>{name}</option>)}
                 </select>
-                <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={editor.title} onChange={(e) => setEditor((p) => ({ ...p, title: e.target.value }))} />
-                <textarea className="h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={editor.body ?? editor.text} onChange={(e) => setEditor((p) => ({ ...p, [editor.type === 'highlight' ? 'body' : 'text']: e.target.value }))} />
+                <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100" value={editor.title} onChange={(e) => setEditor((p) => ({ ...p, title: e.target.value }))} />
+                <textarea className="h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100" value={editor.body ?? editor.text} onChange={(e) => setEditor((p) => ({ ...p, [editor.type === 'highlight' ? 'body' : 'text']: e.target.value }))} />
               </div>
             ) : null}
             {editor.type === 'whyTitle' ? (
-              <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={editor.whyTitle} onChange={(e) => setEditor((p) => ({ ...p, whyTitle: e.target.value }))} />
+              <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100" value={editor.whyTitle} onChange={(e) => setEditor((p) => ({ ...p, whyTitle: e.target.value }))} />
             ) : null}
             <div className="mt-4 flex gap-2">
               <button type="button" onClick={applyEditor} className="rounded-lg bg-accent px-4 py-2 text-sm text-white dark:bg-emerald-700">Apply</button>

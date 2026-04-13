@@ -41,7 +41,7 @@ export default function ContentBlockEditor({
                     [next[bi - 1], next[bi]] = [next[bi], next[bi - 1]];
                     resolvedOnChange(next);
                   }}
-                  className="rounded-md border border-neutral-300 p-1.5 disabled:opacity-40 dark:border-neutral-600"
+                  className="rounded-md border border-neutral-300 bg-white p-1.5 text-neutral-700 transition-colors hover:bg-neutral-50 disabled:opacity-40 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700"
                   aria-label="Move block up"
                 >
                   <ChevronUp className="h-4 w-4" />
@@ -55,7 +55,7 @@ export default function ContentBlockEditor({
                     [next[bi], next[bi + 1]] = [next[bi + 1], next[bi]];
                     resolvedOnChange(next);
                   }}
-                  className="rounded-md border border-neutral-300 p-1.5 disabled:opacity-40 dark:border-neutral-600"
+                  className="rounded-md border border-neutral-300 bg-white p-1.5 text-neutral-700 transition-colors hover:bg-neutral-50 disabled:opacity-40 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700"
                   aria-label="Move block down"
                 >
                   <ChevronDown className="h-4 w-4" />
@@ -73,7 +73,7 @@ export default function ContentBlockEditor({
 
             {block.type === "paragraph" ? (
               <textarea
-                className="h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-950"
+                className="h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
                 value={block.text || ""}
                 onChange={(e) =>
                   resolvedOnChange(resolvedBlocks.map((b, i) => (i === bi ? { ...b, text: e.target.value } : b)))
@@ -82,7 +82,7 @@ export default function ContentBlockEditor({
             ) : null}
             {block.type === "subheading" ? (
               <input
-                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-950"
+                className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
                 value={block.text || ""}
                 onChange={(e) =>
                   resolvedOnChange(resolvedBlocks.map((b, i) => (i === bi ? { ...b, text: e.target.value } : b)))
@@ -94,7 +94,7 @@ export default function ContentBlockEditor({
                 {(block.items || []).map((line, li) => (
                   <div key={`${resolvedKeyPrefix}-${bi}-li-${li}`} className="flex gap-2">
                     <input
-                      className="flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-950"
+                      className="flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
                       value={line}
                       onChange={(e) =>
                         resolvedOnChange(
@@ -143,21 +143,21 @@ export default function ContentBlockEditor({
         <button
           type="button"
           onClick={() => resolvedOnChange([...resolvedBlocks, { type: "paragraph", text: "" }])}
-          className="inline-flex items-center gap-1 rounded-lg border border-neutral-300 px-2 py-1.5 text-xs dark:border-neutral-600"
+          className="inline-flex items-center gap-1 rounded-lg border border-neutral-300 bg-white px-2 py-1.5 text-xs text-neutral-800 transition-colors hover:bg-neutral-50 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700"
         >
           <Plus className="h-3.5 w-3.5" /> Paragraph
         </button>
         <button
           type="button"
           onClick={() => resolvedOnChange([...resolvedBlocks, { type: "subheading", text: "" }])}
-          className="inline-flex items-center gap-1 rounded-lg border border-neutral-300 px-2 py-1.5 text-xs dark:border-neutral-600"
+          className="inline-flex items-center gap-1 rounded-lg border border-neutral-300 bg-white px-2 py-1.5 text-xs text-neutral-800 transition-colors hover:bg-neutral-50 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700"
         >
           <Plus className="h-3.5 w-3.5" /> Subheading
         </button>
         <button
           type="button"
           onClick={() => resolvedOnChange([...resolvedBlocks, { type: "bullets", items: [""] }])}
-          className="inline-flex items-center gap-1 rounded-lg border border-neutral-300 px-2 py-1.5 text-xs dark:border-neutral-600"
+          className="inline-flex items-center gap-1 rounded-lg border border-neutral-300 bg-white px-2 py-1.5 text-xs text-neutral-800 transition-colors hover:bg-neutral-50 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700"
         >
           <Plus className="h-3.5 w-3.5" /> Bullet list
         </button>

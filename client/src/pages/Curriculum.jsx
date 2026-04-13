@@ -325,13 +325,13 @@ export default function Curriculum() {
                 <div className="border-t border-theme px-5 py-3">
                   <div className="flex flex-col gap-2">
                   <input
-                    className="min-w-[220px] flex-1 rounded-lg border border-theme bg-white px-3 py-2 text-sm dark:bg-neutral-950"
+                    className="min-w-[220px] flex-1 rounded-lg border border-theme bg-white px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-500 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                     value={category.title}
                     onChange={(e) => updateCategory(i, { title: e.target.value })}
                     placeholder="Category title"
                   />
                   <input
-                    className="min-w-[220px] flex-1 rounded-lg border border-theme bg-white px-3 py-2 text-sm dark:bg-neutral-950"
+                    className="min-w-[220px] flex-1 rounded-lg border border-theme bg-white px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-500 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                     value={category.description || ''}
                     onChange={(e) => updateCategory(i, { description: e.target.value })}
                     placeholder="Optional category description"
@@ -342,17 +342,17 @@ export default function Curriculum() {
                       type="button"
                       onClick={() => reorderCategory(i, -1)}
                       disabled={i === 0}
-                      className="inline-flex items-center gap-1 rounded-md bg-neutral-100 px-2 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-50 dark:bg-neutral-800"
+                      className="inline-flex items-center gap-1 rounded-md border border-neutral-200/80 bg-neutral-100 px-2 py-1 text-xs text-neutral-800 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100 dark:disabled:border-neutral-700 dark:disabled:bg-neutral-900/90 dark:disabled:text-neutral-500 dark:disabled:opacity-100"
                     >
-                      <ArrowUp className="h-3.5 w-3.5" /> Up
+                      <ArrowUp className="h-3.5 w-3.5 shrink-0" /> Up
                     </button>
                     <button
                       type="button"
                       onClick={() => reorderCategory(i, 1)}
                       disabled={i === working.length - 1}
-                      className="inline-flex items-center gap-1 rounded-md bg-neutral-100 px-2 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-50 dark:bg-neutral-800"
+                      className="inline-flex items-center gap-1 rounded-md border border-neutral-200/80 bg-neutral-100 px-2 py-1 text-xs text-neutral-800 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100 dark:disabled:border-neutral-700 dark:disabled:bg-neutral-900/90 dark:disabled:text-neutral-500 dark:disabled:opacity-100"
                     >
-                      <ArrowDown className="h-3.5 w-3.5" /> Down
+                      <ArrowDown className="h-3.5 w-3.5 shrink-0" /> Down
                     </button>
                     <button type="button" onClick={() => addSubject(i)} className="inline-flex items-center gap-1 rounded-md bg-emerald-100 px-2 py-1 text-xs text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"><Plus className="h-3.5 w-3.5" />Subject</button>
                     <button type="button" onClick={() => deleteCategory(i)} className="inline-flex items-center gap-1 rounded-md bg-rose-100 px-2 py-1 text-xs text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"><Trash2 className="h-3.5 w-3.5" />Delete</button>
@@ -373,7 +373,7 @@ export default function Curriculum() {
                         <div className="flex items-center justify-between gap-2">
                           {isAdmin ? (
                             <input
-                              className="w-full rounded-lg border border-theme bg-white px-2 py-1.5 text-sm dark:bg-neutral-950"
+                              className="w-full rounded-lg border border-theme bg-white px-2 py-1.5 text-sm text-neutral-900 placeholder:text-neutral-500 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                               value={subject.title}
                               onChange={(e) => updateSubject(i, si, { title: e.target.value })}
                               data-subject-input={`${i}-${si}`}
@@ -416,7 +416,7 @@ export default function Curriculum() {
                                 {isAdmin ? (
                                   <div className="flex items-center gap-1">
                                     <input
-                                      className="w-full rounded border border-theme bg-white px-2 py-1 text-xs dark:bg-neutral-950"
+                                      className="w-full rounded border border-theme bg-white px-2 py-1 text-xs text-neutral-900 placeholder:text-neutral-500 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                                       value={child.title}
                                       onChange={(e) => updateChild(i, si, ci, e.target.value)}
                                     />

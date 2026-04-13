@@ -250,7 +250,7 @@ export default function Admission() {
               <label className="block text-sm">
                 Title
                 <input
-                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                   value={heroEditor.title}
                   onChange={(e) => setHeroEditor((p) => ({ ...p, title: e.target.value }))}
                 />
@@ -258,7 +258,7 @@ export default function Admission() {
               <label className="block text-sm">
                 Subtitle
                 <textarea
-                  className="mt-1 h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="mt-1 h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                   value={heroEditor.subtitle}
                   onChange={(e) => setHeroEditor((p) => ({ ...p, subtitle: e.target.value }))}
                 />
@@ -302,7 +302,7 @@ export default function Admission() {
               <label className="block text-sm">
                 Card Title
                 <input
-                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                   value={cardEditor.title}
                   onChange={(e) => setCardEditor((p) => ({ ...p, title: e.target.value }))}
                 />
@@ -310,7 +310,7 @@ export default function Admission() {
               <label className="block text-sm">
                 Description
                 <textarea
-                  className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                   value={cardEditor.description}
                   onChange={(e) => setCardEditor((p) => ({ ...p, description: e.target.value }))}
                 />
@@ -318,7 +318,7 @@ export default function Admission() {
               <label className="block text-sm">
                 Points (one per line)
                 <textarea
-                  className="mt-1 h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="mt-1 h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                   value={cardEditor.pointsText}
                   onChange={(e) => setCardEditor((p) => ({ ...p, pointsText: e.target.value }))}
                 />
@@ -326,7 +326,7 @@ export default function Admission() {
               <label className="block text-sm">
                 Button Label
                 <input
-                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                   value={cardEditor.ctaLabel}
                   onChange={(e) => setCardEditor((p) => ({ ...p, ctaLabel: e.target.value }))}
                 />
@@ -334,7 +334,7 @@ export default function Admission() {
               <label className="block text-sm">
                 Button Link
                 <input
-                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                   value={cardEditor.to}
                   onChange={(e) => setCardEditor((p) => ({ ...p, to: e.target.value }))}
                 />

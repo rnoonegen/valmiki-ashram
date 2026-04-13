@@ -39,7 +39,7 @@ const ALLOWED_PAGES = new Set([
   "summer-camp-schedule",
   "online-programs",
   "contests",
-  'online-course-registration',
+  "online-course-registration",
 ]);
 
 const PAGE_ALIASES = {
@@ -52,8 +52,8 @@ const PAGE_ALIASES = {
   summer_camp_registration: "summer-camp-registration",
   onlineprograms: "online-programs",
   online_programs: "online-programs",
-  onlinecourseregistration: 'online-course-registration',
-  online_course_registration: 'online-course-registration',
+  onlinecourseregistration: "online-course-registration",
+  online_course_registration: "online-course-registration",
   winter_camp: "winter-camp",
   winter_camp_schedule: "winter-camp-schedule",
   summer_camp_schedule: "summer-camp-schedule",
@@ -300,13 +300,11 @@ router.delete("/media/:id", authRequired, async (req, res) => {
 
   await deleteImage(asset.key);
   await MediaAsset.deleteOne({ _id: asset._id });
-  req.app
-    .get("io")
-    .emit("media:deleted", {
-      id: String(asset._id),
-      key: asset.key,
-      folder: asset.folder,
-    });
+  req.app.get("io").emit("media:deleted", {
+    id: String(asset._id),
+    key: asset.key,
+    folder: asset.folder,
+  });
   return res.json({ ok: true });
 });
 
@@ -357,6 +355,9 @@ router.post("/contests", authRequired, async (req, res) => {
     registerButtonText: body.registerButtonText || "Register Now",
     registerMode: body.registerMode === "google" ? "google" : "internal",
     googleFormUrl: body.googleFormUrl || "",
+    googleFormButtonLabel: body.googleFormButtonLabel || "",
+    googleFormHelperText: body.googleFormHelperText || "",
+    builtInRegistrationIntro: String(body.builtInRegistrationIntro || ""),
     sections: Array.isArray(body.sections) ? body.sections : [],
     registrationOpen: body.registrationOpen !== false,
     updatedBy: req.admin?.username || "admin",
@@ -384,6 +385,11 @@ router.put("/contests/:id", authRequired, async (req, res) => {
   contest.registerButtonText = body.registerButtonText || "Register Now";
   contest.registerMode = body.registerMode === "google" ? "google" : "internal";
   contest.googleFormUrl = body.googleFormUrl || "";
+  contest.googleFormButtonLabel = body.googleFormButtonLabel || "";
+  contest.googleFormHelperText = body.googleFormHelperText || "";
+  contest.builtInRegistrationIntro = String(
+    body.builtInRegistrationIntro || "",
+  );
   contest.sections = Array.isArray(body.sections) ? body.sections : [];
   contest.registrationOpen = body.registrationOpen !== false;
   contest.updatedBy = req.admin?.username || "admin";

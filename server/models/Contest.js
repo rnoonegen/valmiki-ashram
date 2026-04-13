@@ -29,9 +29,13 @@ const contestSchema = new mongoose.Schema(
     registerMode: {
       type: String,
       enum: ['internal', 'google'],
-      default: 'internal',
+      default: 'google',
     },
     googleFormUrl: { type: String, default: '' },
+    googleFormButtonLabel: { type: String, default: '' },
+    googleFormHelperText: { type: String, default: '' },
+    /** Shown above the built-in registration form; editable in admin. */
+    builtInRegistrationIntro: { type: String, default: '' },
     sections: [sectionSchema],
     registrationOpen: { type: Boolean, default: true },
     updatedBy: { type: String, default: 'admin' },

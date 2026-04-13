@@ -1031,7 +1031,7 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                       type="button"
                       onClick={() => setCampHistoryPage((p) => Math.max(1, p - 1))}
                       disabled={campHistoryPage === 1}
-                      className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700"
+                      className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm text-neutral-800 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-200"
                     >
                       Previous
                     </button>
@@ -1039,7 +1039,7 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                       type="button"
                       onClick={() => setCampHistoryPage((p) => Math.min(campHistoryTotalPages, p + 1))}
                       disabled={campHistoryPage === campHistoryTotalPages}
-                      className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700"
+                      className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm text-neutral-800 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-200"
                     >
                       Next
                     </button>
@@ -1206,44 +1206,44 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
               <>
               {contentEditorStateTab !== 'form-blueprint' && stateEditorOpen ? (
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
-                  <label className="text-sm">
+                  <label className="text-sm text-neutral-800 dark:text-neutral-200">
                     Title
                     <input
-                      className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                      className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                       value={contentEditor[`${contentEditorStateTab}Title`] || ''}
                       onChange={(e) => setContentEditor((p) => ({ ...p, [`${contentEditorStateTab}Title`]: e.target.value }))}
                     />
                   </label>
-                  <label className="text-sm">
+                  <label className="text-sm text-neutral-800 dark:text-neutral-200">
                     CTA Label
                     <input
-                      className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                      className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                       value={contentEditor[`${contentEditorStateTab}CtaLabel`] || ''}
                       onChange={(e) => setContentEditor((p) => ({ ...p, [`${contentEditorStateTab}CtaLabel`]: e.target.value }))}
                       placeholder={defaultContent.statusMessages[contentEditorStateTab]?.ctaLabel || 'CTA label'}
                     />
                   </label>
-                  <label className="text-sm md:col-span-2">
+                  <label className="text-sm md:col-span-2 text-neutral-800 dark:text-neutral-200">
                     Message
                     <textarea
-                      className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                      className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                       value={contentEditor[`${contentEditorStateTab}Message`] || ''}
                       onChange={(e) => setContentEditor((p) => ({ ...p, [`${contentEditorStateTab}Message`]: e.target.value }))}
                     />
                   </label>
-                  <label className="text-sm md:col-span-2">
+                  <label className="text-sm md:col-span-2 text-neutral-800 dark:text-neutral-200">
                     CTA Link
                     <input
-                      className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                      className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                       value={contentEditor[`${contentEditorStateTab}CtaLink`] || ''}
                       onChange={(e) => setContentEditor((p) => ({ ...p, [`${contentEditorStateTab}CtaLink`]: e.target.value }))}
                       placeholder={defaultContent.statusMessages[contentEditorStateTab]?.ctaLink || '/path-or-url'}
                     />
                   </label>
-                  <label className="text-sm md:col-span-2">
+                  <label className="text-sm md:col-span-2 text-neutral-800 dark:text-neutral-200">
                     Content Blocks (one per line)
                     <textarea
-                      className="mt-1 h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                      className="mt-1 h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                       value={contentEditor[`${contentEditorStateTab}BlocksText`] || ''}
                       onChange={(e) => setContentEditor((p) => ({ ...p, [`${contentEditorStateTab}BlocksText`]: e.target.value }))}
                     />
@@ -1334,25 +1334,25 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                       ) : (
                         <>
                           <div className="mt-5 grid gap-4 md:grid-cols-2">
-                            <label className="text-sm">Email<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
-                            <label className="text-sm">Name<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
-                            <label className="text-sm">Relationship with child<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
-                            <label className="text-sm">Mobile Number<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
-                            <label className="text-sm">Mother Tongue<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
-                            <label className="text-sm">Country<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
-                            <label className="text-sm">State<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
-                            <label className="text-sm">City/Town<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
-                            <label className="text-sm">Child Name<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
-                            <label className="text-sm">Child Age<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
-                            <label className="text-sm">Gender
-                              <select disabled className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950">
+                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Email<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
+                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Name<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
+                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Relationship with child<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
+                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Mobile Number<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
+                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Mother Tongue<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
+                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Country<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
+                            <label className="text-sm text-neutral-800 dark:text-neutral-200">State<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
+                            <label className="text-sm text-neutral-800 dark:text-neutral-200">City/Town<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
+                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Child Name<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
+                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Child Age<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
+                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Gender
+                              <select disabled className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400">
                                 <option value="">Select</option>
                               </select>
                             </label>
-                            <label className="text-sm">School Name<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
-                            <label className="text-sm">Current Class/Standard<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
-                            <label className="text-sm">Family Members Staying
-                              <select disabled className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950">
+                            <label className="text-sm text-neutral-800 dark:text-neutral-200">School Name<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
+                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Current Class/Standard<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
+                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Family Members Staying
+                              <select disabled className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400">
                                 <option value="">Choose</option>
                               </select>
                             </label>
@@ -1361,7 +1361,7 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                             <p className="mb-2 text-sm font-medium text-neutral-800 dark:text-neutral-200">Which batch are you interested in?</p>
                             <div className="grid gap-2 md:grid-cols-2">
                               {String(contentEditor.batchesText || '').split('\n').map((x) => x.trim()).filter(Boolean).map((line) => (
-                                <label key={line} className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 px-3 py-2 text-sm opacity-70 dark:border-neutral-700">
+                                <label key={line} className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-800 opacity-70 dark:border-neutral-700 dark:text-neutral-200">
                                   <input type="checkbox" disabled />
                                   {line}
                                 </label>
@@ -1369,18 +1369,18 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                             </div>
                           </div>
                           <div className="mt-5 grid gap-4 md:grid-cols-2">
-                            <label className="text-sm">How did you hear about us?
-                              <select disabled className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950">
+                            <label className="text-sm text-neutral-800 dark:text-neutral-200">How did you hear about us?
+                              <select disabled className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400">
                                 <option value="">Choose</option>
                               </select>
                             </label>
-                            <label className="text-sm">Other Source<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" /></label>
+                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Other Source<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
                           </div>
-                          <label className="mt-5 block text-sm">Transaction Note
-                            <input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" />
+                          <label className="mt-5 block text-sm text-neutral-800 dark:text-neutral-200">Transaction Note
+                            <input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" />
                           </label>
-                          <label className="mt-4 block text-sm">Payment Screenshot URL (optional)
-                            <input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950" />
+                          <label className="mt-4 block text-sm text-neutral-800 dark:text-neutral-200">Payment Screenshot URL (optional)
+                            <input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" />
                           </label>
                           <div className="mt-6">
                             <button
@@ -1401,18 +1401,18 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                   <h4 className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">Form Blueprint Content</h4>
                   {contentEditor.registrationMode !== 'google-form' ? (
                     <div className="mt-3 grid gap-3 md:grid-cols-2">
-                      <label className="text-sm md:col-span-2">
+                      <label className="text-sm md:col-span-2 text-neutral-800 dark:text-neutral-200">
                         Title + Year
                         <input
-                          className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                          className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                           value={contentEditor.title || ''}
                           onChange={(e) => setContentEditor((p) => ({ ...p, title: e.target.value }))}
                         />
                       </label>
-                      <label className="text-sm md:col-span-2">
+                      <label className="text-sm md:col-span-2 text-neutral-800 dark:text-neutral-200">
                         Subtitle
                         <textarea
-                          className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                          className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                           value={contentEditor.subtitle || ''}
                           onChange={(e) => setContentEditor((p) => ({ ...p, subtitle: e.target.value }))}
                         />
@@ -1422,11 +1422,11 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                   <div className="mt-3 space-y-3">
                     {contentEditor.registrationMode !== 'google-form' ? (
                       <>
-                        <label className="text-sm">Age Guidelines (one per line)
-                          <textarea className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={contentEditor.ageGuidelinesText} onChange={(e) => setContentEditor((p) => ({ ...p, ageGuidelinesText: e.target.value }))} />
+                        <label className="text-sm text-neutral-800 dark:text-neutral-200">Age Guidelines (one per line)
+                          <textarea className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" value={contentEditor.ageGuidelinesText} onChange={(e) => setContentEditor((p) => ({ ...p, ageGuidelinesText: e.target.value }))} />
                         </label>
-                        <label className="text-sm">Batches (one per line)
-                          <textarea className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={contentEditor.batchesText} onChange={(e) => setContentEditor((p) => ({ ...p, batchesText: e.target.value }))} />
+                        <label className="text-sm text-neutral-800 dark:text-neutral-200">Batches (one per line)
+                          <textarea className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" value={contentEditor.batchesText} onChange={(e) => setContentEditor((p) => ({ ...p, batchesText: e.target.value }))} />
                         </label>
                       </>
                     ) : null}
@@ -1434,18 +1434,18 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                       <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">Register Now Form</p>
                       {contentEditor.registrationMode !== 'google-form' ? (
                         <>
-                          <label className="mt-3 block text-sm">
+                          <label className="mt-3 block text-sm text-neutral-800 dark:text-neutral-200">
                             Form Title
                             <input
-                              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                               value={contentEditor.formTitle || ''}
                               onChange={(e) => setContentEditor((p) => ({ ...p, formTitle: e.target.value }))}
                             />
                           </label>
-                          <label className="mt-3 block text-sm">
+                          <label className="mt-3 block text-sm text-neutral-800 dark:text-neutral-200">
                             Form Subtitle/Note
                             <textarea
-                              className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                              className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                               value={contentEditor.formNote || ''}
                               onChange={(e) => setContentEditor((p) => ({ ...p, formNote: e.target.value }))}
                             />
@@ -1454,27 +1454,27 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                       ) : null}
                       {contentEditor.registrationMode === 'google-form' ? (
                         <>
-                          <label className="mt-3 block text-sm">
+                          <label className="mt-3 block text-sm text-neutral-800 dark:text-neutral-200">
                             Google Form URL
                             <input
-                              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                               value={contentEditor.googleFormUrl || ''}
                               onChange={(e) => setContentEditor((p) => ({ ...p, googleFormUrl: e.target.value }))}
                               placeholder="https://forms.gle/..."
                             />
                           </label>
-                          <label className="mt-3 block text-sm">
+                          <label className="mt-3 block text-sm text-neutral-800 dark:text-neutral-200">
                             Google Form Button Label
                             <input
-                              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                               value={contentEditor.googleFormButtonLabel || ''}
                               onChange={(e) => setContentEditor((p) => ({ ...p, googleFormButtonLabel: e.target.value }))}
                             />
                           </label>
-                          <label className="mt-3 block text-sm">
+                          <label className="mt-3 block text-sm text-neutral-800 dark:text-neutral-200">
                             Helper Text
                             <textarea
-                              className="mt-1 h-16 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                              className="mt-1 h-16 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                               value={contentEditor.googleFormHelperText || ''}
                               onChange={(e) => setContentEditor((p) => ({ ...p, googleFormHelperText: e.target.value }))}
                             />
@@ -1599,9 +1599,9 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
             </p>
           ) : null}
           <div className="mt-5 grid gap-4 md:grid-cols-2">
-            <label className="text-sm">Email<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" {...register('email')} /></label>
-            <label className="text-sm">Name<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" {...register('guardianName')} /></label>
-            <label className="text-sm">Relationship with child<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" {...register('relationship')} /></label>
+            <label className="text-sm text-neutral-800 dark:text-neutral-200">Email<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('email')} /></label>
+            <label className="text-sm text-neutral-800 dark:text-neutral-200">Name<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('guardianName')} /></label>
+            <label className="text-sm text-neutral-800 dark:text-neutral-200">Relationship with child<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('relationship')} /></label>
             <PhoneInput
               label="Mobile Number"
               required
@@ -1610,7 +1610,7 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
               error={errors?.mobileNumber?.message}
               isDark={isDark}
             />
-            <label className="text-sm">Mother Tongue<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" {...register('motherTongue')} /></label>
+            <label className="text-sm text-neutral-800 dark:text-neutral-200">Mother Tongue<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('motherTongue')} /></label>
             <FormSelect
               name="country"
               control={control}
@@ -1621,19 +1621,19 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
               error={errors?.country?.message}
               isDark={isDark}
             />
-            <label className="text-sm">State<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" {...register('state')} /></label>
-            <label className="text-sm">City/Town<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" {...register('city')} /></label>
-            <label className="text-sm">Child Name<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" {...register('childName')} /></label>
-            <label className="text-sm">Child Age<input type="number" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" {...register('childAge')} /></label>
-            <label className="text-sm">Gender
-              <select className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" {...register('gender')}>
+            <label className="text-sm text-neutral-800 dark:text-neutral-200">State<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('state')} /></label>
+            <label className="text-sm text-neutral-800 dark:text-neutral-200">City/Town<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('city')} /></label>
+            <label className="text-sm text-neutral-800 dark:text-neutral-200">Child Name<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('childName')} /></label>
+            <label className="text-sm text-neutral-800 dark:text-neutral-200">Child Age<input type="number" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('childAge')} /></label>
+            <label className="text-sm text-neutral-800 dark:text-neutral-200">Gender
+              <select className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('gender')}>
                 <option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option>
               </select>
             </label>
-            <label className="text-sm">School Name<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" {...register('schoolName')} /></label>
-            <label className="text-sm">Current Class/Standard<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" {...register('currentClass')} /></label>
-            <label className="text-sm">Family Members Staying
-              <select className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" {...register('familyMembersStaying')}>
+            <label className="text-sm text-neutral-800 dark:text-neutral-200">School Name<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('schoolName')} /></label>
+            <label className="text-sm text-neutral-800 dark:text-neutral-200">Current Class/Standard<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('currentClass')} /></label>
+            <label className="text-sm text-neutral-800 dark:text-neutral-200">Family Members Staying
+              <select className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('familyMembersStaying')}>
                 <option value="">Choose</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="Above 5">Above 5</option>
               </select>
             </label>
@@ -1666,21 +1666,21 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
           </div>
 
           <div className="mt-5 grid gap-4 md:grid-cols-2">
-            <label className="text-sm">How did you hear about us?
-              <select className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" {...register('source')}>
+            <label className="text-sm text-neutral-800 dark:text-neutral-200">How did you hear about us?
+              <select className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('source')}>
                 <option value="">Choose</option><option>Word of mouth</option><option>Poster/Flyer</option><option>Website</option><option>Instagram</option><option>YouTube</option><option>Whatsapp</option><option>Other</option>
               </select>
             </label>
             {source === 'Other' ? (
-              <label className="text-sm">Other Source<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" {...register('sourceOther')} /></label>
+              <label className="text-sm text-neutral-800 dark:text-neutral-200">Other Source<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('sourceOther')} /></label>
             ) : null}
           </div>
 
-          <label className="mt-5 block text-sm">Transaction Note
-            <input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" placeholder={activeCampContent.transactionHint} {...register('transactionNote')} />
+          <label className="mt-5 block text-sm text-neutral-800 dark:text-neutral-200">Transaction Note
+            <input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" placeholder={activeCampContent.transactionHint} {...register('transactionNote')} />
           </label>
-          <label className="mt-4 block text-sm">Payment Screenshot URL (optional)
-            <input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" placeholder="Paste uploaded payment screenshot link" {...register('paymentScreenshotUrl')} />
+          <label className="mt-4 block text-sm text-neutral-800 dark:text-neutral-200">Payment Screenshot URL (optional)
+            <input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" placeholder="Paste uploaded payment screenshot link" {...register('paymentScreenshotUrl')} />
           </label>
 
           {Object.values(errors).length ? (
@@ -1713,10 +1713,10 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
               <h2 className="heading-section">Submitted Registrations</h2>
             </div>
             <div className="mb-4">
-              <label className="text-sm">
+              <label className="text-sm text-neutral-800 dark:text-neutral-200">
                 Select Camp
                 <select
-                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                   value={selectedAdminCampId}
                   onChange={(e) => setSelectedAdminCampId(e.target.value)}
                 >
@@ -1765,7 +1765,7 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                   type="button"
                   onClick={() => setAdminRegistrationsPage((p) => Math.max(1, p - 1))}
                   disabled={adminRegistrationsPage === 1}
-                  className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700"
+                  className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm text-neutral-800 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-200"
                 >
                   Previous
                 </button>
@@ -1775,7 +1775,7 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                     setAdminRegistrationsPage((p) => Math.min(adminRegistrationsTotalPages, p + 1))
                   }
                   disabled={adminRegistrationsPage === adminRegistrationsTotalPages}
-                  className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700"
+                  className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm text-neutral-800 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-200"
                 >
                   Next
                 </button>
@@ -1798,16 +1798,16 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
             <h3 className="text-lg font-semibold text-accent dark:text-emerald-200">{entryEditor._id ? 'Edit' : 'Add'} Registration Entry</h3>
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               {['registrationCampId','registrationCampTitle','email','guardianName','relationship','mobileNumber','motherTongue','country','state','city','childName','childAge','gender','schoolName','currentClass','familyMembersStaying','source','sourceOther','paymentScreenshotUrl','status'].map((key) => (
-                <label key={key} className="text-sm capitalize">{key}
-                  <input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={entryEditor[key] ?? ''} onChange={(e) => setEntryEditor((p) => ({ ...p, [key]: e.target.value }))} />
+                <label key={key} className="text-sm capitalize text-neutral-800 dark:text-neutral-200">{key}
+                  <input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" value={entryEditor[key] ?? ''} onChange={(e) => setEntryEditor((p) => ({ ...p, [key]: e.target.value }))} />
                 </label>
               ))}
             </div>
-            <label className="mt-3 block text-sm">Interested Batches (one per line)
-              <textarea className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={entryEditor.interestedBatchesText || ''} onChange={(e) => setEntryEditor((p) => ({ ...p, interestedBatchesText: e.target.value }))} />
+            <label className="mt-3 block text-sm text-neutral-800 dark:text-neutral-200">Interested Batches (one per line)
+              <textarea className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" value={entryEditor.interestedBatchesText || ''} onChange={(e) => setEntryEditor((p) => ({ ...p, interestedBatchesText: e.target.value }))} />
             </label>
-            <label className="mt-3 block text-sm">Transaction Note
-              <textarea className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={entryEditor.transactionNote || ''} onChange={(e) => setEntryEditor((p) => ({ ...p, transactionNote: e.target.value }))} />
+            <label className="mt-3 block text-sm text-neutral-800 dark:text-neutral-200">Transaction Note
+              <textarea className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" value={entryEditor.transactionNote || ''} onChange={(e) => setEntryEditor((p) => ({ ...p, transactionNote: e.target.value }))} />
             </label>
             <div className="mt-4 flex gap-2">
               <button type="button" onClick={saveEntryEditor} className="inline-flex items-center gap-1 rounded-lg bg-accent px-4 py-2 text-sm text-white dark:bg-emerald-700"><Save className="h-4 w-4" /> Save</button>
@@ -1880,30 +1880,30 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
               {campEditor.isNew ? 'Add Registration Camp' : 'Edit Registration Camp'}
             </h3>
             <div className="mt-4 space-y-3">
-              <label className="block text-sm">Camp Title
+              <label className="block text-sm text-neutral-800 dark:text-neutral-200">Camp Title
                 <input
-                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                   value={campEditor.title}
                   onChange={(e) => setCampEditor((p) => ({ ...p, title: e.target.value }))}
                 />
               </label>
-              <label className="block text-sm">Camp Subtitle
+              <label className="block text-sm text-neutral-800 dark:text-neutral-200">Camp Subtitle
                 <input
-                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                   value={campEditor.subtitle || ''}
                   onChange={(e) => setCampEditor((p) => ({ ...p, subtitle: e.target.value }))}
                 />
               </label>
-              <label className="block text-sm">Year
+              <label className="block text-sm text-neutral-800 dark:text-neutral-200">Year
                 <input
-                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                   value={campEditor.year || ''}
                   onChange={(e) => setCampEditor((p) => ({ ...p, year: e.target.value }))}
                 />
               </label>
-              <label className="block text-sm">Status
+              <label className="block text-sm text-neutral-800 dark:text-neutral-200">Status
                 <select
-                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                   value={campEditor.status}
                   onChange={(e) => setCampEditor((p) => ({ ...p, status: e.target.value }))}
                 >
@@ -1913,80 +1913,80 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                 </select>
               </label>
               {!campEditor.isNew && campEditor.status === 'closed' ? (
-                <label className="block text-sm">Reason / Note
+                <label className="block text-sm text-neutral-800 dark:text-neutral-200">Reason / Note
                   <textarea
-                    className="mt-1 h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                    className="mt-1 h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                     value={campEditor.note}
                     onChange={(e) => setCampEditor((p) => ({ ...p, note: e.target.value }))}
                   />
                 </label>
               ) : null}
-              <label className="block text-sm">Age Guidelines (one per line)
+              <label className="block text-sm text-neutral-800 dark:text-neutral-200">Age Guidelines (one per line)
                 <textarea
-                  className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                   value={campEditor.ageGuidelinesText || ''}
                   onChange={(e) => setCampEditor((p) => ({ ...p, ageGuidelinesText: e.target.value }))}
                 />
               </label>
-              <label className="block text-sm">Camp Highlights (one per line)
+              <label className="block text-sm text-neutral-800 dark:text-neutral-200">Camp Highlights (one per line)
                 <textarea
-                  className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                   value={campEditor.highlightsText || ''}
                   onChange={(e) => setCampEditor((p) => ({ ...p, highlightsText: e.target.value }))}
                 />
               </label>
-              <label className="block text-sm">Batches (one per line)
+              <label className="block text-sm text-neutral-800 dark:text-neutral-200">Batches (one per line)
                 <textarea
-                  className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                   value={campEditor.batchesText || ''}
                   onChange={(e) => setCampEditor((p) => ({ ...p, batchesText: e.target.value }))}
                 />
               </label>
-              <label className="block text-sm">Registration Pricing
+              <label className="block text-sm text-neutral-800 dark:text-neutral-200">Registration Pricing
                 <input
-                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                   value={campEditor.pricing || ''}
                   onChange={(e) => setCampEditor((p) => ({ ...p, pricing: e.target.value }))}
                 />
               </label>
-              <label className="block text-sm">Residential Pricing
+              <label className="block text-sm text-neutral-800 dark:text-neutral-200">Residential Pricing
                 <input
-                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                   value={campEditor.residencePricing || ''}
                   onChange={(e) => setCampEditor((p) => ({ ...p, residencePricing: e.target.value }))}
                 />
               </label>
-              <label className="block text-sm">Bank Name
+              <label className="block text-sm text-neutral-800 dark:text-neutral-200">Bank Name
                 <input
-                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                   value={campEditor.bankName || ''}
                   onChange={(e) => setCampEditor((p) => ({ ...p, bankName: e.target.value }))}
                 />
               </label>
-              <label className="block text-sm">Account Holder
+              <label className="block text-sm text-neutral-800 dark:text-neutral-200">Account Holder
                 <input
-                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                   value={campEditor.accountHolder || ''}
                   onChange={(e) => setCampEditor((p) => ({ ...p, accountHolder: e.target.value }))}
                 />
               </label>
-              <label className="block text-sm">Account Number
+              <label className="block text-sm text-neutral-800 dark:text-neutral-200">Account Number
                 <input
-                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                   value={campEditor.accountNumber || ''}
                   onChange={(e) => setCampEditor((p) => ({ ...p, accountNumber: e.target.value }))}
                 />
               </label>
-              <label className="block text-sm">IFSC
+              <label className="block text-sm text-neutral-800 dark:text-neutral-200">IFSC
                 <input
-                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                   value={campEditor.ifsc || ''}
                   onChange={(e) => setCampEditor((p) => ({ ...p, ifsc: e.target.value }))}
                 />
               </label>
-              <label className="block text-sm">Transaction Note Hint
+              <label className="block text-sm text-neutral-800 dark:text-neutral-200">Transaction Note Hint
                 <input
-                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                   value={campEditor.transactionHint || ''}
                   onChange={(e) => setCampEditor((p) => ({ ...p, transactionHint: e.target.value }))}
                 />
