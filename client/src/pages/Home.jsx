@@ -32,6 +32,10 @@ const fade = {
   transition: { duration: 0.4 },
 };
 
+/** Used when CMS `introVideoUrl` and `REACT_APP_INTRO_VIDEO_URL` are both empty (e.g. fresh DB / Docker build). */
+const DEFAULT_HOME_INTRO_VIDEO_URL =
+  "https://www.youtube.com/watch?v=vciPv_GGQ0E";
+
 const programCards = [
   {
     title: "Residential Gurukulam",
@@ -147,7 +151,8 @@ export default function Home() {
     heroSubtitle: "World's First Skill Based Technology Gurukulam",
     heroImage:
       "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80",
-    introVideoUrl: process.env.REACT_APP_INTRO_VIDEO_URL,
+    introVideoUrl:
+      process.env.REACT_APP_INTRO_VIDEO_URL || DEFAULT_HOME_INTRO_VIDEO_URL,
     programCards,
     samskaraVideos: defaultSamskaraVideos,
     testimonials: defaultTestimonials,
@@ -163,7 +168,10 @@ export default function Home() {
   const samskaraTrackRef = useRef(null);
   const testimonialsTrackRef = useRef(null);
   useEffect(() => setDraft(cms), [cms]);
-  const videoUrl = cms.introVideoUrl || process.env.REACT_APP_INTRO_VIDEO_URL;
+  const videoUrl =
+    String(cms.introVideoUrl || "").trim() ||
+    String(process.env.REACT_APP_INTRO_VIDEO_URL || "").trim() ||
+    DEFAULT_HOME_INTRO_VIDEO_URL;
   const display = isAdmin ? draft : cms;
   const displayCards = (
     display.programCards?.length ? display.programCards : programCards

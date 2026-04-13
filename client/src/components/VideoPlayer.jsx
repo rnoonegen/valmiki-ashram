@@ -13,7 +13,11 @@ export default function VideoPlayer({ url, className, title }) {
         )}
       >
         <p className="px-4 text-center text-sm">
-          Add REACT_APP_INTRO_VIDEO_URL to show the video.
+          Add a video URL in Admin (Home → intro video) or set{" "}
+          <code className="rounded bg-neutral-200 px-1 py-0.5 text-xs dark:bg-neutral-800">
+            REACT_APP_INTRO_VIDEO_URL
+          </code>{" "}
+          at build time.
         </p>
       </div>
     );

@@ -20,9 +20,11 @@ function assertS3Config() {
   if (!spaceName) missing.push('S3_SPACE_NAME');
   if (!accessKeyId) missing.push('S3_ACCESS_KEY_ID');
   if (!secretAccessKey) missing.push('S3_ACCESS_KEY_SECRET');
-  if (!endpoint) missing.push('S3_ENDPOINT or S3_REGION');
+  if (!endpoint && region) missing.push('S3_ENDPOINT');
   if (missing.length) {
-    const err = new Error(`Missing S3 configuration: ${missing.join(', ')}`);
+    const err = new Error(
+      `Missing S3 configuration: ${missing.join(', ')}. Set these in the server environment (e.g. Kubernetes Secret server-env). See docs/DEPLOY-DIGITALOCEAN.md Part F.`,
+    );
     err.status = 500;
     throw err;
   }

@@ -45,7 +45,7 @@ These are read from `process.env` in the client. **CRA only exposes variables pr
 | Variable | Value for IP deployment | Where used |
 |----------|-------------------------|------------|
 | `REACT_APP_SERVER_URL` | `http://139.59.6.209` | `client/src/admin/api.js` — base URL for `fetch` and Socket.IO client (`getApiBase()`). Paths already include `/api/...`. |
-| `REACT_APP_INTRO_VIDEO_URL` | *(empty)* | `client/src/pages/Home.jsx`, `VideoPlayer.jsx` |
+| `REACT_APP_INTRO_VIDEO_URL` | Default in `client/Dockerfile`: `https://www.youtube.com/watch?v=vciPv_GGQ0E` (override at build). Locally, Home also falls back to the same URL if CMS and env are empty. | `client/src/pages/Home.jsx`, `VideoPlayer.jsx` |
 | `REACT_APP_WHATSAPP_NUMBER` | *(empty)* | `Home.jsx` |
 | `REACT_APP_WHATSAPP_COMMUNITY_LINK` | *(empty)* | `Home.jsx`, `Layout.jsx`, `Footer.jsx` |
 | `REACT_APP_EMAIL` | *(empty)* | `ContactUs.jsx`, `Footer.jsx` |
@@ -63,11 +63,22 @@ To change any `REACT_APP_*` value, edit `client/Dockerfile` `ARG`/`ENV` lines (o
 
 ### GitHub Actions secrets (repository **Settings → Secrets and variables → Actions**)
 
-| Secret | Value |
-|--------|--------|
-| `DO_HOST` | `139.59.6.209` |
-| `DO_USER` | `root` |
-| `DO_SSH_KEY` | Full private key matching the public key on the droplet (PEM text, including `BEGIN`/`END` lines). |
+| Secret | Required? | Purpose |
+|--------|-----------|---------|
+| `DO_HOST` | Yes | Droplet IP, e.g. `139.59.6.209` |
+| `DO_USER` | Yes | SSH user, usually `root` |
+| `DO_SSH_KEY` | Yes | Private key PEM for that user (full `BEGIN`…`END` block) |
+| `ADMIN_JWT_SECRET` | No | If unset, deploy uses app default `valmiki-admin-secret` (change for production) |
+| `S3_REGION` | For uploads | DigitalOcean Spaces region slug, e.g. `blr1` |
+| `S3_SPACE_NAME` | For uploads | Space (bucket) name |
+| `S3_ACCESS_KEY_ID` | For uploads | Spaces access key |
+| `S3_ACCESS_KEY_SECRET` | For uploads | Spaces secret key |
+| `S3_ENDPOINT` | No | e.g. `https://blr1.digitaloceanspaces.com`; leave unset if empty and `S3_REGION` is set (server derives endpoint) |
+| `S3_PUBLIC_BASE_URL` | No | Optional CDN base URL for public object URLs |
+
+On every push to **`main`**, `.github/workflows/deploy-do.yml` SSHes to the droplet, runs **`kubectl create secret generic server-env … | kubectl apply`**, then **`kubectl rollout restart`** for `server` and `client`. That keeps **`server-env`** aligned with GitHub (no S3 keys in git). If S3 secrets are empty, uploads stay disabled until you add them in GitHub and redeploy.
+
+Also set workflow **`env.CLIENT_URL`** (and **`REACT_APP_SERVER_URL`**) in `deploy-do.yml` when you move to HTTPS or a new IP.
 
 `GITHUB_TOKEN` is provided automatically for pushing to GHCR.
 
@@ -175,18 +186,16 @@ The workflow **`.github/workflows/deploy-do.yml`** runs on every push to **`main
 
 1. Builds **`server/Dockerfile`** and **`client/Dockerfile`**.
 2. Pushes to **`ghcr.io/rnoonegen/valmiki-server`** and **`ghcr.io/rnoonegen/valmiki-client`** (`latest` + commit SHA).
-3. SSHes to the droplet and runs:
+3. SSHes to the droplet, **`kubectl apply`** the **`server-env`** Secret (from GitHub Secrets: S3, optional `ADMIN_JWT_SECRET`, etc.), then **`kubectl rollout restart`** `server` and `client`.
 
-   `kubectl rollout restart deployment/server deployment/client -n valmiki`
-
-**Required:** add secrets `DO_HOST`, `DO_USER`, `DO_SSH_KEY` (see table above).
+**Required:** add secrets `DO_HOST`, `DO_USER`, `DO_SSH_KEY` (see table above). For **admin uploads**, add the **S3\_*** GitHub secrets; the next deploy will push them into the cluster Secret.
 
 **IP change:** If the droplet IP ever changes, update:
 
-- `deploy/kubernetes/server.yaml` → Secret `CLIENT_URL`
+- `deploy/kubernetes/server.yaml` → Secret `CLIENT_URL` (only if you apply that file manually again)
 - `client/Dockerfile` → `ARG REACT_APP_SERVER_URL`
-- `.github/workflows/deploy-do.yml` → `REACT_APP_SERVER_URL`
-- Re-apply the Secret and rebuild the **client** image (server CORS uses `CLIENT_URL`).
+- `.github/workflows/deploy-do.yml` → `REACT_APP_SERVER_URL` **and** `CLIENT_URL`
+- Push to `main` so CI rebuilds the **client** and refreshes **`server-env`** on the droplet.
 
 ---
 
@@ -288,6 +297,8 @@ After switching to HTTPS, `CLIENT_URL` and `REACT_APP_SERVER_URL` must both use 
 ---
 
 ## Part F — DigitalOcean Spaces (when you enable uploads)
+
+If the site shows a browser alert like **`Missing S3 configuration: S3_REGION, S3_SPACE_NAME, …`**, that comes from **admin image uploads** (or any feature that calls the S3 upload API). The API server needs Spaces credentials in its environment.
 
 When you create a Space, set the server Secret (non-empty), for example:
 
