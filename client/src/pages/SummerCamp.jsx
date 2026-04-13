@@ -29,12 +29,6 @@ const checklistTabs = [
   { id: "reminders", label: "Reminders" },
 ];
 
-const defaultAboutImages = [
-  "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=80",
-];
-
 const defaultAboutCamp = {
   title: "Summer Camp",
   adventureHeading: "Embark on an Unforgettable Summer Family Adventure!",
@@ -58,7 +52,7 @@ const defaultAboutCamp = {
     },
   ],
   belowGuidelinesBlocks: [],
-  images: defaultAboutImages,
+  images: [],
 };
 
 const defaultBatchesCamp = {
@@ -116,11 +110,7 @@ const defaultHighlightsCamp = {
       ],
     },
   ],
-  images: [
-    "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1509099836639-18ba1795216d?auto=format&fit=crop&w=1200&q=80",
-  ],
+  images: [],
 };
 
 const defaultChecklistCamp = {
@@ -357,10 +347,10 @@ export default function SummerCamp() {
     ageGuidelines: Array.isArray(display.aboutCamp?.ageGuidelines)
       ? display.aboutCamp.ageGuidelines
       : defaultAboutCamp.ageGuidelines,
-    images: Array.isArray(display.aboutCamp?.images) ? display.aboutCamp.images : defaultAboutCamp.images,
     belowTitleBlocks: resolveContentBlocks(display.aboutCamp, "belowTitleBlocks", defaultAboutCamp.belowTitleBlocks, "intro"),
     belowAdventureBlocks: resolveContentBlocks(display.aboutCamp, "belowAdventureBlocks", defaultAboutCamp.belowAdventureBlocks, "adventureText"),
     belowGuidelinesBlocks: resolveContentBlocks(display.aboutCamp, "belowGuidelinesBlocks", defaultAboutCamp.belowGuidelinesBlocks),
+    images: [],
   };
 
   const batchesCamp = {
@@ -375,9 +365,7 @@ export default function SummerCamp() {
     ...defaultHighlightsCamp,
     ...(display.highlightsCamp || {}),
     contentBlocks: resolveContentBlocks(display.highlightsCamp, "contentBlocks", defaultHighlightsCamp.contentBlocks),
-    images: Array.isArray(display.highlightsCamp?.images)
-      ? display.highlightsCamp.images
-      : defaultHighlightsCamp.images,
+    images: [],
   };
 
   const checklistCamp = {
@@ -577,33 +565,6 @@ export default function SummerCamp() {
             })} className="rounded-md bg-white/90 p-1 text-accent shadow dark:bg-neutral-800 dark:text-emerald-200"><Pencil className="h-4 w-4" /></button> : null}
           </div>
           {renderContentBlocks(highlightsCamp.contentBlocks, "highlights", "mt-4")}
-          {isAdmin ? <div className="mt-5 flex justify-end"><ImageUploader folder="summer-camp" buttonText="Add Highlight Image" onUploaded={(asset) => {
-            const next = { ...draft, highlightsCamp: { ...highlightsCamp, images: [...(highlightsCamp.images || []), asset.url] } };
-            saveAndClose(next, () => {});
-          }} /></div> : null}
-          <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {(highlightsCamp.images || []).map((image, i) => (
-              <div key={`hi-${i}`} className="overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-900">
-                <div className="relative">
-                  <img src={image} alt={`Summer camp highlight ${i + 1}`} className="h-52 w-full object-cover" loading="lazy" />
-                  {isAdmin ? (
-                    <div className="absolute right-2 top-2 z-10 flex gap-1">
-                      <ImageUploader folder="summer-camp" buttonText="Change" onUploaded={(asset) => {
-                        const nextImages = [...(highlightsCamp.images || [])];
-                        nextImages[i] = asset.url;
-                        const next = { ...draft, highlightsCamp: { ...highlightsCamp, images: nextImages } };
-                        saveAndClose(next, () => {});
-                      }} />
-                      <button type="button" onClick={() => {
-                        const next = { ...draft, highlightsCamp: { ...highlightsCamp, images: (highlightsCamp.images || []).filter((_, idx) => idx !== i) } };
-                        saveAndClose(next, () => {});
-                      }} className="rounded-md bg-rose-600 p-1 text-white shadow"><Trash2 className="h-4 w-4" /></button>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       );
     }
@@ -685,36 +646,9 @@ export default function SummerCamp() {
           {(aboutCamp.ageGuidelines || []).map((line, i) => <li key={`age-${i}`}>{line}</li>)}
         </ul>
         {renderContentBlocks(aboutCamp.belowGuidelinesBlocks, "about-guides", "mt-5")}
-        {isAdmin ? <div className="mt-5 flex justify-end"><ImageUploader folder="summer-camp" buttonText="Add Image" onUploaded={(asset) => {
-          const next = { ...draft, aboutCamp: { ...aboutCamp, images: [...(aboutCamp.images || []), asset.url] } };
-          saveAndClose(next, () => {});
-        }} /></div> : null}
-        <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {(aboutCamp.images || []).map((image, i) => (
-            <div key={`ab-${i}`} className="overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-900">
-              <div className="relative">
-                <img src={image} alt={`Summer camp activity ${i + 1}`} className="h-52 w-full object-cover" loading="lazy" />
-                {isAdmin ? (
-                  <div className="absolute right-2 top-2 z-10 flex gap-1">
-                    <ImageUploader folder="summer-camp" buttonText="Change" onUploaded={(asset) => {
-                      const nextImages = [...(aboutCamp.images || [])];
-                      nextImages[i] = asset.url;
-                      const next = { ...draft, aboutCamp: { ...aboutCamp, images: nextImages } };
-                      saveAndClose(next, () => {});
-                    }} />
-                    <button type="button" onClick={() => {
-                      const next = { ...draft, aboutCamp: { ...aboutCamp, images: (aboutCamp.images || []).filter((_, idx) => idx !== i) } };
-                      saveAndClose(next, () => {});
-                    }} className="rounded-md bg-rose-600 p-1 text-white shadow"><Trash2 className="h-4 w-4" /></button>
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
     );
-  }, [activeChecklistTab, activeTab, aboutCamp, batchesCamp, checklistCamp, draft, highlightsCamp, isAdmin]);
+  }, [activeChecklistTab, activeTab, aboutCamp, batchesCamp, checklistCamp, highlightsCamp, isAdmin]);
 
   return (
     <PageFade>
@@ -847,74 +781,88 @@ export default function SummerCamp() {
               ) : null}
             </div>
             <div className="grid gap-5 md:grid-cols-2">
-              {(legacyPage.previousGalleries || []).map((gallery, index) => {
-                const detailPath = isAdmin
-                  ? `/admin/summer-camp/${gallery.id}`
-                  : `/summer-camp/${gallery.id}`;
-                const cover = gallery.images?.[0] || "";
-                const stack = (gallery.images || []).slice(1, 3);
-                return (
-                  <article
-                    key={gallery.id || index}
-                    className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <Link to={detailPath} className="min-w-0 flex-1">
-                        <h4 className="font-semibold text-accent dark:text-emerald-200">{gallery.title}</h4>
-                        <p className="mt-1 text-xs text-prose-muted">
-                          Summer:{" "}
-                          {gallery.registrationCampYear ||
-                            registrationCamps.find((camp) => camp.id === gallery.registrationCampId)?.year ||
-                            "-"}
-                        </p>
-                        <p className="mt-1 text-sm text-prose-muted">{gallery.description}</p>
-                      </Link>
-                      {isAdmin ? (
-                        <div className="flex gap-1">
-                          <button
-                            type="button"
-                            onClick={() => openGalleryEditor(index)}
-                            className="rounded-md bg-neutral-100 p-1.5 text-accent dark:bg-neutral-800 dark:text-emerald-200"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => deleteGallery(index)}
-                            className="rounded-md bg-rose-100 p-1.5 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      ) : null}
-                    </div>
-                    <Link to={detailPath} className="mt-3 block">
-                      <div className="relative h-48 rounded-xl bg-neutral-100 p-2 dark:bg-neutral-800">
-                        {stack.map((img, i) => (
-                          <img
-                            key={`${img}-${i}`}
-                            src={img}
-                            alt={`${gallery.title} stacked ${i + 1}`}
-                            className="absolute h-[calc(100%-16px)] w-[calc(100%-16px)] rounded-lg object-cover opacity-60"
-                            style={{ top: 8 + (i + 1) * 6, left: 8 + (i + 1) * 6, zIndex: 10 + i }}
-                          />
-                        ))}
-                        {cover ? (
-                          <img
-                            src={cover}
-                            alt={gallery.title}
-                            className="relative z-30 h-full w-full rounded-lg object-contain bg-white dark:bg-neutral-900"
-                          />
-                        ) : (
-                          <div className="relative z-30 flex h-full w-full items-center justify-center rounded-lg border border-dashed border-neutral-300 text-sm text-prose-muted dark:border-neutral-600">
-                            No cover image
+              {(legacyPage.previousGalleries || []).length === 0 ? (
+                <div className="md:col-span-2 rounded-2xl border border-dashed border-neutral-300 bg-white px-6 py-12 text-center dark:border-neutral-600 dark:bg-neutral-900/60">
+                  <p className="text-sm font-medium text-prose">No past camp galleries yet</p>
+                  <p className="mx-auto mt-2 max-w-lg text-sm text-prose-muted">
+                    Photo collections from previous summer camps appear in this section.
+                    {isAdmin ? (
+                      <> Use &ldquo;Add Gallery&rdquo; above when you are ready to publish the first one.</>
+                    ) : (
+                      <> Check back later for highlights from past seasons.</>
+                    )}
+                  </p>
+                </div>
+              ) : (
+                (legacyPage.previousGalleries || []).map((gallery, index) => {
+                  const detailPath = isAdmin
+                    ? `/admin/summer-camp/${gallery.id}`
+                    : `/summer-camp/${gallery.id}`;
+                  const cover = gallery.images?.[0] || "";
+                  const stack = (gallery.images || []).slice(1, 3);
+                  return (
+                    <article
+                      key={gallery.id || index}
+                      className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <Link to={detailPath} className="min-w-0 flex-1">
+                          <h4 className="font-semibold text-accent dark:text-emerald-200">{gallery.title}</h4>
+                          <p className="mt-1 text-xs text-prose-muted">
+                            Summer:{" "}
+                            {gallery.registrationCampYear ||
+                              registrationCamps.find((camp) => camp.id === gallery.registrationCampId)?.year ||
+                              "-"}
+                          </p>
+                          <p className="mt-1 text-sm text-prose-muted">{gallery.description}</p>
+                        </Link>
+                        {isAdmin ? (
+                          <div className="flex gap-1">
+                            <button
+                              type="button"
+                              onClick={() => openGalleryEditor(index)}
+                              className="rounded-md bg-neutral-100 p-1.5 text-accent dark:bg-neutral-800 dark:text-emerald-200"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => deleteGallery(index)}
+                              className="rounded-md bg-rose-100 p-1.5 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
                           </div>
-                        )}
+                        ) : null}
                       </div>
-                    </Link>
-                  </article>
-                );
-              })}
+                      <Link to={detailPath} className="mt-3 block">
+                        <div className="relative h-48 rounded-xl bg-neutral-100 p-2 dark:bg-neutral-800">
+                          {stack.map((img, i) => (
+                            <img
+                              key={`${img}-${i}`}
+                              src={img}
+                              alt={`${gallery.title} stacked ${i + 1}`}
+                              className="absolute h-[calc(100%-16px)] w-[calc(100%-16px)] rounded-lg object-cover opacity-60"
+                              style={{ top: 8 + (i + 1) * 6, left: 8 + (i + 1) * 6, zIndex: 10 + i }}
+                            />
+                          ))}
+                          {cover ? (
+                            <img
+                              src={cover}
+                              alt={gallery.title}
+                              className="relative z-30 h-full w-full rounded-lg object-contain bg-white dark:bg-neutral-900"
+                            />
+                          ) : (
+                            <div className="relative z-30 flex h-full w-full items-center justify-center rounded-lg border border-dashed border-neutral-300 text-sm text-prose-muted dark:border-neutral-600">
+                              No cover image
+                            </div>
+                          )}
+                        </div>
+                      </Link>
+                    </article>
+                  );
+                })
+              )}
             </div>
           </div>
         </section>
@@ -1181,6 +1129,7 @@ export default function SummerCamp() {
                     belowTitleBlocks: a,
                     belowAdventureBlocks: b,
                     belowGuidelinesBlocks: c,
+                    images: [],
                   },
                 };
                 await saveAndClose(next, () => setAboutEditor(null));
@@ -1256,7 +1205,12 @@ export default function SummerCamp() {
                 if (blocks.length === 0) blocks = defaultHighlightsCamp.contentBlocks;
                 const next = {
                   ...draft,
-                  highlightsCamp: { ...highlightsCamp, title: highlightsEditor.title, contentBlocks: blocks },
+                  highlightsCamp: {
+                    ...highlightsCamp,
+                    title: highlightsEditor.title,
+                    contentBlocks: blocks,
+                    images: [],
+                  },
                 };
                 await saveAndClose(next, () => setHighlightsEditor(null));
               }}><Save className="h-4 w-4" /> Save</button>
