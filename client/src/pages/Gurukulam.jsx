@@ -436,13 +436,13 @@ export default function Gurukulam() {
                   </label>
                   {listFields.has(fieldEditor.key) ? (
                     <textarea
-                      className="h-32 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                      className="h-32 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                       value={fieldEditor.value}
                       onChange={(e) => setFieldEditor((p) => ({ ...p, value: e.target.value }))}
                     />
                   ) : (
                     <textarea
-                      className="h-28 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                      className="h-28 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                       value={fieldEditor.value}
                       onChange={(e) => setFieldEditor((p) => ({ ...p, value: e.target.value }))}
                     />
@@ -480,7 +480,7 @@ export default function Gurukulam() {
                       Title
                     </label>
                     <input
-                      className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                      className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                       value={pillarEditor.title}
                       onChange={(e) => setPillarEditor((p) => ({ ...p, title: e.target.value }))}
                     />
@@ -490,7 +490,7 @@ export default function Gurukulam() {
                       Description
                     </label>
                     <textarea
-                      className="h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                      className="h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                       value={pillarEditor.body}
                       onChange={(e) => setPillarEditor((p) => ({ ...p, body: e.target.value }))}
                     />

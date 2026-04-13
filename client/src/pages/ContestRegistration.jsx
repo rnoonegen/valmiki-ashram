@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import Container from '../components/Container';
 import PageFade from '../components/PageFade';
 import { apiRequest } from '../admin/api';
+import { resolveBuiltInRegistrationIntro } from '../constants/contestRegistrationDefaults';
 
 const platformOptions = ['YouTube', 'Instagram', 'X (Twitter)', 'Facebook', 'Other'];
 
@@ -32,12 +33,19 @@ export default function ContestRegistration() {
       .finally(() => setLoading(false));
   }, [contestId]);
 
-  const useGoogle = useMemo(
-    () => contest?.registerMode === 'google' && contest?.googleFormUrl,
-    [contest]
-  );
+  const useGoogle = useMemo(() => contest?.registerMode === 'google', [contest]);
 
   const registrationOpen = contest?.registrationOpen !== false;
+
+  const googleFormButtonLabel = useMemo(() => {
+    const raw = String(contest?.googleFormButtonLabel || '').trim();
+    return raw || 'Register Now';
+  }, [contest?.googleFormButtonLabel]);
+
+  const builtInIntro = useMemo(
+    () => (contest ? resolveBuiltInRegistrationIntro(contest.builtInRegistrationIntro) : ''),
+    [contest]
+  );
 
   const togglePlatform = (value) => {
     setForm((prev) => {
@@ -90,18 +98,31 @@ export default function ContestRegistration() {
               </p>
             ) : useGoogle ? (
               <div className="mt-6 space-y-3">
-                <p className="text-prose">This contest uses Google Form registration.</p>
-                <a
-                  href={contest.googleFormUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex rounded-lg bg-accent px-4 py-2 text-white hover:opacity-90 dark:bg-emerald-700"
-                >
-                  Open Google Form
-                </a>
+                {contest.googleFormHelperText ? (
+                  <p className="whitespace-pre-wrap text-sm text-prose-muted">{contest.googleFormHelperText}</p>
+                ) : (
+                  <p className="text-prose">This contest uses Google Form registration.</p>
+                )}
+                {contest.googleFormUrl ? (
+                  <a
+                    href={contest.googleFormUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex rounded-lg bg-accent px-4 py-2 text-white hover:opacity-90 dark:bg-emerald-700"
+                  >
+                    {googleFormButtonLabel}
+                  </a>
+                ) : (
+                  <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                    The Google Form link has not been configured yet. Please check back later.
+                  </p>
+                )}
               </div>
             ) : (
               <form className="mt-6 space-y-4" onSubmit={onSubmit}>
+                <div className="mb-6 whitespace-pre-wrap rounded-xl border border-neutral-200 bg-neutral-50/80 p-4 text-sm leading-relaxed text-prose dark:border-neutral-600 dark:bg-neutral-950/40 dark:text-neutral-200">
+                  {builtInIntro}
+                </div>
                 <input
                   required
                   placeholder="Full Name"

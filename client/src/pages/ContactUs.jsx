@@ -314,7 +314,7 @@ export default function ContactUs() {
                     Label
                   </label>
                   <input
-                    className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                    className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                     placeholder="Label (e.g. Email, Phone, Address)"
                     value={detailEditor.label}
                     onChange={(e) => setDetailEditor((p) => ({ ...p, label: e.target.value }))}
@@ -323,7 +323,7 @@ export default function ContactUs() {
                     Value
                   </label>
                   <input
-                    className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                    className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                     placeholder="Value"
                     value={detailEditor.value}
                     onChange={(e) => setDetailEditor((p) => ({ ...p, value: e.target.value }))}
@@ -332,7 +332,7 @@ export default function ContactUs() {
                     Type
                   </label>
                   <select
-                    className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                    className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                     value={detailEditor.type}
                     onChange={(e) => setDetailEditor((p) => ({ ...p, type: e.target.value }))}
                   >
@@ -374,7 +374,7 @@ export default function ContactUs() {
                     Google Maps Page Link
                   </label>
                   <input
-                    className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                    className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                     placeholder="Google Maps page link (optional)"
                     value={mapEditor.mapLink}
                     onChange={(e) => setMapEditor((p) => ({ ...p, mapLink: e.target.value }))}
@@ -383,7 +383,7 @@ export default function ContactUs() {
                     Google Maps Embed URL
                   </label>
                   <textarea
-                    className="h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                    className="h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                     placeholder="Google Maps embed URL"
                     value={mapEditor.mapEmbedUrl}
                     onChange={(e) => setMapEditor((p) => ({ ...p, mapEmbedUrl: e.target.value }))}

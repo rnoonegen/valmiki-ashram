@@ -4,7 +4,10 @@
  */
 function isRegistrationOpen(doc) {
   if (!doc) return false;
-  const v = typeof doc.get === "function" ? doc.get("registrationOpen") : doc.registrationOpen;
+  const v =
+    typeof doc.get === "function"
+      ? doc.get("registrationOpen")
+      : doc.registrationOpen;
   return v !== false;
 }
 

@@ -470,74 +470,74 @@ export default function OnlineCourseRegistration() {
             </p>
             {editor ? (
               <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <label className="text-sm md:col-span-2">
+                <label className="text-sm md:col-span-2 text-neutral-800 dark:text-neutral-200">
                   Page Title
                   <input
-                    className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                    className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                     value={editor.title}
                     onChange={(e) => setEditor((prev) => ({ ...prev, title: e.target.value }))}
                   />
                 </label>
-                <label className="text-sm md:col-span-2">
+                <label className="text-sm md:col-span-2 text-neutral-800 dark:text-neutral-200">
                   Page Subtitle
                   <textarea
-                    className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                    className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                     value={editor.subtitle}
                     onChange={(e) => setEditor((prev) => ({ ...prev, subtitle: e.target.value }))}
                   />
                 </label>
-                <label className="text-sm">
+                <label className="text-sm text-neutral-800 dark:text-neutral-200">
                   Form Title
                   <input
-                    className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                    className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                     value={editor.formTitle}
                     onChange={(e) => setEditor((prev) => ({ ...prev, formTitle: e.target.value }))}
                   />
                 </label>
-                <label className="text-sm">
+                <label className="text-sm text-neutral-800 dark:text-neutral-200">
                   Submit Button Text
                   <input
-                    className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                    className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                     value={editor.submitButtonText}
                     onChange={(e) => setEditor((prev) => ({ ...prev, submitButtonText: e.target.value }))}
                   />
                 </label>
-                <label className="text-sm md:col-span-2">
+                <label className="text-sm md:col-span-2 text-neutral-800 dark:text-neutral-200">
                   Form Note
                   <textarea
-                    className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                    className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                     value={editor.formNote}
                     onChange={(e) => setEditor((prev) => ({ ...prev, formNote: e.target.value }))}
                   />
                 </label>
-                <label className="text-sm md:col-span-2">
+                <label className="text-sm md:col-span-2 text-neutral-800 dark:text-neutral-200">
                   Success Message
                   <input
-                    className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                    className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                     value={editor.successMessage}
                     onChange={(e) => setEditor((prev) => ({ ...prev, successMessage: e.target.value }))}
                   />
                 </label>
-                <label className="text-sm">
+                <label className="text-sm text-neutral-800 dark:text-neutral-200">
                   Countries (value|label|timezone)
                   <textarea
-                    className="mt-1 h-28 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                    className="mt-1 h-28 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                     value={editor.countryOptionsText}
                     onChange={(e) => setEditor((prev) => ({ ...prev, countryOptionsText: e.target.value }))}
                   />
                 </label>
-                <label className="text-sm">
+                <label className="text-sm text-neutral-800 dark:text-neutral-200">
                   Courses (value|label)
                   <textarea
-                    className="mt-1 h-28 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                    className="mt-1 h-28 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                     value={editor.courseOptionsText}
                     onChange={(e) => setEditor((prev) => ({ ...prev, courseOptionsText: e.target.value }))}
                   />
                 </label>
-                <label className="text-sm">
+                <label className="text-sm text-neutral-800 dark:text-neutral-200">
                   IST Time Slots (value|label)
                   <textarea
-                    className="mt-1 h-28 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                    className="mt-1 h-28 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                     value={editor.slotOptionsText}
                     onChange={(e) => setEditor((prev) => ({ ...prev, slotOptionsText: e.target.value }))}
                   />
@@ -665,10 +665,10 @@ export default function OnlineCourseRegistration() {
               ) : null}
               {filtersExpanded ? (
                 <div className="mt-3 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-                  <label className="text-sm">
+                  <label className="text-sm text-neutral-800 dark:text-neutral-200">
                     Gender
                     <select
-                      className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                      className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                       value={genderFilter}
                       onChange={(e) => setGenderFilter(e.target.value)}
                     >
@@ -680,11 +680,11 @@ export default function OnlineCourseRegistration() {
                       ))}
                     </select>
                   </label>
-                  <div className="text-sm">
+                  <div className="text-sm text-neutral-800 dark:text-neutral-200">
                     Age
                     <div className="mt-1 flex items-center gap-2">
                       <select
-                        className="w-28 rounded-lg border border-neutral-300 px-2 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                        className="w-28 rounded-lg border border-neutral-300 px-2 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                         value={ageFilterMode}
                         onChange={(e) => setAgeFilterMode(e.target.value)}
                       >
@@ -695,7 +695,7 @@ export default function OnlineCourseRegistration() {
                         <input
                           type="number"
                           min="1"
-                          className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                          className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                           placeholder="Age"
                           value={ageSingle}
                           onChange={(e) => setAgeSingle(e.target.value)}
@@ -705,7 +705,7 @@ export default function OnlineCourseRegistration() {
                           <input
                             type="number"
                             min="1"
-                            className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                            className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                             placeholder="Min"
                             value={ageMin}
                             onChange={(e) => setAgeMin(e.target.value)}
@@ -713,7 +713,7 @@ export default function OnlineCourseRegistration() {
                           <input
                             type="number"
                             min="1"
-                            className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                            className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                             placeholder="Max"
                             value={ageMax}
                             onChange={(e) => setAgeMax(e.target.value)}
@@ -722,11 +722,11 @@ export default function OnlineCourseRegistration() {
                       )}
                     </div>
                   </div>
-                  <label className="text-sm">
+                  <label className="text-sm text-neutral-800 dark:text-neutral-200">
                     Courses (multi)
                     <select
                       multiple
-                      className="mt-1 h-24 w-full rounded-lg border border-neutral-300 px-2 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                      className="mt-1 h-24 w-full rounded-lg border border-neutral-300 px-2 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                       value={selectedCourses}
                       onChange={(e) =>
                         setSelectedCourses(Array.from(e.target.selectedOptions).map((opt) => opt.value))
@@ -739,11 +739,11 @@ export default function OnlineCourseRegistration() {
                       ))}
                     </select>
                   </label>
-                  <label className="text-sm">
+                  <label className="text-sm text-neutral-800 dark:text-neutral-200">
                     Time Slots (multi)
                     <select
                       multiple
-                      className="mt-1 h-24 w-full rounded-lg border border-neutral-300 px-2 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                      className="mt-1 h-24 w-full rounded-lg border border-neutral-300 px-2 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                       value={selectedSlots}
                       onChange={(e) =>
                         setSelectedSlots(Array.from(e.target.selectedOptions).map((opt) => opt.value))
@@ -988,7 +988,7 @@ export default function OnlineCourseRegistration() {
                 <textarea
                   rows={3}
                   {...register('address.address')}
-                  className="w-full rounded-xl border border-neutral-300 bg-white px-3.5 py-2.5 text-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20 dark:border-neutral-700 dark:bg-neutral-900 dark:focus:border-emerald-500 dark:focus:ring-emerald-900/30"
+                  className="w-full rounded-xl border border-neutral-300 bg-white px-3.5 py-2.5 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-500 focus:border-accent focus:ring-2 focus:ring-accent/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder:text-neutral-400 dark:focus:border-emerald-500 dark:focus:ring-emerald-900/30"
                 />
               </label>
               {errors?.address?.address?.message ? (

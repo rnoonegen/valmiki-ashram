@@ -435,7 +435,7 @@ export default function Footer({ className }) {
                     Footer Tagline
                   </label>
                   <textarea
-                    className="h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                    className="h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400"
                     placeholder="Footer tagline"
                     value={editor.tagline}
                     onChange={(e) => setEditor((p) => ({ ...p, tagline: e.target.value }))}
@@ -444,7 +444,7 @@ export default function Footer({ className }) {
                     WhatsApp Community Link
                   </label>
                   <input
-                    className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                    className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400"
                     placeholder="WhatsApp community link"
                     value={editor.communityLink}
                     onChange={(e) => setEditor((p) => ({ ...p, communityLink: e.target.value }))}
@@ -482,7 +482,7 @@ export default function Footer({ className }) {
                     Label
                   </label>
                   <input
-                    className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                    className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400"
                     placeholder="Label"
                     value={itemEditor.label}
                     onChange={(e) => setItemEditor((p) => ({ ...p, label: e.target.value }))}
@@ -491,7 +491,7 @@ export default function Footer({ className }) {
                     {itemEditor.type === 'social' ? 'Social URL' : 'Path or URL'}
                   </label>
                   <input
-                    className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                    className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400"
                     placeholder={itemEditor.type === 'social' ? 'Social URL' : 'Path or URL'}
                     value={itemEditor.href}
                     onChange={(e) => setItemEditor((p) => ({ ...p, href: e.target.value }))}
@@ -502,7 +502,7 @@ export default function Footer({ className }) {
                         Icon
                       </label>
                       <select
-                        className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                        className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400"
                         value={itemEditor.icon}
                         onChange={(e) => setItemEditor((p) => ({ ...p, icon: e.target.value }))}
                       >

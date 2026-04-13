@@ -238,7 +238,7 @@ export default function FAQ() {
                 <div className="mt-4 space-y-3">
                   {editor.type === 'category' ? (
                     <input
-                      className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                      className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                       placeholder="Category title"
                       value={editor.title}
                       onChange={(e) => setEditor((p) => ({ ...p, title: e.target.value }))}
@@ -246,13 +246,13 @@ export default function FAQ() {
                   ) : (
                     <>
                       <input
-                        className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                        className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                         placeholder="Question"
                         value={editor.question}
                         onChange={(e) => setEditor((p) => ({ ...p, question: e.target.value }))}
                       />
                       <textarea
-                        className="h-32 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                        className="h-32 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                         placeholder="Answer"
                         value={editor.answer}
                         onChange={(e) => setEditor((p) => ({ ...p, answer: e.target.value }))}

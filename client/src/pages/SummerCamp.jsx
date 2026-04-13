@@ -890,7 +890,7 @@ export default function SummerCamp() {
               {textEditor.label}
             </label>
             <textarea
-              className="mt-2 h-28 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+              className="mt-2 h-28 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400"
               value={textEditor.value}
               onChange={(e) => setTextEditor((p) => ({ ...p, value: e.target.value }))}
             />
@@ -921,18 +921,18 @@ export default function SummerCamp() {
               {infoEditor.isNew ? "Add" : "Edit"} Info Card
             </h3>
             <div className="mt-4 space-y-3">
-              <label className="block text-sm">
+              <label className="block text-sm text-neutral-800 dark:text-neutral-200">
                 Title
                 <input
-                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400"
                   value={infoEditor.title}
                   onChange={(e) => setInfoEditor((p) => ({ ...p, title: e.target.value }))}
                 />
               </label>
-              <label className="block text-sm">
+              <label className="block text-sm text-neutral-800 dark:text-neutral-200">
                 Description
                 <textarea
-                  className="mt-1 h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="mt-1 h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400"
                   value={infoEditor.body}
                   onChange={(e) => setInfoEditor((p) => ({ ...p, body: e.target.value }))}
                 />
@@ -966,10 +966,10 @@ export default function SummerCamp() {
             </h3>
             <div className="mt-4 space-y-3">
               {galleryEditor.isNew ? (
-                <label className="block text-sm">
+                <label className="block text-sm text-neutral-800 dark:text-neutral-200">
                   Select Summer Camp
                   <select
-                    className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                    className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400"
                     value={galleryEditor.registrationCampId}
                     onChange={(e) => {
                       const selectedCampId = e.target.value;
@@ -996,34 +996,34 @@ export default function SummerCamp() {
                   </select>
                 </label>
               ) : null}
-              <label className="block text-sm">
+              <label className="block text-sm text-neutral-800 dark:text-neutral-200">
                 Title
                 <input
-                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400"
                   value={galleryEditor.title}
                   onChange={(e) => setGalleryEditor((p) => ({ ...p, title: e.target.value }))}
                 />
               </label>
-              <label className="block text-sm">
+              <label className="block text-sm text-neutral-800 dark:text-neutral-200">
                 Description
                 <textarea
-                  className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400"
                   value={galleryEditor.description}
                   onChange={(e) => setGalleryEditor((p) => ({ ...p, description: e.target.value }))}
                 />
               </label>
-              <label className="block text-sm">
+              <label className="block text-sm text-neutral-800 dark:text-neutral-200">
                 Detailed Intro
                 <textarea
-                  className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400"
                   value={galleryEditor.longDescription}
                   onChange={(e) => setGalleryEditor((p) => ({ ...p, longDescription: e.target.value }))}
                 />
               </label>
-              <label className="block text-sm">
+              <label className="block text-sm text-neutral-800 dark:text-neutral-200">
                 Content Points (one per line)
                 <textarea
-                  className="mt-1 h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950"
+                  className="mt-1 h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400"
                   value={galleryEditor.contentBlocksText}
                   onChange={(e) => setGalleryEditor((p) => ({ ...p, contentBlocksText: e.target.value }))}
                 />
@@ -1086,11 +1086,11 @@ export default function SummerCamp() {
           <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
             <h3 className="text-lg font-semibold text-accent dark:text-emerald-200">Edit About Camp</h3>
             <div className="mt-4 space-y-3">
-              <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={aboutEditor.title} onChange={(e) => setAboutEditor((p) => ({ ...p, title: e.target.value }))} />
+              <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400" value={aboutEditor.title} onChange={(e) => setAboutEditor((p) => ({ ...p, title: e.target.value }))} />
               <ContentBlockEditor keyPrefix="about-b1" title="Below main heading" hint="Add paragraphs, subheadings, or bullet lists." blocks={aboutEditor.belowTitleBlocks} onChange={(next) => setAboutEditor((p) => ({ ...p, belowTitleBlocks: next }))} />
-              <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={aboutEditor.adventureHeading} onChange={(e) => setAboutEditor((p) => ({ ...p, adventureHeading: e.target.value }))} />
+              <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400" value={aboutEditor.adventureHeading} onChange={(e) => setAboutEditor((p) => ({ ...p, adventureHeading: e.target.value }))} />
               <ContentBlockEditor keyPrefix="about-b2" title="Below adventure heading" blocks={aboutEditor.belowAdventureBlocks} onChange={(next) => setAboutEditor((p) => ({ ...p, belowAdventureBlocks: next }))} />
-              <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={aboutEditor.ageGuidelinesTitle} onChange={(e) => setAboutEditor((p) => ({ ...p, ageGuidelinesTitle: e.target.value }))} />
+              <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400" value={aboutEditor.ageGuidelinesTitle} onChange={(e) => setAboutEditor((p) => ({ ...p, ageGuidelinesTitle: e.target.value }))} />
               <div className="rounded-lg border border-neutral-200 p-3 dark:border-neutral-700">
                 <div className="mb-3 flex items-center justify-between">
                   <p className="text-sm font-medium text-prose">Age guideline lines</p>
@@ -1099,7 +1099,7 @@ export default function SummerCamp() {
                 <div className="space-y-2">
                   {(aboutEditor.ageGuidelines || []).map((line, i) => (
                     <div key={`agl-${i}`} className="flex gap-2">
-                      <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={line} onChange={(e) => setAboutEditor((p) => {
+                      <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400" value={line} onChange={(e) => setAboutEditor((p) => {
                         const next = [...(p.ageGuidelines || [])];
                         next[i] = e.target.value;
                         return { ...p, ageGuidelines: next };
@@ -1145,16 +1145,16 @@ export default function SummerCamp() {
           <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
             <h3 className="text-lg font-semibold text-accent dark:text-emerald-200">Edit Camp Batches</h3>
             <div className="mt-4 space-y-3">
-              <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={batchesEditor.title} onChange={(e) => setBatchesEditor((p) => ({ ...p, title: e.target.value }))} />
+              <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400" placeholder="Section heading (e.g. Weekly Camp Batches)" value={batchesEditor.title} onChange={(e) => setBatchesEditor((p) => ({ ...p, title: e.target.value }))} />
               <div className="rounded-lg border border-neutral-200 p-3 dark:border-neutral-700">
                 <div className="mb-3 flex items-center justify-between">
-                  <p className="text-sm font-medium text-prose">Batch lines</p>
+                  <p className="text-sm font-medium text-neutral-800 dark:text-neutral-100">Batch lines</p>
                   <button type="button" onClick={() => setBatchesEditor((p) => ({ ...p, items: [...(p.items || []), ""] }))} className="inline-flex items-center gap-1 rounded-lg bg-accent px-2 py-1 text-xs text-white dark:bg-emerald-700"><Plus className="h-4 w-4" /> Add batch</button>
                 </div>
                 <div className="space-y-2">
                   {(batchesEditor.items || []).map((line, i) => (
                     <div key={`bat-${i}`} className="flex gap-2">
-                      <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={line} onChange={(e) => setBatchesEditor((p) => {
+                      <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400" placeholder={`Batch ${i + 1} (e.g. dates)`} value={line} onChange={(e) => setBatchesEditor((p) => {
                         const next = [...(p.items || [])];
                         next[i] = e.target.value;
                         return { ...p, items: next };
@@ -1196,7 +1196,7 @@ export default function SummerCamp() {
           <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
             <h3 className="text-lg font-semibold text-accent dark:text-emerald-200">Edit Camp Highlights</h3>
             <div className="mt-4 space-y-3">
-              <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={highlightsEditor.title} onChange={(e) => setHighlightsEditor((p) => ({ ...p, title: e.target.value }))} />
+              <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400" placeholder="Camp Highlights" value={highlightsEditor.title} onChange={(e) => setHighlightsEditor((p) => ({ ...p, title: e.target.value }))} />
               <ContentBlockEditor keyPrefix="hl" title="Highlights blocks" blocks={highlightsEditor.contentBlocks} onChange={(next) => setHighlightsEditor((p) => ({ ...p, contentBlocks: next }))} />
             </div>
             <div className="mt-4 flex gap-2">
@@ -1228,12 +1228,12 @@ export default function SummerCamp() {
               {(checklistEditor.categories || []).map((cat, ci) => (
                 <div key={`c-${ci}`} className="rounded-lg border border-neutral-200 p-3 dark:border-neutral-700">
                   <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
-                    <input className="rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={cat.title} onChange={(e) => setChecklistEditor((p) => {
+                    <input className="rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400" value={cat.title} onChange={(e) => setChecklistEditor((p) => {
                       const categories = [...(p.categories || [])];
                       categories[ci] = { ...categories[ci], title: e.target.value };
                       return { ...p, categories };
                     })} />
-                    <select className="rounded-lg border border-neutral-300 px-2 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={cat.listType} onChange={(e) => setChecklistEditor((p) => {
+                    <select className="rounded-lg border border-neutral-300 px-2 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400" value={cat.listType} onChange={(e) => setChecklistEditor((p) => {
                       const categories = [...(p.categories || [])];
                       categories[ci] = { ...categories[ci], listType: e.target.value };
                       return { ...p, categories };
@@ -1247,7 +1247,7 @@ export default function SummerCamp() {
                     {(cat.entries || []).map((entry, ei) => (
                       <div key={`e-${ci}-${ei}`} className="rounded-lg border border-neutral-100 p-2 dark:border-neutral-800">
                         <div className="mb-2 flex items-center justify-between">
-                          <select className="rounded-lg border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-700 dark:bg-neutral-950" value={entry.type || "line"} onChange={(e) => setChecklistEditor((p) => {
+                          <select className="rounded-lg border border-neutral-300 px-2 py-1 text-sm text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400" value={entry.type || "line"} onChange={(e) => setChecklistEditor((p) => {
                             const categories = [...(p.categories || [])];
                             const c = { ...categories[ci] };
                             const entries = [...(c.entries || [])];
@@ -1267,7 +1267,7 @@ export default function SummerCamp() {
                             return { ...p, categories };
                           })}>Delete</button>
                         </div>
-                        <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-950" placeholder="Label" value={entry.label || ""} onChange={(e) => setChecklistEditor((p) => {
+                        <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400" placeholder="Label" value={entry.label || ""} onChange={(e) => setChecklistEditor((p) => {
                           const categories = [...(p.categories || [])];
                           const c = { ...categories[ci] };
                           const entries = [...(c.entries || [])];
@@ -1280,7 +1280,7 @@ export default function SummerCamp() {
                           <div className="mt-2 space-y-2">
                             {(entry.bullets || []).map((b, bi) => (
                               <div key={`b-${ci}-${ei}-${bi}`} className="flex gap-2">
-                                <input className="flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-950" value={b} onChange={(e) => setChecklistEditor((p) => {
+                                <input className="flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400" value={b} onChange={(e) => setChecklistEditor((p) => {
                                   const categories = [...(p.categories || [])];
                                   const c = { ...categories[ci] };
                                   const entries = [...(c.entries || [])];
@@ -1314,7 +1314,7 @@ export default function SummerCamp() {
                             })}>+ Add bullet</button>
                           </div>
                         ) : (
-                          <textarea className="mt-2 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-950" placeholder="Body" value={entry.body || ""} onChange={(e) => setChecklistEditor((p) => {
+                          <textarea className="mt-2 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400" placeholder="Body" value={entry.body || ""} onChange={(e) => setChecklistEditor((p) => {
                             const categories = [...(p.categories || [])];
                             const c = { ...categories[ci] };
                             const entries = [...(c.entries || [])];
@@ -1326,7 +1326,7 @@ export default function SummerCamp() {
                         )}
                       </div>
                     ))}
-                    <button type="button" className="inline-flex items-center gap-1 rounded-lg border border-neutral-300 px-2 py-1.5 text-xs dark:border-neutral-600" onClick={() => setChecklistEditor((p) => {
+                    <button type="button" className="inline-flex items-center gap-1 rounded-lg border border-neutral-300 bg-white px-2 py-1.5 text-xs text-neutral-800 transition-colors hover:bg-neutral-50 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700" onClick={() => setChecklistEditor((p) => {
                       const categories = [...(p.categories || [])];
                       const c = { ...categories[ci] };
                       c.entries = [...(c.entries || []), { type: "line", label: "", body: "" }];
@@ -1361,24 +1361,24 @@ export default function SummerCamp() {
           <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
             <h3 className="text-lg font-semibold text-accent dark:text-emerald-200">Edit Reminders</h3>
             <div className="mt-4 space-y-3">
-              <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950" value={remindersEditor.title} onChange={(e) => setRemindersEditor((p) => ({ ...p, title: e.target.value }))} />
+              <input className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400" placeholder="Important Reminders" value={remindersEditor.title} onChange={(e) => setRemindersEditor((p) => ({ ...p, title: e.target.value }))} />
               <div className="rounded-lg border border-neutral-200 p-3 dark:border-neutral-700">
                 <div className="mb-2 flex items-center justify-between">
-                  <p className="text-sm font-medium text-prose">Reminder items</p>
+                  <p className="text-sm font-medium text-neutral-800 dark:text-neutral-100">Reminder items</p>
                   <button type="button" onClick={() => setRemindersEditor((p) => ({ ...p, items: [...(p.items || []), { label: "", body: "" }] }))} className="inline-flex items-center gap-1 rounded-lg bg-accent px-2 py-1 text-xs text-white dark:bg-emerald-700"><Plus className="h-4 w-4" /> Add</button>
                 </div>
                 <div className="space-y-3">
                   {(remindersEditor.items || []).map((it, i) => (
                     <div key={`ri-${i}`} className="rounded-lg border border-neutral-100 p-2 dark:border-neutral-800">
                       <div className="flex gap-2">
-                        <input className="flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-950" value={it.label} onChange={(e) => setRemindersEditor((p) => {
+                        <input className="flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400" value={it.label} onChange={(e) => setRemindersEditor((p) => {
                           const items = [...(p.items || [])];
                           items[i] = { ...items[i], label: e.target.value };
                           return { ...p, items };
                         })} />
                         <button type="button" className="rounded-md bg-rose-600 p-2 text-white" onClick={() => setRemindersEditor((p) => ({ ...p, items: (p.items || []).filter((_, idx) => idx !== i) }))}><Trash2 className="h-4 w-4" /></button>
                       </div>
-                      <textarea className="mt-2 h-16 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-950" value={it.body} onChange={(e) => setRemindersEditor((p) => {
+                      <textarea className="mt-2 h-16 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-400" value={it.body} onChange={(e) => setRemindersEditor((p) => {
                         const items = [...(p.items || [])];
                         items[i] = { ...items[i], body: e.target.value };
                         return { ...p, items };
