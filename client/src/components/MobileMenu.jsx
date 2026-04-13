@@ -20,9 +20,9 @@ const programItems = [
 ];
 
 const registrationItems = [
-  { to: '/winter-camp/register', label: 'Winter Camp Registration' },
-  { to: '/summer-camp/register', label: 'Summer Camp Registration' },
-  { to: '/online-course/register', label: 'Online Course Registration' },
+  { to: '/register/winter-camp', label: 'Winter Camp Registration' },
+  { to: '/register/summer-camp', label: 'Summer Camp Registration' },
+  { to: '/register/online-course', label: 'Online Course Registration' },
 ];
 
 const tailLinks = [
