@@ -200,6 +200,16 @@ export default function Navbar() {
               alt="Logo preview"
               className="max-h-[70vh] w-full object-contain"
             />
+            <div className="mt-4 flex justify-center">
+              <ImageUploader
+                folder="branding"
+                buttonText="Change Logo"
+                onUploaded={(asset) => {
+                  saveLogo(asset.url);
+                  setLogoPreviewOpen(false);
+                }}
+              />
+            </div>
           </div>
         </div>
       ) : null}
