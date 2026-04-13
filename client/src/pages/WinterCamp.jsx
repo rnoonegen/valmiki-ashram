@@ -30,12 +30,6 @@ const checklistTabs = [
   { id: "reminders", label: "Reminders" },
 ];
 
-const defaultAboutCampImages = [
-  "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=80",
-];
-
 const defaultHighlightsCampContent = {
   title: "Camp Highlights",
   contentBlocks: [
@@ -63,11 +57,7 @@ const defaultHighlightsCampContent = {
       ],
     },
   ],
-  images: [
-    "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1509099836639-18ba1795216d?auto=format&fit=crop&w=1200&q=80",
-  ],
+  images: [],
 };
 
 function buildHighlightsContentBlocks(raw) {
@@ -128,7 +118,7 @@ const defaultAboutCampContent = {
     },
   ],
   belowGuidelinesBlocks: [],
-  images: defaultAboutCampImages,
+  images: [],
 };
 
 function buildAboutSectionBlocks(raw, blocksKey, legacyTextKey) {
@@ -493,12 +483,10 @@ export default function WinterCamp() {
     ageGuidelines: Array.isArray(display.aboutCamp?.ageGuidelines)
       ? display.aboutCamp.ageGuidelines
       : defaultAboutCampContent.ageGuidelines,
-    images: Array.isArray(display.aboutCamp?.images)
-      ? display.aboutCamp.images
-      : defaultAboutCampContent.images,
     belowTitleBlocks: buildAboutBelowTitleBlocks(display.aboutCamp),
     belowAdventureBlocks: buildAboutBelowAdventureBlocks(display.aboutCamp),
     belowGuidelinesBlocks: buildAboutBelowGuidelinesBlocks(display.aboutCamp),
+    images: [],
   };
 
   const batchesCamp = {
@@ -515,9 +503,7 @@ export default function WinterCamp() {
     ...defaultHighlightsCampContent,
     ...(display.highlightsCamp || {}),
     contentBlocks: buildHighlightsContentBlocks(display.highlightsCamp),
-    images: Array.isArray(display.highlightsCamp?.images)
-      ? display.highlightsCamp.images
-      : defaultHighlightsCampContent.images,
+    images: [],
   };
 
   const rawChecklistCategories = Array.isArray(
@@ -606,24 +592,12 @@ export default function WinterCamp() {
         belowTitleBlocks: belowTitle,
         belowAdventureBlocks: belowAdventure,
         belowGuidelinesBlocks: belowGuidelines,
+        images: [],
       },
     };
     setDraft(next);
     await saveWinterCampContent(next);
     setAboutEditor(null);
-  };
-
-  const updateAboutImages = async (updater) => {
-    const nextImages = updater([...(aboutCamp.images || [])]);
-    const next = {
-      ...draft,
-      aboutCamp: {
-        ...aboutCamp,
-        images: nextImages.filter(Boolean),
-      },
-    };
-    setDraft(next);
-    await saveWinterCampContent(next);
   };
 
   const openBatchesEditor = () => {
@@ -694,25 +668,12 @@ export default function WinterCamp() {
           (highlightsEditor.title || "").trim() ||
           defaultHighlightsCampContent.title,
         contentBlocks: blocks,
-        images: highlightsCamp.images,
+        images: [],
       },
     };
     setDraft(next);
     await saveWinterCampContent(next);
     setHighlightsEditor(null);
-  };
-
-  const updateHighlightsImages = async (updater) => {
-    const nextImages = updater([...(highlightsCamp.images || [])]);
-    const next = {
-      ...draft,
-      highlightsCamp: {
-        ...highlightsCamp,
-        images: nextImages.filter(Boolean),
-      },
-    };
-    setDraft(next);
-    await saveWinterCampContent(next);
   };
 
   const openChecklistCategoriesEditor = () => {
@@ -1074,62 +1035,6 @@ export default function WinterCamp() {
               </p>
             );
           })}
-
-          {isAdmin ? (
-            <div className="mt-5 flex justify-end">
-              <ImageUploader
-                folder="winter-camp"
-                buttonText="Add Highlight Image"
-                onUploaded={(asset) =>
-                  updateHighlightsImages((images) => [...images, asset.url])
-                }
-              />
-            </div>
-          ) : null}
-
-          <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {(highlightsCamp.images || []).map((image, index) => (
-              <div
-                key={`${image}-${index}`}
-                className="overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-900"
-              >
-                <div className="relative">
-                  <img
-                    src={image}
-                    alt={`Winter camp highlight ${index + 1}`}
-                    className="h-52 w-full object-cover"
-                    loading="lazy"
-                  />
-                  {isAdmin ? (
-                    <div className="absolute right-2 top-2 z-10 flex gap-1">
-                      <ImageUploader
-                        folder="winter-camp"
-                        buttonText="Change"
-                        onUploaded={(asset) =>
-                          updateHighlightsImages((images) => {
-                            images[index] = asset.url;
-                            return images;
-                          })
-                        }
-                      />
-                      <button
-                        type="button"
-                        onClick={() =>
-                          updateHighlightsImages((images) =>
-                            images.filter((_, i) => i !== index)
-                          )
-                        }
-                        className="rounded-md bg-rose-600 p-1 text-white shadow"
-                        aria-label="Delete highlight image"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       );
     }
@@ -1282,62 +1187,6 @@ export default function WinterCamp() {
           "about-g",
           "mt-5"
         )}
-
-        {isAdmin ? (
-          <div className="mt-5 flex justify-end">
-            <ImageUploader
-              folder="winter-camp"
-              buttonText="Add Image"
-              onUploaded={(asset) =>
-                updateAboutImages((images) => [...images, asset.url])
-              }
-            />
-          </div>
-        ) : null}
-
-        <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {(aboutCamp.images || []).map((image, index) => (
-            <div
-              key={`${image}-${index}`}
-              className="overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-900"
-            >
-              <div className="relative">
-                <img
-                  src={image}
-                  alt={`Winter camp activity ${index + 1}`}
-                  className="h-52 w-full object-cover"
-                  loading="lazy"
-                />
-                {isAdmin ? (
-                  <div className="absolute right-2 top-2 z-10 flex gap-1">
-                    <ImageUploader
-                      folder="winter-camp"
-                      buttonText="Change"
-                      onUploaded={(asset) =>
-                        updateAboutImages((images) => {
-                          images[index] = asset.url;
-                          return images;
-                        })
-                      }
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        updateAboutImages((images) =>
-                          images.filter((_, i) => i !== index)
-                        )
-                      }
-                      className="rounded-md bg-rose-600 p-1 text-white shadow"
-                      aria-label="Delete about camp image"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
     );
   }, [
@@ -1415,84 +1264,98 @@ export default function WinterCamp() {
             ) : null}
           </div>
           <div className="grid gap-5 md:grid-cols-2">
-            {(legacyPage.previousGalleries || []).map((gallery, index) => {
-              const detailPath = isAdmin
-                ? `/admin/winter-camp/${gallery.id}`
-                : `/winter-camp/${gallery.id}`;
-              const cover = gallery.images?.[0] || "";
-              const stack = (gallery.images || []).slice(1, 3);
-              return (
-                <article
-                  key={gallery.id || index}
-                  className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <Link to={detailPath} className="min-w-0 flex-1">
-                      <h4 className="font-semibold text-accent dark:text-emerald-200">
-                        {gallery.title}
-                      </h4>
-                      <p className="mt-1 text-xs text-prose-muted">
-                        Winter:{" "}
-                        {gallery.registrationCampYear ||
-                          registrationCamps.find(
-                            (camp) => camp.id === gallery.registrationCampId
-                          )?.year ||
-                          "-"}
-                      </p>
-                      <p className="mt-1 text-sm text-prose-muted">
-                        {gallery.description}
-                      </p>
-                    </Link>
-                    {isAdmin ? (
-                      <div className="flex gap-1">
-                        <button
-                          type="button"
-                          onClick={() => openGalleryEditor(index)}
-                          className="rounded-md bg-neutral-100 p-1.5 text-accent dark:bg-neutral-800 dark:text-emerald-200"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => deleteGallery(index)}
-                          className="rounded-md bg-rose-100 p-1.5 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ) : null}
-                  </div>
-                  <Link to={detailPath} className="mt-3 block">
-                    <div className="relative h-48 rounded-xl bg-neutral-100 p-2 dark:bg-neutral-800">
-                      {stack.map((img, i) => (
-                        <img
-                          key={`${img}-${i}`}
-                          src={img}
-                          alt={`${gallery.title} stacked ${i + 1}`}
-                          className="absolute h-[calc(100%-16px)] w-[calc(100%-16px)] rounded-lg object-cover opacity-60"
-                          style={{
-                            top: 8 + (i + 1) * 6,
-                            left: 8 + (i + 1) * 6,
-                            zIndex: 10 + i,
-                          }}
-                        />
-                      ))}
-                      {cover ? (
-                        <img
-                          src={cover}
-                          alt={gallery.title}
-                          className="relative z-30 h-full w-full rounded-lg object-contain bg-white dark:bg-neutral-900"
-                        />
-                      ) : (
-                        <div className="relative z-30 flex h-full w-full items-center justify-center rounded-lg border border-dashed border-neutral-300 text-sm text-prose-muted dark:border-neutral-600">
-                          No cover image
+            {(legacyPage.previousGalleries || []).length === 0 ? (
+              <div className="md:col-span-2 rounded-2xl border border-dashed border-neutral-300 bg-white px-6 py-12 text-center dark:border-neutral-600 dark:bg-neutral-900/60">
+                <p className="text-sm font-medium text-prose">No past camp galleries yet</p>
+                <p className="mx-auto mt-2 max-w-lg text-sm text-prose-muted">
+                  Photo collections from previous winter camps appear in this section.
+                  {isAdmin ? (
+                    <> Use &ldquo;Add Gallery&rdquo; above when you are ready to publish the first one.</>
+                  ) : (
+                    <> Check back later for highlights from past seasons.</>
+                  )}
+                </p>
+              </div>
+            ) : (
+              (legacyPage.previousGalleries || []).map((gallery, index) => {
+                const detailPath = isAdmin
+                  ? `/admin/winter-camp/${gallery.id}`
+                  : `/winter-camp/${gallery.id}`;
+                const cover = gallery.images?.[0] || "";
+                const stack = (gallery.images || []).slice(1, 3);
+                return (
+                  <article
+                    key={gallery.id || index}
+                    className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <Link to={detailPath} className="min-w-0 flex-1">
+                        <h4 className="font-semibold text-accent dark:text-emerald-200">
+                          {gallery.title}
+                        </h4>
+                        <p className="mt-1 text-xs text-prose-muted">
+                          Winter:{" "}
+                          {gallery.registrationCampYear ||
+                            registrationCamps.find(
+                              (camp) => camp.id === gallery.registrationCampId
+                            )?.year ||
+                            "-"}
+                        </p>
+                        <p className="mt-1 text-sm text-prose-muted">
+                          {gallery.description}
+                        </p>
+                      </Link>
+                      {isAdmin ? (
+                        <div className="flex gap-1">
+                          <button
+                            type="button"
+                            onClick={() => openGalleryEditor(index)}
+                            className="rounded-md bg-neutral-100 p-1.5 text-accent dark:bg-neutral-800 dark:text-emerald-200"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => deleteGallery(index)}
+                            className="rounded-md bg-rose-100 p-1.5 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         </div>
-                      )}
+                      ) : null}
                     </div>
-                  </Link>
-                </article>
-              );
-            })}
+                    <Link to={detailPath} className="mt-3 block">
+                      <div className="relative h-48 rounded-xl bg-neutral-100 p-2 dark:bg-neutral-800">
+                        {stack.map((img, i) => (
+                          <img
+                            key={`${img}-${i}`}
+                            src={img}
+                            alt={`${gallery.title} stacked ${i + 1}`}
+                            className="absolute h-[calc(100%-16px)] w-[calc(100%-16px)] rounded-lg object-cover opacity-60"
+                            style={{
+                              top: 8 + (i + 1) * 6,
+                              left: 8 + (i + 1) * 6,
+                              zIndex: 10 + i,
+                            }}
+                          />
+                        ))}
+                        {cover ? (
+                          <img
+                            src={cover}
+                            alt={gallery.title}
+                            className="relative z-30 h-full w-full rounded-lg object-contain bg-white dark:bg-neutral-900"
+                          />
+                        ) : (
+                          <div className="relative z-30 flex h-full w-full items-center justify-center rounded-lg border border-dashed border-neutral-300 text-sm text-prose-muted dark:border-neutral-600">
+                            No cover image
+                          </div>
+                        )}
+                      </div>
+                    </Link>
+                  </article>
+                );
+              })
+            )}
           </div>
         </section>
         {status.message ? (
