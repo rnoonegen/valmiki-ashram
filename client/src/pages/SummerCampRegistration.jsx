@@ -1866,8 +1866,8 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                                 <p className="mb-2 text-sm font-medium text-neutral-800 dark:text-neutral-200">Select one or more batches</p>
                                 <div className="grid gap-2 md:grid-cols-2">
                                   {(contentEditor.batchRows || []).map((row, idx) => (
-                                    <label key={row.id || idx} className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-800 opacity-70 dark:border-neutral-700 dark:text-neutral-200">
-                                      <input type="checkbox" disabled />
+                                    <label key={row.id || idx} className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-800 opacity-70 dark:border-neutral-700 dark:bg-neutral-900/60 dark:text-neutral-200">
+                                      <input type="checkbox" disabled className="h-4 w-4 rounded border-neutral-400 text-accent dark:border-neutral-500 dark:bg-neutral-950 dark:text-emerald-400" />
                                       <span>{blueprintPreviewBatchLabel(row)}</span>
                                     </label>
                                   ))}
@@ -1910,7 +1910,7 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                             </div>
                           </div>
                           {blueprintPreviewPricing ? (
-                            <div className="mt-4 rounded-xl border border-emerald-300 bg-emerald-50/70 p-4 text-sm opacity-95 dark:border-emerald-700/60 dark:bg-emerald-950/20">
+                            <div className="mt-4 rounded-xl border border-emerald-300 bg-emerald-50/70 p-4 text-sm text-emerald-900 opacity-95 dark:border-emerald-700/60 dark:bg-emerald-950/20 dark:text-emerald-100">
                               <p className="text-xs font-semibold uppercase tracking-wide text-emerald-800 dark:text-emerald-200">Price preview (sample)</p>
                               <p className="mt-2">Registration fee (family): <span className="font-semibold">{toINRCurrency(blueprintPreviewPricing.reg)}</span></p>
                               <p>Example child stay: <span className="font-semibold">{blueprintPreviewPricing.childDays}</span> day(s) (first batch length)</p>
@@ -2158,11 +2158,11 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
             </ul>
             <p className="mt-5 text-prose">{activeCampContent.pricing}</p>
             <p className="mt-2 text-prose">{activeCampContent.residencePricing}</p>
-            <div className="mt-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm dark:border-neutral-700 dark:bg-neutral-800/60">
+            <div className="mt-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-800 dark:border-neutral-700 dark:bg-neutral-800/60 dark:text-neutral-100">
               <p>Registration (per family): <span className="font-semibold">{toINRCurrency(activeCampContent.registrationFee)}</span></p>
               <p>Residential (per person/day): <span className="font-semibold">{toINRCurrency(activeCampContent.perPersonPerDayPrice)}</span></p>
             </div>
-            <div className="mt-4 rounded-xl border border-primary-muted/60 bg-primary/25 p-4 text-sm dark:border-emerald-800/50 dark:bg-emerald-950/20">
+            <div className="mt-4 rounded-xl border border-primary-muted/60 bg-primary/25 p-4 text-sm text-neutral-900 dark:border-emerald-800/50 dark:bg-emerald-950/20 dark:text-emerald-100">
               <p><span className="font-semibold">Bank Name:</span> {activeCampContent.payment.bankName}</p>
               <p><span className="font-semibold">Account Holder:</span> {activeCampContent.payment.accountHolder}</p>
               <p><span className="font-semibold">Account Number:</span> {activeCampContent.payment.accountNumber}</p>
@@ -2417,9 +2417,13 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                       const checked = (watch(`children.${childIndex}.interestedBatches`) || []).includes(batch);
                       const daysForBatch = Number(activeCampContent.batchDays?.[batch] || 0);
                       return (
-                        <label key={`${batch}-${childIndex}`} className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 px-3 py-2 text-sm dark:border-neutral-700">
+                        <label
+                          key={`${batch}-${childIndex}`}
+                          className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-800 dark:border-neutral-700 dark:bg-neutral-900/60 dark:text-neutral-200"
+                        >
                           <input
                             type="checkbox"
+                            className="h-4 w-4 rounded border-neutral-400 text-accent focus:ring-accent dark:border-neutral-500 dark:bg-neutral-950 dark:text-emerald-400 dark:focus:ring-emerald-500"
                             checked={checked}
                             onChange={(e) => {
                               const prev = watch(`children.${childIndex}.interestedBatches`) || [];
@@ -2599,13 +2603,13 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
               </a>
             ) : null}
           </div>
-          <div className="mt-4 rounded-xl border border-emerald-300 bg-emerald-50/70 p-4 text-sm dark:border-emerald-700/60 dark:bg-emerald-950/20">
+          <div className="mt-4 rounded-xl border border-emerald-300 bg-emerald-50/70 p-4 text-sm text-emerald-900 dark:border-emerald-700/60 dark:bg-emerald-950/20 dark:text-emerald-100">
             <p>Registration fee (family): <span className="font-semibold">{toINRCurrency(activeCampContent.registrationFee)}</span></p>
             <p>Children stay total: <span className="font-semibold">{childStayDaysTotal}</span> day(s)</p>
             <p>Family stay total: <span className="font-semibold">{familyStayDaysTotal}</span> day(s)</p>
             <p>Per person/day: <span className="font-semibold">{toINRCurrency(activeCampContent.perPersonPerDayPrice)}</span></p>
             {childPriceRows.length ? (
-              <div className="mt-3 rounded-lg border border-emerald-200 bg-white/70 p-3 dark:border-emerald-800/50 dark:bg-neutral-900/40">
+              <div className="mt-3 rounded-lg border border-emerald-200 bg-white/70 p-3 text-emerald-900 dark:border-emerald-800/50 dark:bg-neutral-900/40 dark:text-emerald-100">
                 <p className="font-semibold text-emerald-900 dark:text-emerald-200">Children Breakdown</p>
                 <div className="mt-2 space-y-1">
                   {childPriceRows.map((row, idx) => (
@@ -2619,7 +2623,7 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
               </div>
             ) : null}
             {familyPriceRows.length ? (
-              <div className="mt-3 rounded-lg border border-emerald-200 bg-white/70 p-3 dark:border-emerald-800/50 dark:bg-neutral-900/40">
+              <div className="mt-3 rounded-lg border border-emerald-200 bg-white/70 p-3 text-emerald-900 dark:border-emerald-800/50 dark:bg-neutral-900/40 dark:text-emerald-100">
                 <p className="font-semibold text-emerald-900 dark:text-emerald-200">Family Members Breakdown</p>
                 <div className="mt-2 space-y-1">
                   {familyPriceRows.map((row, idx) => (

@@ -1884,7 +1884,7 @@ export default function AdminContests() {
                       <input
                         disabled
                         type="checkbox"
-                        className="mr-2 align-middle"
+                        className="mr-2 h-4 w-4 rounded border-neutral-400 align-middle text-accent dark:border-neutral-500 dark:bg-neutral-950 dark:text-emerald-400"
                       />
                       Have you watched the official contest rules video?
                     </label>
@@ -1892,7 +1892,7 @@ export default function AdminContests() {
                       <input
                         disabled
                         type="checkbox"
-                        className="mr-2 align-middle"
+                        className="mr-2 h-4 w-4 rounded border-neutral-400 align-middle text-accent dark:border-neutral-500 dark:bg-neutral-950 dark:text-emerald-400"
                       />
                       Have you joined the Arattai App community?
                     </label>

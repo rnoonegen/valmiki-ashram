@@ -517,6 +517,7 @@ export default function Footer({ className }) {
                     <label className="inline-flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-200">
                       <input
                         type="checkbox"
+                        className="h-4 w-4 rounded border-neutral-400 text-accent dark:border-neutral-500 dark:bg-neutral-950 dark:text-emerald-400"
                         checked={itemEditor.external}
                         onChange={(e) => setItemEditor((p) => ({ ...p, external: e.target.checked }))}
                       />
