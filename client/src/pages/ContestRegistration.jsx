@@ -4,6 +4,8 @@ import Container from '../components/Container';
 import PageFade from '../components/PageFade';
 import { apiRequest } from '../admin/api';
 import { resolveBuiltInRegistrationIntro } from '../constants/contestRegistrationDefaults';
+import RequiredStar from '../components/forms/RequiredStar';
+import { isValidEmail, normalizeEmail } from '../utils/formInput';
 
 const platformOptions = ['YouTube', 'Instagram', 'X (Twitter)', 'Facebook', 'Other'];
 
@@ -63,10 +65,26 @@ export default function ContestRegistration() {
     event.preventDefault();
     setError('');
     setMessage('');
+    const emailNorm = normalizeEmail(form.email);
+    const missing = [];
+    if (!String(form.fullName || '').trim()) missing.push('Full name');
+    if (!String(form.email || '').trim()) missing.push('Email');
+    else if (!isValidEmail(emailNorm)) {
+      setError('Enter a valid email address.');
+      return;
+    }
+    if (!String(form.mobileNumber || '').trim()) missing.push('Mobile number');
+    if (!form.watchedRulesVideo) missing.push('Confirm you watched the official rules video');
+    if (!form.joinedArattaiCommunity) missing.push('Confirm you joined the Arattai App community');
+    if (!String(form.shortVideoLink || '').trim()) missing.push('Short video link');
+    if (missing.length) {
+      setError(`Required fields: ${missing.join('; ')}.`);
+      return;
+    }
     try {
       const data = await apiRequest(`/api/contests/${contestId}/register`, {
         method: 'POST',
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, email: emailNorm }),
       });
       setMessage(data.message || 'Registration submitted.');
       setForm({
@@ -123,28 +141,41 @@ export default function ContestRegistration() {
                 <div className="mb-6 whitespace-pre-wrap rounded-xl border border-neutral-200 bg-neutral-50/80 p-4 text-sm leading-relaxed text-prose dark:border-neutral-600 dark:bg-neutral-950/40 dark:text-neutral-200">
                   {builtInIntro}
                 </div>
-                <input
-                  required
-                  placeholder="Full Name"
-                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:[color-scheme:dark]"
-                  value={form.fullName}
-                  onChange={(e) => setForm((p) => ({ ...p, fullName: e.target.value }))}
-                />
-                <input
-                  required
-                  type="email"
-                  placeholder="Email"
-                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:[color-scheme:dark]"
-                  value={form.email}
-                  onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
-                />
-                <input
-                  required
-                  placeholder="Mobile Number"
-                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:[color-scheme:dark]"
-                  value={form.mobileNumber}
-                  onChange={(e) => setForm((p) => ({ ...p, mobileNumber: e.target.value }))}
-                />
+                <p className="text-xs text-prose-muted">
+                  Required fields are marked with <span className="font-medium text-red-500">*</span>.
+                </p>
+                <label className="block text-sm text-neutral-800 dark:text-neutral-200">
+                  Full Name
+                  <RequiredStar />
+                  <input
+                    placeholder="Full Name"
+                    className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:[color-scheme:dark]"
+                    value={form.fullName}
+                    onChange={(e) => setForm((p) => ({ ...p, fullName: e.target.value }))}
+                  />
+                </label>
+                <label className="block text-sm text-neutral-800 dark:text-neutral-200">
+                  Email
+                  <RequiredStar />
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:[color-scheme:dark]"
+                    value={form.email}
+                    onChange={(e) => setForm((p) => ({ ...p, email: e.target.value.toLowerCase() }))}
+                    onBlur={(e) => setForm((p) => ({ ...p, email: normalizeEmail(e.target.value) }))}
+                  />
+                </label>
+                <label className="block text-sm text-neutral-800 dark:text-neutral-200">
+                  Mobile Number
+                  <RequiredStar />
+                  <input
+                    placeholder="Mobile Number"
+                    className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:[color-scheme:dark]"
+                    value={form.mobileNumber}
+                    onChange={(e) => setForm((p) => ({ ...p, mobileNumber: e.target.value }))}
+                  />
+                </label>
                 <label className="block text-sm text-neutral-800 dark:text-neutral-200">
                   <input
                     type="checkbox"
@@ -153,6 +184,7 @@ export default function ContestRegistration() {
                     onChange={(e) => setForm((p) => ({ ...p, watchedRulesVideo: e.target.checked }))}
                   />
                   Have you watched the official contest rules video?
+                  <RequiredStar />
                 </label>
                 <label className="block text-sm text-neutral-800 dark:text-neutral-200">
                   <input
@@ -162,14 +194,18 @@ export default function ContestRegistration() {
                     onChange={(e) => setForm((p) => ({ ...p, joinedArattaiCommunity: e.target.checked }))}
                   />
                   Have you joined the Arattai App community?
+                  <RequiredStar />
                 </label>
-                <input
-                  required
-                  placeholder="Short video link"
-                  className="w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:[color-scheme:dark]"
-                  value={form.shortVideoLink}
-                  onChange={(e) => setForm((p) => ({ ...p, shortVideoLink: e.target.value }))}
-                />
+                <label className="block text-sm text-neutral-800 dark:text-neutral-200">
+                  Short video link
+                  <RequiredStar />
+                  <input
+                    placeholder="Short video link"
+                    className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:[color-scheme:dark]"
+                    value={form.shortVideoLink}
+                    onChange={(e) => setForm((p) => ({ ...p, shortVideoLink: e.target.value }))}
+                  />
+                </label>
                 <div>
                   <p className="mb-2 text-sm font-medium text-neutral-800 dark:text-neutral-200">Social media platforms</p>
                   <div className="grid gap-2 sm:grid-cols-2">

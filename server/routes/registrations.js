@@ -5,6 +5,7 @@ const WinterCampRegistration = require('../models/WinterCampRegistration');
 const OnlineCourseRegistration = require('../models/OnlineCourseRegistration');
 const { authRequired } = require('../middleware/auth');
 const { uploadImage } = require('../services/s3');
+const { normalizeEmail, isValidEmail } = require('../utils/email');
 
 const router = express.Router();
 const upload = multer({
@@ -44,12 +45,13 @@ function normalizePayload(payload = {}) {
   }
   const firstChild = normalizedChildren[0] || {};
   const familyMembers = Array.isArray(payload.familyMembers) ? payload.familyMembers : [];
+  const mergedParentEmail = normalizeEmail(payload.parentEmail || payload.email || '');
   return {
     registrationCampId: String(payload.registrationCampId || '').trim(),
     registrationCampTitle: String(payload.registrationCampTitle || '').trim(),
-    parentEmail: String(payload.parentEmail || payload.email || '').trim(),
+    parentEmail: mergedParentEmail,
     parentName: String(payload.parentName || payload.guardianName || '').trim(),
-    email: String(payload.email || payload.parentEmail || '').trim(),
+    email: mergedParentEmail,
     guardianName: String(payload.guardianName || payload.parentName || '').trim(),
     relationship: String(payload.relationship || '').trim(),
     mobileNumber: String(payload.mobileNumber || '').trim(),
@@ -104,6 +106,9 @@ function validateRequired(data) {
   ];
   const missing = requiredFields.find((key) => !String(data[key] || '').trim());
   if (missing) return `${missing} is required.`;
+  if (!isValidEmail(data.parentEmail)) {
+    return 'Enter a valid parent email address.';
+  }
   if (!Array.isArray(data.children) || !data.children.length) {
     return 'At least one child is required.';
   }
@@ -149,12 +154,12 @@ function normalizeOnlineCoursePayload(payload = {}) {
     parents: {
       parent1: {
         name: String(parent1.name || '').trim(),
-        email: String(parent1.email || '').trim(),
+        email: normalizeEmail(parent1.email || ''),
         phone: String(parent1.phone || '').trim(),
       },
       parent2: {
         name: String(parent2.name || '').trim(),
-        email: String(parent2.email || '').trim(),
+        email: normalizeEmail(parent2.email || ''),
         phone: String(parent2.phone || '').trim(),
       },
     },
@@ -189,6 +194,12 @@ function normalizeOnlineCoursePayload(payload = {}) {
 function validateOnlineCourseRequired(data) {
   if (!data.parents.parent1.name || !data.parents.parent1.email || !data.parents.parent1.phone) {
     return 'Parent 1 details are required.';
+  }
+  if (!isValidEmail(data.parents.parent1.email)) {
+    return 'Enter a valid email for Parent 1.';
+  }
+  if (data.parents.parent2.email && !isValidEmail(data.parents.parent2.email)) {
+    return 'Parent 2 email is invalid.';
   }
   if (!data.address.country || !data.address.city || !data.address.address || !data.address.zipcode) {
     return 'Address details are required.';

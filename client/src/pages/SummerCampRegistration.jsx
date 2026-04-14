@@ -9,13 +9,23 @@ import { adminRequest, apiRequest, getApiBase } from '../admin/api';
 import Container from '../components/Container';
 import FormSelect from '../components/forms/FormSelect';
 import PhoneInput from '../components/forms/PhoneInput';
+import RequiredStar from '../components/forms/RequiredStar';
 import PageFade from '../components/PageFade';
 import { useTheme } from '../context/ThemeContext';
 import { COUNTRY_OPTIONS } from '../data/registrationOptions';
 import useLiveContent from '../hooks/useLiveContent';
+import {
+  buildCampYearSelectYears,
+  getCampYearBounds,
+  isValidEmail,
+  normalizeEmail,
+  parseCampYearForSave,
+  zodRequiredEmail,
+} from '../utils/formInput';
+import { flattenRhfErrorMessages } from '../utils/formErrors';
 
 const schema = z.object({
-  parentEmail: z.string().email('Enter a valid email'),
+  parentEmail: zodRequiredEmail('Enter a valid email'),
   parentName: z.string().min(1, 'Parent name is required'),
   relationship: z.string().min(1, 'Relationship is required'),
   mobileNumber: z.string().min(7, 'Mobile number is required'),
@@ -47,6 +57,46 @@ const schema = z.object({
   source: z.string().min(1, 'Please choose one source'),
   sourceOther: z.string().optional(),
 });
+
+const ENTRY_EDITOR_REQUIRED_KEYS = [
+  'registrationCampId',
+  'registrationCampTitle',
+  'email',
+  'guardianName',
+  'relationship',
+  'mobileNumber',
+  'motherTongue',
+  'country',
+  'state',
+  'city',
+  'childName',
+  'childAge',
+  'gender',
+  'schoolName',
+  'currentClass',
+  'source',
+];
+
+const ENTRY_EDITOR_REQUIRED_SET = new Set(ENTRY_EDITOR_REQUIRED_KEYS);
+
+const ENTRY_EDITOR_LABELS = {
+  registrationCampId: 'Registration camp ID',
+  registrationCampTitle: 'Camp title',
+  email: 'Parent email',
+  guardianName: 'Parent / guardian name',
+  relationship: 'Relationship',
+  mobileNumber: 'Mobile number',
+  motherTongue: 'Mother tongue',
+  country: 'Country',
+  state: 'State',
+  city: 'City',
+  childName: 'Child name',
+  childAge: 'Child age',
+  gender: 'Gender',
+  schoolName: 'School',
+  currentClass: 'Current class',
+  source: 'How did you hear about us',
+};
 
 function createDefaultContent(campLabel, campLabelLower) {
   return {
@@ -122,6 +172,12 @@ function createDefaultContent(campLabel, campLabelLower) {
   },
   transactionHint: `${campLabel} - Batch # and Child/Children Name`,
 };
+}
+
+function rhfFieldClass(hasError) {
+  const base =
+    'mt-1 w-full rounded-lg border px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400';
+  return `${base} ${hasError ? 'border-rose-400 dark:border-rose-600' : 'border-neutral-300 dark:border-neutral-700'}`;
 }
 
 const defaultValues = {
@@ -363,6 +419,11 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
   const [entryEditor, setEntryEditor] = useState(null);
   const [entryPreview, setEntryPreview] = useState(null);
   const [campEditor, setCampEditor] = useState(null);
+  const campYearSelectModel = useMemo(() => {
+    if (!campEditor) return null;
+    const bounds = getCampYearBounds();
+    return { bounds, ...buildCampYearSelectYears(campEditor.year, bounds) };
+  }, [campEditor]);
   const [adminTab, setAdminTab] = useState('registration-form');
   const [contentEditorStateTab, setContentEditorStateTab] = useState('empty');
   const [stateEditorOpen, setStateEditorOpen] = useState(false);
@@ -777,7 +838,11 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
   const openEntryEditor = (item) => {
     setEntryEditor(
       item
-        ? { ...item, interestedBatchesText: (item.interestedBatches || []).join('\n') }
+        ? {
+            ...item,
+            interestedBatchesText: (item.interestedBatches || []).join('\n'),
+            email: normalizeEmail(item.email || item.parentEmail || ''),
+          }
         : {
             _id: '',
             registrationCampId: openCamp?.id || '',
@@ -832,12 +897,17 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
             ifsc: camp.payment?.ifsc || content.payment.ifsc,
             transactionHint: camp.transactionHint || content.transactionHint,
             isNew: false,
+            year: (() => {
+              const raw = String(camp?.year ?? '').trim();
+              if (/^\d{4}$/.test(raw)) return raw;
+              return String(getCampYearBounds().min);
+            })(),
           }
         : {
             id: `camp-${Date.now()}`,
             title: '',
             subtitle: '',
-            year: '',
+            year: String(new Date().getFullYear()),
             status: 'open',
             note: '',
             ageGuidelinesText: content.ageGuidelines.join('\n'),
@@ -861,12 +931,22 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
 
   const saveCampEditor = async () => {
     if (!campEditor) return;
-    if (
-      !String(campEditor.title || '').trim() ||
-      !String(campEditor.subtitle || '').trim() ||
-      !String(campEditor.year || '').trim()
-    ) {
-      setStatus({ type: 'error', message: 'Camp title, subtitle, and year are required.' });
+    const campMissing = [];
+    if (!String(campEditor.title || '').trim()) campMissing.push('Camp title');
+    if (!String(campEditor.subtitle || '').trim()) campMissing.push('Camp subtitle');
+    if (!String(campEditor.year || '').trim()) campMissing.push('Camp year');
+    if (campMissing.length) {
+      setStatus({
+        type: 'error',
+        message: `Required fields: ${campMissing.join(', ')}.`,
+      });
+      return;
+    }
+    if (!campEditor.isNew && campEditor.status === 'closed' && !String(campEditor.note || '').trim()) {
+      setStatus({
+        type: 'error',
+        message: 'Required fields: Reason / Note (required when status is Closed).',
+      });
       return;
     }
     const batchError = validateBatchRows(campEditor.batchRows || []);
@@ -874,12 +954,20 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
       setStatus({ type: 'error', message: batchError });
       return;
     }
+    const yearParsed = parseCampYearForSave(campEditor.year);
+    if (!yearParsed.ok) {
+      setStatus({
+        type: 'error',
+        message: `Camp year must be between ${yearParsed.min} and ${yearParsed.max}.`,
+      });
+      return;
+    }
     const batchPayload = buildBatchPayload(campEditor.batchRows || []);
     const normalizedCamp = {
       id: campEditor.id,
       title: String(campEditor.title || '').trim(),
       subtitle: String(campEditor.subtitle || '').trim(),
-      year: String(campEditor.year || '').trim(),
+      year: yearParsed.year,
       status: campEditor.status,
       note: String(campEditor.note || '').trim(),
       ageGuidelines: toLines(campEditor.ageGuidelinesText),
@@ -939,13 +1027,44 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
 
   const saveEntryEditor = async () => {
     if (!entryEditor) return;
+    const emailNorm = normalizeEmail(entryEditor.email);
+    if (!isValidEmail(emailNorm)) {
+      setStatus({ type: 'error', message: 'Enter a valid email address.' });
+      return;
+    }
+    const entryMissing = [];
+    for (const key of ENTRY_EDITOR_REQUIRED_KEYS) {
+      if (!String(entryEditor[key] ?? '').trim()) {
+        entryMissing.push(ENTRY_EDITOR_LABELS[key] || key);
+      }
+    }
+    if (String(entryEditor.source || '').trim() === 'Other' && !String(entryEditor.sourceOther || '').trim()) {
+      entryMissing.push('Source (other details)');
+    }
+    const batchLines = String(entryEditor.interestedBatchesText || '')
+      .split('\n')
+      .map((x) => x.trim())
+      .filter(Boolean);
+    if (!batchLines.length) {
+      entryMissing.push('Interested batches (at least one line)');
+    }
+    if (entryMissing.length) {
+      setStatus({
+        type: 'error',
+        message: `Required fields: ${entryMissing.join(', ')}.`,
+      });
+      return;
+    }
     const payload = {
       ...entryEditor,
+      email: emailNorm,
+      parentEmail: emailNorm,
       interestedBatches: String(entryEditor.interestedBatchesText || '')
         .split('\n')
         .map((x) => x.trim())
         .filter(Boolean),
     };
+    delete payload.interestedBatchesText;
     try {
       if (entryEditor._id) {
         await adminRequest(`${adminRegistrationsApiBase}/${entryEditor._id}`, {
@@ -1715,7 +1834,7 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                       ) : (
                         <>
                           <div className="mt-5 grid gap-4 md:grid-cols-2">
-                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Parent Email<input disabled readOnly placeholder="parent@example.com" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
+                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Parent Email<input type="email" disabled readOnly placeholder="parent@example.com" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
                             <label className="text-sm text-neutral-800 dark:text-neutral-200">Parent Name<input disabled readOnly placeholder="Parent name" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
                             <label className="text-sm text-neutral-800 dark:text-neutral-200">Relationship with child<input disabled readOnly placeholder="Father / Mother / Guardian" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
                             <label className="text-sm text-neutral-800 dark:text-neutral-200">Mobile Number<input disabled readOnly placeholder="+91…" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
@@ -2071,15 +2190,45 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
           <fieldset disabled={isAdmin} className={isAdmin ? 'opacity-90' : ''}>
           <h2 className="heading-section">{content.formTitle || defaultContent.formTitle}</h2>
           {content.formNote ? <p className="mt-2 text-sm text-prose-muted">{content.formNote}</p> : null}
+          <p className="mt-2 text-xs text-prose-muted">
+            Required fields are marked with <span className="font-medium text-red-500">*</span>.
+          </p>
           {isPublic && selectedCamp ? (
             <p className="mt-2 text-sm text-prose-muted">
               Registering for: <span className="font-medium text-neutral-900 dark:text-neutral-100">{selectedCamp.title}</span>
             </p>
           ) : null}
           <div className="mt-5 grid gap-4 md:grid-cols-2">
-            <label className="text-sm text-neutral-800 dark:text-neutral-200">Parent Email<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('parentEmail')} /></label>
-            <label className="text-sm text-neutral-800 dark:text-neutral-200">Parent Name<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('parentName')} /></label>
-            <label className="text-sm text-neutral-800 dark:text-neutral-200">Relationship with child<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('relationship')} /></label>
+            <label className="text-sm text-neutral-800 dark:text-neutral-200">
+              Parent Email
+              <RequiredStar />
+              <input
+                type="email"
+                autoComplete="email"
+                inputMode="email"
+                className={rhfFieldClass(!!errors.parentEmail)}
+                {...register('parentEmail', { setValueAs: (v) => normalizeEmail(v) })}
+              />
+              {errors.parentEmail ? (
+                <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.parentEmail.message}</p>
+              ) : null}
+            </label>
+            <label className="text-sm text-neutral-800 dark:text-neutral-200">
+              Parent Name
+              <RequiredStar />
+              <input className={rhfFieldClass(!!errors.parentName)} {...register('parentName')} />
+              {errors.parentName ? (
+                <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.parentName.message}</p>
+              ) : null}
+            </label>
+            <label className="text-sm text-neutral-800 dark:text-neutral-200">
+              Relationship with child
+              <RequiredStar />
+              <input className={rhfFieldClass(!!errors.relationship)} {...register('relationship')} />
+              {errors.relationship ? (
+                <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.relationship.message}</p>
+              ) : null}
+            </label>
             <PhoneInput
               label="Mobile Number"
               required
@@ -2088,7 +2237,14 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
               error={errors?.mobileNumber?.message}
               isDark={isDark}
             />
-            <label className="text-sm text-neutral-800 dark:text-neutral-200">Mother Tongue<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('motherTongue')} /></label>
+            <label className="text-sm text-neutral-800 dark:text-neutral-200">
+              Mother Tongue
+              <RequiredStar />
+              <input className={rhfFieldClass(!!errors.motherTongue)} {...register('motherTongue')} />
+              {errors.motherTongue ? (
+                <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.motherTongue.message}</p>
+              ) : null}
+            </label>
             <FormSelect
               name="country"
               control={control}
@@ -2099,12 +2255,34 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
               error={errors?.country?.message}
               isDark={isDark}
             />
-            <label className="text-sm text-neutral-800 dark:text-neutral-200">State<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('state')} /></label>
-            <label className="text-sm text-neutral-800 dark:text-neutral-200">City/Town<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('city')} /></label>
+            <label className="text-sm text-neutral-800 dark:text-neutral-200">
+              State
+              <RequiredStar />
+              <input className={rhfFieldClass(!!errors.state)} {...register('state')} />
+              {errors.state ? (
+                <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.state.message}</p>
+              ) : null}
+            </label>
+            <label className="text-sm text-neutral-800 dark:text-neutral-200">
+              City/Town
+              <RequiredStar />
+              <input className={rhfFieldClass(!!errors.city)} {...register('city')} />
+              {errors.city ? (
+                <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.city.message}</p>
+              ) : null}
+            </label>
           </div>
           <div className="mt-6 space-y-4">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">Children ({childFields.length})</p>
+              <div>
+                <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">
+                  Children ({childFields.length})
+                  <RequiredStar />
+                </p>
+                {errors.children && typeof errors.children.message === 'string' ? (
+                  <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.children.message}</p>
+                ) : null}
+              </div>
               <button
                 type="button"
                 onClick={() =>
@@ -2139,19 +2317,101 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                   ) : null}
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
-                  <label className="text-sm text-neutral-800 dark:text-neutral-200">Name<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" {...register(`children.${childIndex}.name`)} /></label>
-                  <label className="text-sm text-neutral-800 dark:text-neutral-200">Age<input type="number" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" {...register(`children.${childIndex}.age`)} /></label>
-                  <label className="text-sm text-neutral-800 dark:text-neutral-200">Gender
-                    <select className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" {...register(`children.${childIndex}.gender`)}>
-                      <option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option>
-                    </select>
+                  <label className="text-sm text-neutral-800 dark:text-neutral-200">
+                    Name
+                    <RequiredStar />
+                    <input
+                      className={rhfFieldClass(!!errors.children?.[childIndex]?.name)}
+                      {...register(`children.${childIndex}.name`)}
+                    />
+                    {errors.children?.[childIndex]?.name ? (
+                      <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">
+                        {errors.children[childIndex].name.message}
+                      </p>
+                    ) : null}
                   </label>
-                  <label className="text-sm text-neutral-800 dark:text-neutral-200">DOB<input type="date" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" {...register(`children.${childIndex}.dob`)} /></label>
-                  <label className="text-sm text-neutral-800 dark:text-neutral-200">School<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" {...register(`children.${childIndex}.school`)} /></label>
-                  <label className="text-sm text-neutral-800 dark:text-neutral-200">Current Class<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" {...register(`children.${childIndex}.currentClass`)} /></label>
+                  <label className="text-sm text-neutral-800 dark:text-neutral-200">
+                    Age
+                    <RequiredStar />
+                    <input
+                      type="number"
+                      className={rhfFieldClass(!!errors.children?.[childIndex]?.age)}
+                      {...register(`children.${childIndex}.age`)}
+                    />
+                    {errors.children?.[childIndex]?.age ? (
+                      <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">
+                        {errors.children[childIndex].age.message}
+                      </p>
+                    ) : null}
+                  </label>
+                  <label className="text-sm text-neutral-800 dark:text-neutral-200">
+                    Gender
+                    <RequiredStar />
+                    <select
+                      className={rhfFieldClass(!!errors.children?.[childIndex]?.gender)}
+                      {...register(`children.${childIndex}.gender`)}
+                    >
+                      <option value="">Select</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                    </select>
+                    {errors.children?.[childIndex]?.gender ? (
+                      <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">
+                        {errors.children[childIndex].gender.message}
+                      </p>
+                    ) : null}
+                  </label>
+                  <label className="text-sm text-neutral-800 dark:text-neutral-200">
+                    DOB
+                    <RequiredStar />
+                    <input
+                      type="date"
+                      className={rhfFieldClass(!!errors.children?.[childIndex]?.dob)}
+                      {...register(`children.${childIndex}.dob`)}
+                    />
+                    {errors.children?.[childIndex]?.dob ? (
+                      <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">
+                        {errors.children[childIndex].dob.message}
+                      </p>
+                    ) : null}
+                  </label>
+                  <label className="text-sm text-neutral-800 dark:text-neutral-200">
+                    School
+                    <RequiredStar />
+                    <input
+                      className={rhfFieldClass(!!errors.children?.[childIndex]?.school)}
+                      {...register(`children.${childIndex}.school`)}
+                    />
+                    {errors.children?.[childIndex]?.school ? (
+                      <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">
+                        {errors.children[childIndex].school.message}
+                      </p>
+                    ) : null}
+                  </label>
+                  <label className="text-sm text-neutral-800 dark:text-neutral-200">
+                    Current Class
+                    <RequiredStar />
+                    <input
+                      className={rhfFieldClass(!!errors.children?.[childIndex]?.currentClass)}
+                      {...register(`children.${childIndex}.currentClass`)}
+                    />
+                    {errors.children?.[childIndex]?.currentClass ? (
+                      <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">
+                        {errors.children[childIndex].currentClass.message}
+                      </p>
+                    ) : null}
+                  </label>
                 </div>
                 <div className="mt-4">
-                  <p className="mb-2 text-sm font-medium text-neutral-800 dark:text-neutral-200">Select one or more batches</p>
+                  <p className="mb-2 text-sm font-medium text-neutral-800 dark:text-neutral-200">
+                    Select one or more batches
+                    <RequiredStar />
+                  </p>
+                  {errors.children?.[childIndex]?.interestedBatches ? (
+                    <p className="mb-2 text-xs text-rose-600 dark:text-rose-400">
+                      {errors.children[childIndex].interestedBatches.message}
+                    </p>
+                  ) : null}
                   <div className="grid gap-2 md:grid-cols-2">
                     {activeCampContent.batches.map((batch) => {
                       const checked = (watch(`children.${childIndex}.interestedBatches`) || []).includes(batch);
@@ -2193,10 +2453,48 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
             </div>
             {familyFields.map((field, memberIndex) => (
               <div key={field.id} className="grid gap-3 rounded-xl border border-neutral-200 p-4 md:grid-cols-3 dark:border-neutral-700">
-                <label className="text-sm text-neutral-800 dark:text-neutral-200">Name<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" {...register(`familyMembers.${memberIndex}.name`)} /></label>
-                <label className="text-sm text-neutral-800 dark:text-neutral-200">Relation with child<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" {...register(`familyMembers.${memberIndex}.relationWithChild`)} /></label>
+                <label className="text-sm text-neutral-800 dark:text-neutral-200">
+                  Name
+                  <RequiredStar />
+                  <input
+                    className={rhfFieldClass(!!errors.familyMembers?.[memberIndex]?.name)}
+                    {...register(`familyMembers.${memberIndex}.name`)}
+                  />
+                  {errors.familyMembers?.[memberIndex]?.name ? (
+                    <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">
+                      {errors.familyMembers[memberIndex].name.message}
+                    </p>
+                  ) : null}
+                </label>
+                <label className="text-sm text-neutral-800 dark:text-neutral-200">
+                  Relation with child
+                  <RequiredStar />
+                  <input
+                    className={rhfFieldClass(!!errors.familyMembers?.[memberIndex]?.relationWithChild)}
+                    {...register(`familyMembers.${memberIndex}.relationWithChild`)}
+                  />
+                  {errors.familyMembers?.[memberIndex]?.relationWithChild ? (
+                    <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">
+                      {errors.familyMembers[memberIndex].relationWithChild.message}
+                    </p>
+                  ) : null}
+                </label>
                 <div className="flex items-end gap-2">
-                  <label className="w-full text-sm text-neutral-800 dark:text-neutral-200">Staying Days<input type="number" min="1" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" {...register(`familyMembers.${memberIndex}.stayingDays`)} /></label>
+                  <label className="w-full text-sm text-neutral-800 dark:text-neutral-200">
+                    Staying Days
+                    <RequiredStar />
+                    <input
+                      type="number"
+                      min="1"
+                      className={rhfFieldClass(!!errors.familyMembers?.[memberIndex]?.stayingDays)}
+                      {...register(`familyMembers.${memberIndex}.stayingDays`)}
+                    />
+                    {errors.familyMembers?.[memberIndex]?.stayingDays ? (
+                      <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">
+                        {errors.familyMembers[memberIndex].stayingDays.message}
+                      </p>
+                    ) : null}
+                  </label>
                   <button
                     type="button"
                     onClick={() => removeFamily(memberIndex)}
@@ -2211,21 +2509,56 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
           </div>
 
           <div className="mt-5 grid gap-4 md:grid-cols-2">
-            <label className="text-sm text-neutral-800 dark:text-neutral-200">How did you hear about us?
-              <select className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('source')}>
-                <option value="">Choose</option><option>Word of mouth</option><option>Poster/Flyer</option><option>Website</option><option>Instagram</option><option>YouTube</option><option>Whatsapp</option><option>Other</option>
+            <label className="text-sm text-neutral-800 dark:text-neutral-200">
+              How did you hear about us?
+              <RequiredStar />
+              <select
+                className={rhfFieldClass(!!errors.source)}
+                {...register('source')}
+              >
+                <option value="">Choose</option>
+                <option>Word of mouth</option>
+                <option>Poster/Flyer</option>
+                <option>Website</option>
+                <option>Instagram</option>
+                <option>YouTube</option>
+                <option>Whatsapp</option>
+                <option>Other</option>
               </select>
+              {errors.source ? (
+                <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.source.message}</p>
+              ) : null}
             </label>
             {source === 'Other' ? (
-              <label className="text-sm text-neutral-800 dark:text-neutral-200">Other Source<input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" {...register('sourceOther')} /></label>
+              <label className="text-sm text-neutral-800 dark:text-neutral-200">
+                Other Source
+                <RequiredStar />
+                <input
+                  className={rhfFieldClass(!!errors.sourceOther)}
+                  {...register('sourceOther')}
+                />
+                {errors.sourceOther ? (
+                  <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.sourceOther.message}</p>
+                ) : null}
+              </label>
             ) : null}
           </div>
 
           <label className="mt-5 block text-sm text-neutral-800 dark:text-neutral-200">Transaction Note
             <input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" placeholder={activeCampContent.transactionHint} {...register('transactionNote')} />
           </label>
-          <label className="mt-4 block text-sm text-neutral-800 dark:text-neutral-200">Payment Screenshot URL (optional)
-            <input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" placeholder="Paste uploaded payment screenshot link" {...register('paymentScreenshotUrl')} />
+          <label className="mt-4 block text-sm text-neutral-800 dark:text-neutral-200">
+            Payment Screenshot URL (optional)
+            <input
+              className={rhfFieldClass(!!errors.paymentScreenshotUrl)}
+              placeholder="Paste uploaded payment screenshot link"
+              {...register('paymentScreenshotUrl')}
+            />
+            {errors.paymentScreenshotUrl ? (
+              <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">
+                {errors.paymentScreenshotUrl.message}
+              </p>
+            ) : null}
           </label>
           <div className="mt-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-700 dark:bg-neutral-800/40">
             <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200">Upload Payment Screenshot</p>
@@ -2308,8 +2641,18 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
             </p>
           </div>
 
-          {Object.values(errors).length ? (
-            <p className="mt-3 text-sm text-rose-600">Please fill all required fields correctly.</p>
+          {Object.keys(errors).length ? (
+            <div
+              className="mt-3 rounded-lg border border-rose-200 bg-rose-50/90 p-3 text-sm text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-200"
+              role="alert"
+            >
+              <p className="font-medium">Please fix the following:</p>
+              <ul className="mt-2 list-disc space-y-1 pl-5">
+                {flattenRhfErrorMessages(errors).map((msg, idx) => (
+                  <li key={`${msg}-${idx}`}>{msg}</li>
+                ))}
+              </ul>
+            </div>
           ) : null}
           <div className="mt-6 flex flex-wrap items-center gap-2">
             <button type="submit" disabled={isAdmin || isSubmitting || (isPublic && !(selectedCamp && selectedCamp.status === 'open'))} className="inline-flex rounded-lg bg-accent px-5 py-2.5 text-sm text-white disabled:opacity-60 dark:bg-emerald-700">
@@ -2427,15 +2770,50 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/40 p-4">
           <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
             <h3 className="text-lg font-semibold text-accent dark:text-emerald-200">{entryEditor._id ? 'Edit' : 'Add'} Registration Entry</h3>
+            <p className="mt-2 text-xs text-prose-muted">
+              Required fields are marked with <span className="font-medium text-red-500">*</span>.
+            </p>
             <div className="mt-4 grid gap-3 md:grid-cols-2">
-              {['registrationCampId','registrationCampTitle','email','guardianName','relationship','mobileNumber','motherTongue','country','state','city','childName','childAge','gender','schoolName','currentClass','familyMembersStaying','source','sourceOther','paymentScreenshotUrl','status'].map((key) => (
-                <label key={key} className="text-sm capitalize text-neutral-800 dark:text-neutral-200">{key}
-                  <input className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" value={entryEditor[key] ?? ''} onChange={(e) => setEntryEditor((p) => ({ ...p, [key]: e.target.value }))} />
-                </label>
-              ))}
+              {['registrationCampId','registrationCampTitle','email','guardianName','relationship','mobileNumber','motherTongue','country','state','city','childName','childAge','gender','schoolName','currentClass','familyMembersStaying','source','sourceOther','paymentScreenshotUrl','status'].map((key) =>
+                key === 'email' ? (
+                  <label key={key} className="text-sm capitalize text-neutral-800 dark:text-neutral-200">
+                    email (parent)
+                    <RequiredStar />
+                    <input
+                      type="email"
+                      autoComplete="email"
+                      inputMode="email"
+                      className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
+                      value={entryEditor.email ?? ''}
+                      onChange={(e) =>
+                        setEntryEditor((p) => ({ ...p, email: e.target.value.toLowerCase() }))
+                      }
+                      onBlur={(e) =>
+                        setEntryEditor((p) => ({ ...p, email: normalizeEmail(e.target.value) }))
+                      }
+                    />
+                  </label>
+                ) : (
+                  <label key={key} className="text-sm capitalize text-neutral-800 dark:text-neutral-200">
+                    {key}
+                    {ENTRY_EDITOR_REQUIRED_SET.has(key) ? <RequiredStar /> : null}
+                    <input
+                      className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
+                      value={entryEditor[key] ?? ''}
+                      onChange={(e) => setEntryEditor((p) => ({ ...p, [key]: e.target.value }))}
+                    />
+                  </label>
+                )
+              )}
             </div>
-            <label className="mt-3 block text-sm text-neutral-800 dark:text-neutral-200">Interested Batches (one per line)
-              <textarea className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" value={entryEditor.interestedBatchesText || ''} onChange={(e) => setEntryEditor((p) => ({ ...p, interestedBatchesText: e.target.value }))} />
+            <label className="mt-3 block text-sm text-neutral-800 dark:text-neutral-200">
+              Interested Batches (one per line)
+              <RequiredStar />
+              <textarea
+                className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
+                value={entryEditor.interestedBatchesText || ''}
+                onChange={(e) => setEntryEditor((p) => ({ ...p, interestedBatchesText: e.target.value }))}
+              />
             </label>
             <label className="mt-3 block text-sm text-neutral-800 dark:text-neutral-200">Transaction Note
               <textarea className="mt-1 h-20 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" value={entryEditor.transactionNote || ''} onChange={(e) => setEntryEditor((p) => ({ ...p, transactionNote: e.target.value }))} />
@@ -2568,29 +2946,56 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
             <h3 className="text-lg font-semibold text-accent dark:text-emerald-200">
               {campEditor.isNew ? 'Add Registration Camp' : 'Edit Registration Camp'}
             </h3>
+            <p className="mt-2 text-xs text-prose-muted">
+              Required fields are marked with <span className="font-medium text-red-500">*</span>.
+            </p>
             <div className="mt-4 space-y-3">
-              <label className="block text-sm text-neutral-800 dark:text-neutral-200">Camp Title
+              <label className="block text-sm text-neutral-800 dark:text-neutral-200">
+                Camp Title
+                <RequiredStar />
                 <input
                   className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                   value={campEditor.title}
                   onChange={(e) => setCampEditor((p) => ({ ...p, title: e.target.value }))}
                 />
               </label>
-              <label className="block text-sm text-neutral-800 dark:text-neutral-200">Camp Subtitle
+              <label className="block text-sm text-neutral-800 dark:text-neutral-200">
+                Camp Subtitle
+                <RequiredStar />
                 <input
                   className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                   value={campEditor.subtitle || ''}
                   onChange={(e) => setCampEditor((p) => ({ ...p, subtitle: e.target.value }))}
                 />
               </label>
-              <label className="block text-sm text-neutral-800 dark:text-neutral-200">Year
-                <input
-                  className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
-                  value={campEditor.year || ''}
-                  onChange={(e) => setCampEditor((p) => ({ ...p, year: e.target.value }))}
-                />
+              <label className="block text-sm text-neutral-800 dark:text-neutral-200">
+                Year
+                <RequiredStar />
+                {campYearSelectModel ? (
+                  <select
+                    className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white"
+                    value={campEditor.year != null && campEditor.year !== '' ? String(campEditor.year) : ''}
+                    onChange={(e) => setCampEditor((p) => ({ ...p, year: e.target.value }))}
+                  >
+                    {campYearSelectModel.legacyYears.map((y) => (
+                      <option key={`legacy-${y}`} value={String(y)}>
+                        {y} (outside {campYearSelectModel.bounds.min}–{campYearSelectModel.bounds.max}; update to save)
+                      </option>
+                    ))}
+                    {campYearSelectModel.allowed.map((y) => (
+                      <option key={y} value={String(y)}>
+                        {y}
+                      </option>
+                    ))}
+                  </select>
+                ) : null}
+                <p className="mt-1 text-xs text-prose-muted">
+                  Select {campYearSelectModel?.bounds.min} through {campYearSelectModel?.bounds.max}.
+                </p>
               </label>
-              <label className="block text-sm text-neutral-800 dark:text-neutral-200">Status
+              <label className="block text-sm text-neutral-800 dark:text-neutral-200">
+                Status
+                <RequiredStar />
                 <select
                   className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                   value={campEditor.status}
@@ -2602,7 +3007,9 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                 </select>
               </label>
               {!campEditor.isNew && campEditor.status === 'closed' ? (
-                <label className="block text-sm text-neutral-800 dark:text-neutral-200">Reason / Note
+                <label className="block text-sm text-neutral-800 dark:text-neutral-200">
+                  Reason / Note
+                  <RequiredStar />
                   <textarea
                     className="mt-1 h-24 w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400"
                     value={campEditor.note}
@@ -2625,7 +3032,10 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                 />
               </label>
               <div className="space-y-2">
-                <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200">Batches</p>
+                <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
+                  Batches
+                  <RequiredStar />
+                </p>
                 {(campEditor.batchRows || []).map((row, idx) => (
                   <div key={row.id || idx} className="grid gap-2 rounded-lg border border-neutral-200 p-3 sm:grid-cols-2 lg:grid-cols-5 dark:border-neutral-700">
                     <input className="min-w-0 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" placeholder={`Batch ${idx + 1} Name`} value={row.label || `Batch ${idx + 1}`} onChange={(e) => setCampEditor((p) => ({ ...p, batchRows: (p.batchRows || []).map((it, i) => (i === idx ? { ...it, label: e.target.value } : it)) }))} />

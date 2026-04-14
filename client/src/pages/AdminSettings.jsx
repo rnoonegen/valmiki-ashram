@@ -2,6 +2,7 @@ import { Eye, EyeOff, Save } from 'lucide-react';
 import { useState } from 'react';
 import { adminRequest } from '../admin/api';
 import Container from '../components/Container';
+import RequiredStar from '../components/forms/RequiredStar';
 import PageFade from '../components/PageFade';
 
 export default function AdminSettings() {
@@ -20,8 +21,12 @@ export default function AdminSettings() {
 
   const onSubmit = async (event) => {
     event.preventDefault();
-    if (!form.currentPassword || !form.newPassword || !form.confirmPassword) {
-      setMessage({ type: 'error', text: 'All password fields are required.' });
+    const missing = [];
+    if (!String(form.currentPassword || '').trim()) missing.push('Current password');
+    if (!String(form.newPassword || '').trim()) missing.push('New password');
+    if (!String(form.confirmPassword || '').trim()) missing.push('Confirm password');
+    if (missing.length) {
+      setMessage({ type: 'error', text: `Required fields: ${missing.join(', ')}.` });
       return;
     }
     if (form.newPassword !== form.confirmPassword) {
@@ -49,6 +54,7 @@ export default function AdminSettings() {
     <div>
       <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-200">
         {label}
+        <RequiredStar />
       </label>
       <div className="relative">
         <input
@@ -80,6 +86,9 @@ export default function AdminSettings() {
           </p>
 
           <form className="mt-6 space-y-4" onSubmit={onSubmit}>
+            <p className="text-xs text-prose-muted">
+              Required fields are marked with <span className="font-medium text-red-500">*</span>.
+            </p>
             {passwordField('currentPassword', 'Current Password', 'Enter current password')}
             {passwordField('newPassword', 'New Password', 'Enter new password')}
             {passwordField('confirmPassword', 'Confirm Password', 'Re-enter new password')}

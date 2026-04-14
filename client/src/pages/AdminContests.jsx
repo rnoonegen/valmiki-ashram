@@ -1866,6 +1866,7 @@ export default function AdminContests() {
                     />
                     <input
                       disabled
+                      type="email"
                       placeholder="Email"
                       className="w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:[color-scheme:dark]"
                     />

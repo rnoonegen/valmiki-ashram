@@ -6,6 +6,7 @@ import CourseCard from './CourseCard';
 import DatePicker from './DatePicker';
 import FormInput from './FormInput';
 import RemoveButton from './RemoveButton';
+import RequiredStar from './RequiredStar';
 
 export default function ChildCard({
   control,
@@ -105,6 +106,7 @@ export default function ChildCard({
         <div className="flex items-center justify-between">
           <h5 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
             Courses
+            <RequiredStar />
           </h5>
           <AddButton
             onClick={() =>

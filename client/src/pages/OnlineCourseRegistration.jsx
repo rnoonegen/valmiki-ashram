@@ -18,26 +18,20 @@ import { useTheme } from '../context/ThemeContext';
 import { COUNTRY_OPTIONS, COURSE_OPTIONS } from '../data/registrationOptions';
 import useLiveContent from '../hooks/useLiveContent';
 import { IST_TIME_SLOTS, convertIstSlotToTimezone } from '../utils/timeSlots';
+import { normalizeEmail, zodOptionalEmail, zodRequiredEmail } from '../utils/formInput';
+import { flattenRhfErrorMessages } from '../utils/formErrors';
 import 'react-phone-input-2/lib/style.css';
-
-const optionalEmail = z
-  .string()
-  .optional()
-  .or(z.literal(''))
-  .refine((v) => !v || z.string().email().safeParse(v).success, {
-    message: 'Enter a valid email',
-  });
 
 const schema = z.object({
   parents: z.object({
     parent1: z.object({
       name: z.string().min(1, 'Parent 1 name is required'),
-      email: z.string().email('Enter a valid email'),
+      email: zodRequiredEmail('Enter a valid email'),
       phone: z.string().min(7, 'Parent 1 phone is required'),
     }),
     parent2: z.object({
       name: z.string().optional(),
-      email: optionalEmail,
+      email: zodOptionalEmail('Enter a valid email'),
       phone: z.string().optional(),
     }),
   }),
@@ -908,6 +902,9 @@ export default function OnlineCourseRegistration() {
                 </header>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <p className="text-xs text-prose-muted">
+            Required fields are marked with <span className="font-medium text-red-500">*</span>.
+          </p>
           <SectionCard
             title="1. Parent Details"
             subtitle="Primary parent is mandatory. Secondary parent is optional."
@@ -923,7 +920,7 @@ export default function OnlineCourseRegistration() {
                 label="Parent 1 Email"
                 required
                 type="email"
-                {...register('parents.parent1.email')}
+                {...register('parents.parent1.email', { setValueAs: (v) => normalizeEmail(v) })}
                 error={errors?.parents?.parent1?.email?.message}
               />
               <PhoneInput
@@ -942,7 +939,7 @@ export default function OnlineCourseRegistration() {
               <FormInput
                 label="Parent 2 Email"
                 type="email"
-                {...register('parents.parent2.email')}
+                {...register('parents.parent2.email', { setValueAs: (v) => normalizeEmail(v) })}
                 error={errors?.parents?.parent2?.email?.message}
               />
               <PhoneInput
@@ -1062,9 +1059,22 @@ export default function OnlineCourseRegistration() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
           >
+            {Object.keys(errors).length ? (
+              <div
+                className="mb-3 rounded-lg border border-rose-200 bg-rose-50/90 p-3 text-sm text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-200"
+                role="alert"
+              >
+                <p className="font-medium">Please fix the following:</p>
+                <ul className="mt-2 max-h-32 list-disc space-y-1 overflow-y-auto pl-5">
+                  {flattenRhfErrorMessages(errors).map((msg, idx) => (
+                    <li key={`${msg}-${idx}`}>{msg}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
             <div className="flex flex-col items-start justify-between gap-3 md:flex-row md:items-center">
               <p className="text-sm text-prose-muted">
-                Review all sections before submission. Errors will be shown inline.
+                Review all sections before submission. Errors are listed here and inline by each field.
               </p>
               <button
                 type="submit"
