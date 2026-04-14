@@ -215,6 +215,15 @@ const formatBatchDisplayDate = (value) => {
   return `${month} ${day} '${year}`;
 };
 
+const blueprintPreviewBatchLabel = (row) => {
+  const days = Number(row?.days) > 0 ? Number(row.days) : 7;
+  const start = formatBatchDisplayDate(row?.startDate);
+  const end = formatBatchDisplayDate(row?.endDate);
+  const label = String(row?.label || '').trim() || 'Batch';
+  if (start && end) return `${label} (${start} - ${end}) (${days} day(s))`;
+  return `${label} (${days} day(s))`;
+};
+
 const validateBatchRows = (rows = []) => {
   if (!Array.isArray(rows) || !rows.length) return 'Please add at least one batch.';
   let previousEndDate = null;
@@ -357,7 +366,25 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
   const [adminTab, setAdminTab] = useState('registration-form');
   const [contentEditorStateTab, setContentEditorStateTab] = useState('empty');
   const [stateEditorOpen, setStateEditorOpen] = useState(false);
-  const [adminBuiltInPreviewExpanded, setAdminBuiltInPreviewExpanded] = useState(true);
+  const [adminBuiltInPreviewExpanded, setAdminBuiltInPreviewExpanded] = useState(false);
+  const blueprintPreviewPricing = useMemo(() => {
+    if (!contentEditor) return null;
+    const reg = Number(contentEditor.registrationFee) || defaultContent.registrationFee;
+    const per = Number(contentEditor.perPersonPerDayPrice) || defaultContent.perPersonPerDayPrice;
+    const rows = contentEditor.batchRows || [];
+    const firstDays = rows[0] && Number(rows[0]?.days) > 0 ? Number(rows[0].days) : 7;
+    const childDays = firstDays;
+    const famDays = 3;
+    const residential = (childDays + famDays) * per;
+    return {
+      reg,
+      per,
+      childDays,
+      famDays,
+      residential,
+      total: reg + residential,
+    };
+  }, [contentEditor, defaultContent.registrationFee, defaultContent.perPersonPerDayPrice]);
   const [selectedCampId, setSelectedCampId] = useState('');
   const [selectedAdminCampId, setSelectedAdminCampId] = useState('');
   const [adminRegistrationsPage, setAdminRegistrationsPage] = useState(1);
@@ -1650,7 +1677,7 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                           <ul className="mt-3 space-y-2 text-prose">
                             {(contentEditor.batchRows || []).map((row, idx) => (
                               <li key={row.id || idx} className="rounded-lg bg-neutral-100 px-3 py-2 dark:bg-neutral-800">
-                                {row.label} {row.startDate && row.endDate ? `(${row.startDate} to ${row.endDate})` : ''}
+                                {blueprintPreviewBatchLabel(row)}
                               </li>
                             ))}
                           </ul>
@@ -1688,54 +1715,96 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                       ) : (
                         <>
                           <div className="mt-5 grid gap-4 md:grid-cols-2">
-                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Parent Email<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
-                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Parent Name<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
-                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Relationship with child<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
-                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Mobile Number<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
-                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Mother Tongue<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
-                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Country<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
-                            <label className="text-sm text-neutral-800 dark:text-neutral-200">State<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
-                            <label className="text-sm text-neutral-800 dark:text-neutral-200">City/Town<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
-                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Child Name<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
-                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Child Age<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
-                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Gender
-                              <select disabled className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400">
-                                <option value="">Select</option>
-                              </select>
-                            </label>
-                            <label className="text-sm text-neutral-800 dark:text-neutral-200">School Name<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
-                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Current Class/Standard<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
-                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Family Members Staying
-                              <select disabled className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400">
-                                <option value="">Choose</option>
-                              </select>
-                            </label>
+                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Parent Email<input disabled readOnly placeholder="parent@example.com" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
+                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Parent Name<input disabled readOnly placeholder="Parent name" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
+                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Relationship with child<input disabled readOnly placeholder="Father / Mother / Guardian" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
+                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Mobile Number<input disabled readOnly placeholder="+91…" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
+                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Mother Tongue<input disabled readOnly placeholder="Telugu" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
+                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Country<input disabled readOnly placeholder="India" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
+                            <label className="text-sm text-neutral-800 dark:text-neutral-200">State<input disabled readOnly placeholder="State" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
+                            <label className="text-sm text-neutral-800 dark:text-neutral-200">City/Town<input disabled readOnly placeholder="City" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
                           </div>
-                          <div className="mt-5">
-                            <p className="mb-2 text-sm font-medium text-neutral-800 dark:text-neutral-200">Which batch are you interested in?</p>
-                            <div className="grid gap-2 md:grid-cols-2">
-                              {(contentEditor.batchRows || []).map((row, idx) => (
-                                <label key={row.id || idx} className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-800 opacity-70 dark:border-neutral-700 dark:text-neutral-200">
-                                  <input type="checkbox" disabled />
-                                  {row.label}
+                          <div className="mt-6 space-y-3">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">Children (1)</p>
+                              <span className="rounded-lg bg-neutral-200 px-2 py-1 text-xs text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">Add Child (preview)</span>
+                            </div>
+                            <div className="rounded-xl border border-neutral-200 p-4 opacity-90 dark:border-neutral-700">
+                              <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">Child 1</p>
+                              <div className="mt-3 grid gap-4 md:grid-cols-2">
+                                <label className="text-sm text-neutral-800 dark:text-neutral-200">Name<input disabled readOnly placeholder="Child name" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" /></label>
+                                <label className="text-sm text-neutral-800 dark:text-neutral-200">Age<input disabled readOnly placeholder="10" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" /></label>
+                                <label className="text-sm text-neutral-800 dark:text-neutral-200">Gender
+                                  <select disabled className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white">
+                                    <option value="">Select</option>
+                                  </select>
                                 </label>
-                              ))}
+                                <label className="text-sm text-neutral-800 dark:text-neutral-200">DOB<input type="date" disabled className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" /></label>
+                                <label className="text-sm text-neutral-800 dark:text-neutral-200">School<input disabled readOnly placeholder="School" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" /></label>
+                                <label className="text-sm text-neutral-800 dark:text-neutral-200">Current Class<input disabled readOnly placeholder="Class / standard" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" /></label>
+                              </div>
+                              <div className="mt-4">
+                                <p className="mb-2 text-sm font-medium text-neutral-800 dark:text-neutral-200">Select one or more batches</p>
+                                <div className="grid gap-2 md:grid-cols-2">
+                                  {(contentEditor.batchRows || []).map((row, idx) => (
+                                    <label key={row.id || idx} className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-800 opacity-70 dark:border-neutral-700 dark:text-neutral-200">
+                                      <input type="checkbox" disabled />
+                                      <span>{blueprintPreviewBatchLabel(row)}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="mt-6 space-y-3">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">Family Members Staying with child (1)</p>
+                              <span className="rounded-lg bg-neutral-200 px-2 py-1 text-xs text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">Add (preview)</span>
+                            </div>
+                            <div className="grid gap-2 rounded-xl border border-neutral-200 p-4 opacity-90 md:grid-cols-3 dark:border-neutral-700">
+                              <label className="text-sm text-neutral-800 dark:text-neutral-200">Name<input disabled readOnly placeholder="Member name" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" /></label>
+                              <label className="text-sm text-neutral-800 dark:text-neutral-200">Relation with child<input disabled readOnly placeholder="Father" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" /></label>
+                              <label className="text-sm text-neutral-800 dark:text-neutral-200">Staying Days<input disabled readOnly placeholder="3" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" /></label>
                             </div>
                           </div>
                           <div className="mt-5 grid gap-4 md:grid-cols-2">
                             <label className="text-sm text-neutral-800 dark:text-neutral-200">How did you hear about us?
-                              <select disabled className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400">
+                              <select disabled className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white">
                                 <option value="">Choose</option>
                               </select>
                             </label>
-                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Other Source<input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" /></label>
+                            <label className="text-sm text-neutral-800 dark:text-neutral-200">Other Source<input disabled readOnly placeholder="—" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" /></label>
                           </div>
                           <label className="mt-5 block text-sm text-neutral-800 dark:text-neutral-200">Transaction Note
-                            <input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" />
+                            <input disabled readOnly placeholder={contentEditor.transactionHint || defaultContent.transactionHint} className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" />
                           </label>
                           <label className="mt-4 block text-sm text-neutral-800 dark:text-neutral-200">Payment Screenshot URL (optional)
-                            <input disabled readOnly value="" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 placeholder:text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white dark:placeholder:text-neutral-400" />
+                            <input disabled readOnly placeholder="Filled after upload" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" />
                           </label>
+                          <div className="mt-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3 opacity-90 dark:border-neutral-700 dark:bg-neutral-800/40">
+                            <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200">Upload Payment Screenshot</p>
+                            <div className="mt-2 flex flex-wrap items-center gap-2">
+                              <span className="inline-flex cursor-not-allowed items-center gap-2 rounded-lg bg-accent/60 px-3 py-2 text-xs font-medium text-white dark:bg-emerald-800/70">
+                                <Upload className="h-4 w-4" />
+                                Choose Image (preview)
+                              </span>
+                            </div>
+                          </div>
+                          {blueprintPreviewPricing ? (
+                            <div className="mt-4 rounded-xl border border-emerald-300 bg-emerald-50/70 p-4 text-sm opacity-95 dark:border-emerald-700/60 dark:bg-emerald-950/20">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-800 dark:text-emerald-200">Price preview (sample)</p>
+                              <p className="mt-2">Registration fee (family): <span className="font-semibold">{toINRCurrency(blueprintPreviewPricing.reg)}</span></p>
+                              <p>Example child stay: <span className="font-semibold">{blueprintPreviewPricing.childDays}</span> day(s) (first batch length)</p>
+                              <p>Example family stay: <span className="font-semibold">{blueprintPreviewPricing.famDays}</span> day(s)</p>
+                              <p>Per person/day: <span className="font-semibold">{toINRCurrency(blueprintPreviewPricing.per)}</span></p>
+                              <p className="mt-1 text-xs text-emerald-900 dark:text-emerald-100">
+                                Example: {toINRCurrency(blueprintPreviewPricing.reg)} + ({blueprintPreviewPricing.childDays} + {blueprintPreviewPricing.famDays}) × {toINRCurrency(blueprintPreviewPricing.per)} = {toINRCurrency(blueprintPreviewPricing.total)}
+                              </p>
+                              <p className="mt-2 text-base font-semibold text-emerald-900 dark:text-emerald-200">
+                                Sample total: {toINRCurrency(blueprintPreviewPricing.total)}
+                              </p>
+                            </div>
+                          ) : null}
                           <div className="mt-6">
                             <button
                               type="button"
