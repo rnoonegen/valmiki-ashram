@@ -14,6 +14,10 @@ const { uploadImage, deleteImage } = require("../services/s3");
 
 const router = express.Router();
 const scrypt = promisify(crypto.scrypt);
+
+function newContestSlug() {
+  return `c-${crypto.randomBytes(12).toString("hex")}`;
+}
 const MAX_UPLOAD_MB = Number(process.env.MAX_UPLOAD_MB || 25);
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -345,6 +349,7 @@ router.post("/contests", authRequired, async (req, res) => {
 
   const contest = await Contest.create({
     title,
+    slug: newContestSlug(),
     description: body.description || "",
     submitDate: body.submitDate || null,
     resultDate: body.resultDate || null,
@@ -373,6 +378,10 @@ router.put("/contests/:id", authRequired, async (req, res) => {
 
   const nextTitle = String(body.title || contest.title).trim();
   if (!nextTitle) return res.status(400).json({ message: "Title is required" });
+
+  if (!String(contest.slug || "").trim()) {
+    contest.slug = newContestSlug();
+  }
 
   contest.title = nextTitle;
   contest.description = body.description || "";

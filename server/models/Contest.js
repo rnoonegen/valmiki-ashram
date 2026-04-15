@@ -19,6 +19,8 @@ const sectionSchema = new mongoose.Schema(
 
 const contestSchema = new mongoose.Schema(
   {
+    /** Stable id for URLs/SEO; required for DBs with a unique index on slug. */
+    slug: { type: String, trim: true },
     title: { type: String, required: true, trim: true },
     description: { type: String, default: '' },
     submitDate: { type: Date, default: null },

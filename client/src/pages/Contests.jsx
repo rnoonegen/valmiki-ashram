@@ -1,3 +1,4 @@
+import Button from '../components/Button';
 import Container from '../components/Container';
 import PageFade from '../components/PageFade';
 import { useEffect, useState } from 'react';
@@ -36,7 +37,21 @@ export default function Contests() {
             ))}
         </div>
         {loading ? <p className="mt-6 text-prose-muted">Loading contests...</p> : null}
-        {!loading && items.length === 0 ? <p className="mt-6 text-prose-muted">No contests yet.</p> : null}
+        {!loading && items.length === 0 ? (
+          <section className="mt-6 w-full rounded-lg border border-neutral-200 bg-neutral-50/95 p-4 shadow-sm sm:mt-8 sm:rounded-xl sm:p-6 md:p-8 dark:border-neutral-700 dark:bg-neutral-900/80">
+            <h2 className="text-lg font-bold leading-snug text-accent sm:text-xl md:text-2xl dark:text-emerald-200">
+              No contests available right now
+            </h2>
+            <p className="mt-2 max-w-none text-sm leading-relaxed text-prose sm:mt-3 sm:text-base md:text-lg dark:text-neutral-300">
+              Get in touch with us and we will post updates here when the next contest opens for registration.
+            </p>
+            <div className="mt-4 sm:mt-6">
+              <Button variant="primary" to="/contact" className="w-full sm:w-auto">
+                Get in Touch
+              </Button>
+            </div>
+          </section>
+        ) : null}
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {items.map((contest) => {
             const detailPath = adminMode ? `/admin/contests/${contest._id}` : `/contests/${contest._id}`;
