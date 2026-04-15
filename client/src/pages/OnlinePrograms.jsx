@@ -293,8 +293,8 @@ export default function OnlinePrograms() {
 
   return (
     <PageFade>
-      <section className="border-b border-neutral-200 bg-secondary/35 py-10 dark:border-neutral-700 dark:bg-neutral-950/70 md:py-14">
-        <Container>
+      <Container className="py-8 md:py-12">
+        <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-700 dark:bg-neutral-900 sm:p-8">
           {isAdmin ? (
             <div className="mb-3 flex justify-end">
               <button
@@ -332,10 +332,10 @@ export default function OnlinePrograms() {
               {paragraph}
             </p>
           ))}
-        </Container>
-      </section>
+        </section>
+      </Container>
 
-      <Container className="py-8 md:py-12">
+      <Container className="pb-8 pt-0 md:pb-12 md:pt-0">
         {isAdmin ? (
           <div className="mb-4 flex justify-end">
             <button
