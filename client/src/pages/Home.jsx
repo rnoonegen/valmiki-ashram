@@ -662,66 +662,7 @@ export default function Home() {
               </button>
             </div>
           ) : null}
-          <div
-            ref={samskaraTrackRef}
-            className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-          >
-            {displaySamskaraVideos.map((video, index) => (
-              <motion.article
-                key={video.title}
-                data-samskara-video-card
-                className="relative w-[calc(100%-10px)] shrink-0 snap-start overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-nav ring-1 ring-black/5 sm:w-[420px] md:w-[460px] dark:border-neutral-700 dark:bg-neutral-950 dark:shadow-nav-dark dark:ring-white/10"
-                initial={{ opacity: 0, y: 14 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-30px" }}
-                transition={{ duration: 0.35 }}
-              >
-                {isAdmin ? (
-                  <div className="absolute right-2 top-2 z-10 flex gap-1">
-                    <button
-                      type="button"
-                      onClick={() => openSamskaraEditor(index)}
-                      className="rounded-md bg-white/90 p-1 text-accent shadow dark:bg-neutral-800 dark:text-emerald-200"
-                      aria-label="Edit samskara video"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => deleteSamskaraVideo(index)}
-                      className="rounded-md bg-rose-600 p-1 text-white shadow"
-                      aria-label="Delete samskara video"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                ) : null}
-                <div className="border-b border-neutral-200 px-3 py-2 dark:border-neutral-700">
-                  <h3 className="truncate text-sm font-semibold text-accent sm:text-base dark:text-emerald-200">
-                    {video.title}
-                  </h3>
-                </div>
-                {video.url ? (
-                  <div className="relative aspect-[9/16] w-full bg-black">
-                    <iframe
-                      title={video.title}
-                      src={getYoutubeEmbedUrl(video.url.trim())}
-                      className="absolute inset-0 h-full w-full border-0"
-                      loading="lazy"
-                      referrerPolicy="strict-origin-when-cross-origin"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      allowFullScreen
-                    />
-                  </div>
-                ) : (
-                  <div className="flex aspect-[9/16] w-full items-center justify-center bg-secondary/70 px-4 text-center text-sm text-prose-muted dark:bg-neutral-900">
-                    Add this YouTube embed URL in <code>samskaraVideos</code>.
-                  </div>
-                )}
-              </motion.article>
-            ))}
-          </div>
-          <div className="mt-4 flex justify-center gap-2 md:gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
             <button
               type="button"
               aria-label="Previous samskara video"
@@ -730,6 +671,65 @@ export default function Home() {
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
+            <div
+              ref={samskaraTrackRef}
+              className="flex flex-1 snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            >
+              {displaySamskaraVideos.map((video, index) => (
+                <motion.article
+                  key={video.title}
+                  data-samskara-video-card
+                  className="relative w-[calc(100%-8px)] shrink-0 snap-start overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-nav ring-1 ring-black/5 sm:w-[320px] md:w-[340px] lg:w-[calc((100%-2rem)/3)] dark:border-neutral-700 dark:bg-neutral-950 dark:shadow-nav-dark dark:ring-white/10"
+                  initial={{ opacity: 0, y: 14 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-30px" }}
+                  transition={{ duration: 0.35 }}
+                >
+                  {isAdmin ? (
+                    <div className="absolute right-2 top-2 z-10 flex gap-1">
+                      <button
+                        type="button"
+                        onClick={() => openSamskaraEditor(index)}
+                        className="rounded-md bg-white/90 p-1 text-accent shadow dark:bg-neutral-800 dark:text-emerald-200"
+                        aria-label="Edit samskara video"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteSamskaraVideo(index)}
+                        className="rounded-md bg-rose-600 p-1 text-white shadow"
+                        aria-label="Delete samskara video"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : null}
+                  <div className="border-b border-neutral-200 px-3 py-2 dark:border-neutral-700">
+                    <h3 className="truncate text-sm font-semibold text-accent sm:text-base dark:text-emerald-200">
+                      {video.title}
+                    </h3>
+                  </div>
+                  {video.url ? (
+                    <div className="relative aspect-[9/11] w-full bg-black">
+                      <iframe
+                        title={video.title}
+                        src={getYoutubeEmbedUrl(video.url.trim())}
+                        className="absolute inset-0 h-full w-full border-0"
+                        loading="lazy"
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex aspect-[9/11] w-full items-center justify-center bg-secondary/70 px-4 text-center text-sm text-prose-muted dark:bg-neutral-900">
+                      Add this YouTube embed URL in <code>samskaraVideos</code>.
+                    </div>
+                  )}
+                </motion.article>
+              ))}
+            </div>
             <button
               type="button"
               aria-label="Next samskara video"
