@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pencil, Plus, Save, Trash2, X } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { adminRequest } from '../admin/api';
@@ -16,10 +16,28 @@ export default function FAQ() {
   const [draft, setDraft] = useState(categories);
   const [editor, setEditor] = useState(null);
   const [status, setStatus] = useState({ type: '', message: '' });
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     setDraft(categories);
   }, [cms]);
+
+  const filteredCategories = useMemo(() => {
+    const query = String(searchQuery || '').trim().toLowerCase();
+    if (!query) return categories;
+    return categories
+      .map((category) => {
+        const categoryTitle = String(category?.title || '').toLowerCase();
+        if (categoryTitle.includes(query)) return category;
+        const matchedItems = (category?.items || []).filter((item) => {
+          const question = String(item?.question || '').toLowerCase();
+          const answer = String(item?.answer || '').toLowerCase();
+          return question.includes(query) || answer.includes(query);
+        });
+        return { ...category, items: matchedItems };
+      })
+      .filter((category) => Array.isArray(category?.items) && category.items.length);
+  }, [categories, searchQuery]);
 
   const saveAll = async (nextDraft = draft) => {
     try {
@@ -143,10 +161,26 @@ export default function FAQ() {
               </button>
             ) : null}
           </div>
+          {!isAdmin ? (
+            <div className="mt-5">
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium text-neutral-800 dark:text-neutral-200">
+                  Search FAQs
+                </span>
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Type your question (e.g. NIOS, homeschool, Gurukulam)"
+                  className="w-full rounded-xl border border-neutral-300 bg-white px-3.5 py-2.5 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-500 focus:border-accent focus:ring-2 focus:ring-accent/20 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder:text-neutral-400 dark:focus:border-emerald-500 dark:focus:ring-emerald-900/30"
+                />
+              </label>
+            </div>
+          ) : null}
         </header>
 
         <div className="mt-10 flex flex-col gap-8 md:mt-12 md:gap-10">
-          {(isAdmin ? draft : categories).map((category, categoryIndex) =>
+          {(isAdmin ? draft : filteredCategories).map((category, categoryIndex) =>
             isAdmin ? (
               <section
                 key={category.id}
@@ -212,6 +246,11 @@ export default function FAQ() {
               <FaqCategorySection key={category.id} category={category} />
             )
           )}
+          {!isAdmin && filteredCategories.length === 0 ? (
+            <div className="rounded-2xl border border-neutral-200 bg-white/90 p-5 text-sm text-prose-muted shadow-sm ring-1 ring-black/5 dark:border-neutral-700 dark:bg-neutral-900/60 dark:ring-white/5">
+              No FAQs match your search. Try a different keyword.
+            </div>
+          ) : null}
         </div>
       </Container>
       {isAdmin ? (
