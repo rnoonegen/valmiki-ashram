@@ -103,18 +103,11 @@ export default function ChildCard({
       </div>
 
       <div className="mt-5 space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center">
           <h5 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
             Courses
             <RequiredStar />
           </h5>
-          <AddButton
-            onClick={() =>
-              append({ courseName: '', timeSlotIST: '', localTime: '' })
-            }
-          >
-            Add Course
-          </AddButton>
         </div>
 
         <AnimatePresence>
@@ -138,6 +131,15 @@ export default function ChildCard({
             );
           })}
         </AnimatePresence>
+        <div>
+          <AddButton
+            onClick={() =>
+              append({ courseName: '', timeSlotIST: '', localTime: '' })
+            }
+          >
+            Add Course
+          </AddButton>
+        </div>
       </div>
       {childErrors?.courses?.message ? (
         <p className="mt-2 text-xs text-red-500">{childErrors.courses.message}</p>

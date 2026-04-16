@@ -42,7 +42,8 @@ const schema = z.object({
       school: z.string().min(1, 'Current school is required'),
       currentClass: z.string().min(1, 'Current class is required'),
       schoolName: z.string().optional(),
-      interestedBatches: z.array(z.string()).min(1, 'Select at least one batch'),
+      stayStartBatch: z.string().min(1, 'Select start date'),
+      stayEndBatch: z.string().min(1, 'Select end date'),
     })
   ).min(1, 'Add at least one child'),
   familyMembers: z.array(
@@ -197,7 +198,8 @@ const defaultValues = {
       dob: '',
       school: '',
       currentClass: '',
-      interestedBatches: [],
+      stayStartBatch: '',
+      stayEndBatch: '',
     },
   ],
   familyMembers: [],
@@ -327,6 +329,16 @@ const addDays = (date, days) => {
   const next = new Date(date.getTime());
   next.setUTCDate(next.getUTCDate() + days);
   return next;
+};
+
+const getChildSelectedBatches = (child, orderedBatches = []) => {
+  const start = String(child?.stayStartBatch || '').trim();
+  const end = String(child?.stayEndBatch || '').trim();
+  if (!start || !end || !Array.isArray(orderedBatches) || !orderedBatches.length) return [];
+  const startIndex = orderedBatches.indexOf(start);
+  const endIndex = orderedBatches.indexOf(end);
+  if (startIndex < 0 || endIndex < 0 || endIndex < startIndex) return [];
+  return orderedBatches.slice(startIndex, endIndex + 1);
 };
 
 const buildBatchRowUpdate = (row, field, value) => {
@@ -651,6 +663,7 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
           children: (values.children || []).map((child) => ({
             ...child,
             schoolName: String(child?.schoolName || child?.school || '').trim(),
+            interestedBatches: getChildSelectedBatches(child, activeCampContent.batches),
           })),
           registrationFee: Number(activeCampContent.registrationFee || 0),
           perPersonPerDayPrice: Number(activeCampContent.perPersonPerDayPrice || 0),
@@ -1172,10 +1185,30 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
     });
     return map;
   }, [activeCampContent.batchConfigs]);
+  const batchStartLabelMap = useMemo(() => {
+    const map = {};
+    (activeCampContent.batchConfigs || []).forEach((row) => {
+      const key = String(row?.label || '').trim();
+      if (!key) return;
+      const start = formatBatchDisplayDate(row?.startDate);
+      map[key] = start || key;
+    });
+    return map;
+  }, [activeCampContent.batchConfigs]);
+  const batchEndLabelMap = useMemo(() => {
+    const map = {};
+    (activeCampContent.batchConfigs || []).forEach((row) => {
+      const key = String(row?.label || '').trim();
+      if (!key) return;
+      const end = formatBatchDisplayDate(row?.endDate);
+      map[key] = end || key;
+    });
+    return map;
+  }, [activeCampContent.batchConfigs]);
   const watchedChildren = watch('children') || [];
   const watchedFamilyMembers = watch('familyMembers') || [];
   const childPriceRows = watchedChildren.map((child, index) => {
-    const selected = Array.isArray(child?.interestedBatches) ? child.interestedBatches : [];
+    const selected = getChildSelectedBatches(child, activeCampContent.batches);
     const days = selected.reduce((sum, batch) => sum + Number(activeCampContent.batchDays?.[batch] || 0), 0);
     return {
       label: child?.name ? `${child.name}` : `Child ${index + 1}`,
@@ -1194,7 +1227,7 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
     };
   });
   const childStayDaysTotal = watchedChildren.reduce((total, child) => {
-    const selected = Array.isArray(child?.interestedBatches) ? child.interestedBatches : [];
+    const selected = getChildSelectedBatches(child, activeCampContent.batches);
     const days = selected.reduce((sum, batch) => sum + Number(activeCampContent.batchDays?.[batch] || 0), 0);
     return total + days;
   }, 0);
@@ -1863,14 +1896,22 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                                 <label className="text-sm text-neutral-800 dark:text-neutral-200">Current Class<input disabled readOnly placeholder="Class / standard" className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" /></label>
                               </div>
                               <div className="mt-4">
-                                <p className="mb-2 text-sm font-medium text-neutral-800 dark:text-neutral-200">Select one or more batches</p>
-                                <div className="grid gap-2 md:grid-cols-2">
-                                  {(contentEditor.batchRows || []).map((row, idx) => (
-                                    <label key={row.id || idx} className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-800 opacity-70 dark:border-neutral-700 dark:bg-neutral-900/60 dark:text-neutral-200">
-                                      <input type="checkbox" disabled className="h-4 w-4 rounded border-neutral-400 text-accent dark:border-neutral-500 dark:bg-neutral-950 dark:text-emerald-400" />
-                                      <span>{blueprintPreviewBatchLabel(row)}</span>
-                                    </label>
-                                  ))}
+                                <p className="mb-2 text-sm font-medium text-neutral-800 dark:text-neutral-200">
+                                  Select stay start & end date
+                                </p>
+                                <div className="grid gap-3 md:grid-cols-2">
+                                  <label className="text-sm text-neutral-800 dark:text-neutral-200">
+                                    Start Date (batch start)
+                                    <select disabled className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white">
+                                      <option value="">Select start date</option>
+                                    </select>
+                                  </label>
+                                  <label className="text-sm text-neutral-800 dark:text-neutral-200">
+                                    End Date (batch end)
+                                    <select disabled className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 opacity-70 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white">
+                                      <option value="">Select end date</option>
+                                    </select>
+                                  </label>
                                 </div>
                               </div>
                             </div>
@@ -2283,23 +2324,6 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                   <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.children.message}</p>
                 ) : null}
               </div>
-              <button
-                type="button"
-                onClick={() =>
-                  appendChild({
-                    name: '',
-                    age: '',
-                    gender: '',
-                    dob: '',
-                    school: '',
-                    currentClass: '',
-                    interestedBatches: [],
-                  })
-                }
-                className="rounded-lg bg-accent px-3 py-1.5 text-xs text-white dark:bg-emerald-700"
-              >
-                Add Child
-              </button>
             </div>
             {childFields.map((field, childIndex) => (
               <div key={field.id} className="rounded-xl border border-neutral-200 p-4 dark:border-neutral-700">
@@ -2404,56 +2428,99 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                 </div>
                 <div className="mt-4">
                   <p className="mb-2 text-sm font-medium text-neutral-800 dark:text-neutral-200">
-                    Select one or more batches
+                    Select stay start & end date
                     <RequiredStar />
                   </p>
-                  {errors.children?.[childIndex]?.interestedBatches ? (
+                  {(errors.children?.[childIndex]?.stayStartBatch || errors.children?.[childIndex]?.stayEndBatch) ? (
                     <p className="mb-2 text-xs text-rose-600 dark:text-rose-400">
-                      {errors.children[childIndex].interestedBatches.message}
+                      {errors.children?.[childIndex]?.stayStartBatch?.message || errors.children?.[childIndex]?.stayEndBatch?.message}
                     </p>
                   ) : null}
-                  <div className="grid gap-2 md:grid-cols-2">
-                    {activeCampContent.batches.map((batch) => {
-                      const checked = (watch(`children.${childIndex}.interestedBatches`) || []).includes(batch);
-                      const daysForBatch = Number(activeCampContent.batchDays?.[batch] || 0);
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {(() => {
+                      const selectedStart = watch(`children.${childIndex}.stayStartBatch`) || '';
+                      const selectedEnd = watch(`children.${childIndex}.stayEndBatch`) || '';
+                      const startIndex = activeCampContent.batches.indexOf(selectedStart);
+                      const endOptions = startIndex >= 0 ? activeCampContent.batches.slice(startIndex) : [];
                       return (
-                        <label
-                          key={`${batch}-${childIndex}`}
-                          className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-800 dark:border-neutral-700 dark:bg-neutral-900/60 dark:text-neutral-200"
-                        >
-                          <input
-                            type="checkbox"
-                            className="h-4 w-4 rounded border-neutral-400 text-accent focus:ring-accent dark:border-neutral-500 dark:bg-neutral-950 dark:text-emerald-400 dark:focus:ring-emerald-500"
-                            checked={checked}
-                            onChange={(e) => {
-                              const prev = watch(`children.${childIndex}.interestedBatches`) || [];
-                              setValue(
-                                `children.${childIndex}.interestedBatches`,
-                                e.target.checked ? [...prev, batch] : prev.filter((x) => x !== batch),
-                                { shouldValidate: true }
-                              );
-                            }}
-                          />
-                          <span>{batchLabelMap[batch] || batch} ({daysForBatch} days)</span>
-                        </label>
+                        <>
+                          <label className="text-sm text-neutral-800 dark:text-neutral-200">
+                            Start Date (batch start)
+                            <select
+                              className={rhfFieldClass(!!errors.children?.[childIndex]?.stayStartBatch)}
+                              value={selectedStart}
+                              onChange={(e) => {
+                                const nextStart = e.target.value;
+                                const nextStartIndex = activeCampContent.batches.indexOf(nextStart);
+                                const currentEndIndex = activeCampContent.batches.indexOf(selectedEnd);
+                                const nextEnd =
+                                  nextStartIndex >= 0 && currentEndIndex >= nextStartIndex ? selectedEnd : '';
+                                setValue(`children.${childIndex}.stayStartBatch`, nextStart, { shouldValidate: true, shouldDirty: true });
+                                setValue(`children.${childIndex}.stayEndBatch`, nextEnd, { shouldValidate: true, shouldDirty: true });
+                              }}
+                            >
+                              <option value="">Select start date</option>
+                              {activeCampContent.batches.map((batch) => (
+                                <option key={`start-${batch}-${childIndex}`} value={batch}>
+                                  {batchStartLabelMap[batch] || batch}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                          <label className="text-sm text-neutral-800 dark:text-neutral-200">
+                            End Date (batch end)
+                            <select
+                              className={rhfFieldClass(!!errors.children?.[childIndex]?.stayEndBatch)}
+                              value={selectedEnd}
+                              onChange={(e) =>
+                                setValue(`children.${childIndex}.stayEndBatch`, e.target.value, {
+                                  shouldValidate: true,
+                                  shouldDirty: true,
+                                })
+                              }
+                              disabled={!selectedStart}
+                            >
+                              <option value="">Select end date</option>
+                              {endOptions.map((batch) => (
+                                <option key={`end-${batch}-${childIndex}`} value={batch}>
+                                  {batchEndLabelMap[batch] || batch}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                        </>
                       );
-                    })}
+                    })()}
                   </div>
                 </div>
               </div>
             ))}
+            <div className="flex justify-start">
+              <button
+                type="button"
+                onClick={() =>
+                  appendChild({
+                    name: '',
+                    age: '',
+                    gender: '',
+                    dob: '',
+                    school: '',
+                    currentClass: '',
+                    stayStartBatch: '',
+                    stayEndBatch: '',
+                  })
+                }
+                className="inline-flex items-center gap-2 rounded-xl border border-accent bg-accent px-4 py-2 text-sm font-medium text-white transition hover:bg-accent-light dark:border-emerald-600 dark:bg-emerald-800 dark:hover:bg-emerald-700"
+              >
+                <Plus className="h-4 w-4" />
+                Add Child
+              </button>
+            </div>
           </div>
 
           <div className="mt-6 space-y-4">
             <div className="flex items-center justify-between gap-3">
               <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">Family Members Staying with child ({familyFields.length})</p>
-              <button
-                type="button"
-                onClick={() => appendFamily({ name: '', relationWithChild: '', stayingDays: '' })}
-                className="rounded-lg bg-accent px-3 py-1.5 text-xs text-white dark:bg-emerald-700"
-              >
-                Add Family Member
-              </button>
             </div>
             {familyFields.map((field, memberIndex) => (
               <div key={field.id} className="grid gap-3 rounded-xl border border-neutral-200 p-4 md:grid-cols-3 dark:border-neutral-700">
@@ -2510,6 +2577,16 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                 </div>
               </div>
             ))}
+            <div className="flex justify-start">
+              <button
+                type="button"
+                onClick={() => appendFamily({ name: '', relationWithChild: '', stayingDays: '' })}
+                className="inline-flex items-center gap-2 rounded-xl border border-accent bg-accent px-4 py-2 text-sm font-medium text-white transition hover:bg-accent-light dark:border-emerald-600 dark:bg-emerald-800 dark:hover:bg-emerald-700"
+              >
+                <Plus className="h-4 w-4" />
+                Add Family Member
+              </button>
+            </div>
           </div>
 
           <div className="mt-5 grid gap-4 md:grid-cols-2">
