@@ -249,7 +249,7 @@ const buildBatchPayload = (rows = []) => {
   const normalized = rows
     .map((row, index) => ({
       id: String(row?.id || `batch-${Date.now()}-${index}`),
-      label: String(row?.label || '').trim(),
+      label: String(row?.label || `Batch ${index + 1}`).trim(),
       startDate: String(row?.startDate || '').trim(),
       endDate: String(row?.endDate || '').trim(),
       days: Number(row?.days) || 0,
@@ -294,9 +294,8 @@ const validateBatchRows = (rows = []) => {
   if (!Array.isArray(rows) || !rows.length) return 'Please add at least one batch.';
   let previousEndDate = null;
   for (let i = 0; i < rows.length; i += 1) {
-    const row = rows[i];
+    const row = { ...rows[i], label: String(rows[i]?.label || `Batch ${i + 1}`).trim() };
     const rowLabel = `Batch ${i + 1}`;
-    if (!String(row?.label || '').trim()) return `${rowLabel}: name is required.`;
     if (!String(row?.startDate || '').trim() || !String(row?.endDate || '').trim()) {
       return `${rowLabel}: start and end date are required.`;
     }
@@ -2019,8 +2018,7 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                         <div className="space-y-2">
                           <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200">Batches</p>
                           {(contentEditor.batchRows || []).map((row, idx) => (
-                            <div key={row.id || idx} className="grid gap-2 rounded-lg border border-neutral-200 p-3 sm:grid-cols-2 lg:grid-cols-5 dark:border-neutral-700">
-                              <input className="min-w-0 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" placeholder={`Batch ${idx + 1} Name`} value={row.label || `Batch ${idx + 1}`} onChange={(e) => setContentEditor((p) => ({ ...p, batchRows: (p.batchRows || []).map((it, i) => (i === idx ? { ...it, label: e.target.value } : it)) }))} />
+                            <div key={row.id || idx} className="grid gap-2 rounded-lg border border-neutral-200 p-3 sm:grid-cols-2 lg:grid-cols-4 dark:border-neutral-700">
                               <input type="date" className="min-w-0 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" value={row.startDate || ''} onChange={(e) => setContentEditor((p) => ({ ...p, batchRows: (p.batchRows || []).map((it, i) => (i === idx ? buildBatchRowUpdate(it, 'startDate', e.target.value) : it)) }))} />
                               <input type="date" className="min-w-0 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" value={row.endDate || ''} onChange={(e) => setContentEditor((p) => ({ ...p, batchRows: (p.batchRows || []).map((it, i) => (i === idx ? buildBatchRowUpdate(it, 'endDate', e.target.value) : it)) }))} />
                               <input type="number" min="1" className="min-w-0 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" placeholder="Days" value={row.days || ''} onChange={(e) => setContentEditor((p) => ({ ...p, batchRows: (p.batchRows || []).map((it, i) => (i === idx ? buildBatchRowUpdate(it, 'days', e.target.value) : it)) }))} />
@@ -3126,8 +3124,7 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                   <RequiredStar />
                 </p>
                 {(campEditor.batchRows || []).map((row, idx) => (
-                  <div key={row.id || idx} className="grid gap-2 rounded-lg border border-neutral-200 p-3 sm:grid-cols-2 lg:grid-cols-5 dark:border-neutral-700">
-                    <input className="min-w-0 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" placeholder={`Batch ${idx + 1} Name`} value={row.label || `Batch ${idx + 1}`} onChange={(e) => setCampEditor((p) => ({ ...p, batchRows: (p.batchRows || []).map((it, i) => (i === idx ? { ...it, label: e.target.value } : it)) }))} />
+                  <div key={row.id || idx} className="grid gap-2 rounded-lg border border-neutral-200 p-3 sm:grid-cols-2 lg:grid-cols-4 dark:border-neutral-700">
                     <input type="date" className="min-w-0 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" value={row.startDate || ''} onChange={(e) => setCampEditor((p) => ({ ...p, batchRows: (p.batchRows || []).map((it, i) => (i === idx ? buildBatchRowUpdate(it, 'startDate', e.target.value) : it)) }))} />
                     <input type="date" className="min-w-0 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" value={row.endDate || ''} onChange={(e) => setCampEditor((p) => ({ ...p, batchRows: (p.batchRows || []).map((it, i) => (i === idx ? buildBatchRowUpdate(it, 'endDate', e.target.value) : it)) }))} />
                     <input type="number" min="1" className="min-w-0 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" placeholder="Days" value={row.days || ''} onChange={(e) => setCampEditor((p) => ({ ...p, batchRows: (p.batchRows || []).map((it, i) => (i === idx ? buildBatchRowUpdate(it, 'days', e.target.value) : it)) }))} />
