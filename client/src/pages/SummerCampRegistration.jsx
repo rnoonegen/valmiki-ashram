@@ -273,6 +273,14 @@ const formatBatchDisplayDate = (value) => {
   return `${month} ${day} '${year}`;
 };
 
+const parseLegacyBatchDateRange = (label) => {
+  const value = String(label || '').trim();
+  if (!value) return { start: '', end: '' };
+  const withoutPrefix = value.includes(':') ? value.split(':').slice(1).join(':').trim() : value;
+  const [start = '', end = ''] = withoutPrefix.split(/\s*-\s*/, 2).map((part) => String(part || '').trim());
+  return { start, end };
+};
+
 const blueprintPreviewBatchLabel = (row) => {
   const days = Number(row?.days) > 0 ? Number(row.days) : 7;
   const start = formatBatchDisplayDate(row?.startDate);
@@ -1191,7 +1199,7 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
       const key = String(row?.label || '').trim();
       if (!key) return;
       const start = formatBatchDisplayDate(row?.startDate);
-      map[key] = start || key;
+      map[key] = start || parseLegacyBatchDateRange(key).start;
     });
     return map;
   }, [activeCampContent.batchConfigs]);
@@ -1201,7 +1209,7 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
       const key = String(row?.label || '').trim();
       if (!key) return;
       const end = formatBatchDisplayDate(row?.endDate);
-      map[key] = end || key;
+      map[key] = end || parseLegacyBatchDateRange(key).end;
     });
     return map;
   }, [activeCampContent.batchConfigs]);
@@ -2462,7 +2470,7 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                               <option value="">Select start date</option>
                               {activeCampContent.batches.map((batch) => (
                                 <option key={`start-${batch}-${childIndex}`} value={batch}>
-                                  {batchStartLabelMap[batch] || batch}
+                                  {batchStartLabelMap[batch] || parseLegacyBatchDateRange(batch).start || batch}
                                 </option>
                               ))}
                             </select>
@@ -2483,7 +2491,7 @@ export default function SummerCampRegistration({ variant = 'summer' }) {
                               <option value="">Select end date</option>
                               {endOptions.map((batch) => (
                                 <option key={`end-${batch}-${childIndex}`} value={batch}>
-                                  {batchEndLabelMap[batch] || batch}
+                                  {batchEndLabelMap[batch] || parseLegacyBatchDateRange(batch).end || batch}
                                 </option>
                               ))}
                             </select>
