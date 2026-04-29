@@ -1,8 +1,98 @@
+# name: Deploy with Docker Compose
+
+# on:
+#   push:
+#     branches: [main]
+#   workflow_dispatch:
+
+# jobs:
+#   deploy-compose:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Deploy on droplet via docker compose
+#         uses: appleboy/ssh-action@v1.2.0
+#         env:
+#           REPO_URL: https://github.com/rnoonegen/valmiki-ashram.git
+#           APP_DIR: /var/www/valmiki-ashram
+#           CLIENT_URL: http://139.59.6.209:4000
+#           REACT_APP_SERVER_URL: http://139.59.6.209:5000
+#           REACT_APP_INTRO_VIDEO_URL: https://www.youtube.com/watch?v=AEzDtyRJ1Iw
+#           REACT_APP_WHATSAPP_NUMBER: "9611522541"
+#           REACT_APP_WHATSAPP_COMMUNITY_LINK: https://chat.whatsapp.com/CtMsOUveQ3LF9yX4JuMGBj
+#           REACT_APP_EMAIL: contact@valmikiashram.org
+#           REACT_APP_PHONE: "9611522541"
+#           REACT_APP_ADDRESS: 110 Forest Ridge Villas, Shameerpet-Keesara Rd, Secunderabad, 500078, TS, India, Near BITS Pilani Campus
+#           REACT_APP_GOOGLE_MAPS_LINK: https://www.google.com/maps/dir/?api=1&destination=23%2C%20Forest%20Rdg%2C%20Dharmavaram%2C%20Secunderabad%2C%20Telangana%20500078%2C%20India
+#           REACT_APP_GOOGLE_MAPS_EMBED_URL: https://www.google.com/maps?q=110%20Forest%20Ridge%20Villas%2C%20Shameerpet-Keesara%20Rd%2C%20Secunderabad%2C%20500078%2C%20TS%2C%20India%2C%20Near%20BITS%20Pilani%20Campus&output=embed
+#           REACT_APP_INSTAGRAM_LINK: https://www.instagram.com/valmiki.ashram/
+#           REACT_APP_FACEBOOK_LINK: https://www.facebook.com/people/Valmiki-Ashram/61575026825238/?rdid=GHwMQBIvKb2uU7He&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F1A5PWFFgUf%2F
+#           REACT_APP_X_LINK: https://x.com/ValmikiAshram
+#           REACT_APP_LINKEDIN_LINK: https://www.linkedin.com/in/valmiki-ashram2025/
+#           REACT_APP_YOUTUBE_LINK: https://www.youtube.com/@ValmikiAshramOrg/shorts
+#           MONGO_URI: mongodb://mongo:27017/valmiki
+#           ADMIN_JWT_SECRET: ${{ secrets.ADMIN_JWT_SECRET }}
+#           MAX_UPLOAD_MB: "25"
+#           S3_REGION: ${{ secrets.S3_REGION }}
+#           S3_SPACE_NAME: ${{ secrets.S3_SPACE_NAME }}
+#           S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
+#           S3_ACCESS_KEY_SECRET: ${{ secrets.S3_ACCESS_KEY_SECRET }}
+#           S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
+#           S3_PUBLIC_BASE_URL: ${{ secrets.S3_PUBLIC_BASE_URL }}
+#         with:
+#           host: ${{ secrets.DO_HOST }}
+#           username: ${{ secrets.DO_USER }}
+#           key: ${{ secrets.DO_SSH_KEY }}
+#           envs: REPO_URL,APP_DIR,CLIENT_URL,REACT_APP_SERVER_URL,REACT_APP_INTRO_VIDEO_URL,REACT_APP_WHATSAPP_NUMBER,REACT_APP_WHATSAPP_COMMUNITY_LINK,REACT_APP_EMAIL,REACT_APP_PHONE,REACT_APP_ADDRESS,REACT_APP_GOOGLE_MAPS_LINK,REACT_APP_GOOGLE_MAPS_EMBED_URL,REACT_APP_INSTAGRAM_LINK,REACT_APP_FACEBOOK_LINK,REACT_APP_X_LINK,REACT_APP_LINKEDIN_LINK,REACT_APP_YOUTUBE_LINK,MONGO_URI,ADMIN_JWT_SECRET,MAX_UPLOAD_MB,S3_REGION,S3_SPACE_NAME,S3_ACCESS_KEY_ID,S3_ACCESS_KEY_SECRET,S3_ENDPOINT,S3_PUBLIC_BASE_URL
+#           script: |
+#             set -e
+
+#             mkdir -p /var/www
+#             if [ ! -d "$APP_DIR/.git" ]; then
+#               rm -rf "$APP_DIR"
+#               git clone "$REPO_URL" "$APP_DIR"
+#             fi
+
+#             cd "$APP_DIR"
+#             git fetch --all --prune
+#             git checkout main
+#             git reset --hard origin/main
+
+#             cat > .env.valmiki <<EOF
+#             CLIENT_URL=$CLIENT_URL
+#             REACT_APP_SERVER_URL=$REACT_APP_SERVER_URL
+#             REACT_APP_INTRO_VIDEO_URL=$REACT_APP_INTRO_VIDEO_URL
+#             REACT_APP_WHATSAPP_NUMBER=$REACT_APP_WHATSAPP_NUMBER
+#             REACT_APP_WHATSAPP_COMMUNITY_LINK=$REACT_APP_WHATSAPP_COMMUNITY_LINK
+#             REACT_APP_EMAIL=$REACT_APP_EMAIL
+#             REACT_APP_PHONE=$REACT_APP_PHONE
+#             REACT_APP_ADDRESS=$REACT_APP_ADDRESS
+#             REACT_APP_GOOGLE_MAPS_LINK=$REACT_APP_GOOGLE_MAPS_LINK
+#             REACT_APP_GOOGLE_MAPS_EMBED_URL=$REACT_APP_GOOGLE_MAPS_EMBED_URL
+#             REACT_APP_INSTAGRAM_LINK=$REACT_APP_INSTAGRAM_LINK
+#             REACT_APP_FACEBOOK_LINK=$REACT_APP_FACEBOOK_LINK
+#             REACT_APP_X_LINK=$REACT_APP_X_LINK
+#             REACT_APP_LINKEDIN_LINK=$REACT_APP_LINKEDIN_LINK
+#             REACT_APP_YOUTUBE_LINK=$REACT_APP_YOUTUBE_LINK
+#             MONGO_URI=$MONGO_URI
+#             ADMIN_JWT_SECRET=${ADMIN_JWT_SECRET:-valmiki-admin-secret}
+#             MAX_UPLOAD_MB=$MAX_UPLOAD_MB
+#             S3_REGION=$S3_REGION
+#             S3_SPACE_NAME=$S3_SPACE_NAME
+#             S3_ACCESS_KEY_ID=$S3_ACCESS_KEY_ID
+#             S3_ACCESS_KEY_SECRET=$S3_ACCESS_KEY_SECRET
+#             S3_ENDPOINT=$S3_ENDPOINT
+#             S3_PUBLIC_BASE_URL=$S3_PUBLIC_BASE_URL
+#             EOF
+
+#             docker compose --env-file .env.valmiki -f docker-compose.valmiki.yml up -d --build
+#             docker compose --env-file .env.valmiki -f docker-compose.valmiki.yml ps
+
 name: Deploy with Docker Compose
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -16,19 +106,19 @@ jobs:
           APP_DIR: /var/www/valmiki-ashram
           CLIENT_URL: http://139.59.6.209:4000
           REACT_APP_SERVER_URL: http://139.59.6.209:5000
-          REACT_APP_INTRO_VIDEO_URL: https://www.youtube.com/watch?v=AEzDtyRJ1Iw
+          REACT_APP_INTRO_VIDEO_URL: https://youtube.com
           REACT_APP_WHATSAPP_NUMBER: "9611522541"
-          REACT_APP_WHATSAPP_COMMUNITY_LINK: https://chat.whatsapp.com/CtMsOUveQ3LF9yX4JuMGBj
+          REACT_APP_WHATSAPP_COMMUNITY_LINK: https://whatsapp.com
           REACT_APP_EMAIL: contact@valmikiashram.org
           REACT_APP_PHONE: "9611522541"
           REACT_APP_ADDRESS: 110 Forest Ridge Villas, Shameerpet-Keesara Rd, Secunderabad, 500078, TS, India, Near BITS Pilani Campus
-          REACT_APP_GOOGLE_MAPS_LINK: https://www.google.com/maps/dir/?api=1&destination=23%2C%20Forest%20Rdg%2C%20Dharmavaram%2C%20Secunderabad%2C%20Telangana%20500078%2C%20India
-          REACT_APP_GOOGLE_MAPS_EMBED_URL: https://www.google.com/maps?q=110%20Forest%20Ridge%20Villas%2C%20Shameerpet-Keesara%20Rd%2C%20Secunderabad%2C%20500078%2C%20TS%2C%20India%2C%20Near%20BITS%20Pilani%20Campus&output=embed
-          REACT_APP_INSTAGRAM_LINK: https://www.instagram.com/valmiki.ashram/
-          REACT_APP_FACEBOOK_LINK: https://www.facebook.com/people/Valmiki-Ashram/61575026825238/?rdid=GHwMQBIvKb2uU7He&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F1A5PWFFgUf%2F
-          REACT_APP_X_LINK: https://x.com/ValmikiAshram
-          REACT_APP_LINKEDIN_LINK: https://www.linkedin.com/in/valmiki-ashram2025/
-          REACT_APP_YOUTUBE_LINK: https://www.youtube.com/@ValmikiAshramOrg/shorts
+          REACT_APP_GOOGLE_MAPS_LINK: https://google.com
+          REACT_APP_GOOGLE_MAPS_EMBED_URL: https://google.com
+          REACT_APP_INSTAGRAM_LINK: https://instagram.com
+          REACT_APP_FACEBOOK_LINK: https://facebook.com
+          REACT_APP_X_LINK: https://x.com
+          REACT_APP_LINKEDIN_LINK: https://linkedin.com
+          REACT_APP_YOUTUBE_LINK: https://youtube.com
           MONGO_URI: mongodb://mongo:27017/valmiki
           ADMIN_JWT_SECRET: ${{ secrets.ADMIN_JWT_SECRET }}
           MAX_UPLOAD_MB: "25"
@@ -45,18 +135,15 @@ jobs:
           envs: REPO_URL,APP_DIR,CLIENT_URL,REACT_APP_SERVER_URL,REACT_APP_INTRO_VIDEO_URL,REACT_APP_WHATSAPP_NUMBER,REACT_APP_WHATSAPP_COMMUNITY_LINK,REACT_APP_EMAIL,REACT_APP_PHONE,REACT_APP_ADDRESS,REACT_APP_GOOGLE_MAPS_LINK,REACT_APP_GOOGLE_MAPS_EMBED_URL,REACT_APP_INSTAGRAM_LINK,REACT_APP_FACEBOOK_LINK,REACT_APP_X_LINK,REACT_APP_LINKEDIN_LINK,REACT_APP_YOUTUBE_LINK,MONGO_URI,ADMIN_JWT_SECRET,MAX_UPLOAD_MB,S3_REGION,S3_SPACE_NAME,S3_ACCESS_KEY_ID,S3_ACCESS_KEY_SECRET,S3_ENDPOINT,S3_PUBLIC_BASE_URL
           script: |
             set -e
-
             mkdir -p /var/www
             if [ ! -d "$APP_DIR/.git" ]; then
               rm -rf "$APP_DIR"
               git clone "$REPO_URL" "$APP_DIR"
             fi
-
             cd "$APP_DIR"
             git fetch --all --prune
             git checkout main
             git reset --hard origin/main
-
             cat > .env.valmiki <<EOF
             CLIENT_URL=$CLIENT_URL
             REACT_APP_SERVER_URL=$REACT_APP_SERVER_URL
@@ -83,6 +170,5 @@ jobs:
             S3_ENDPOINT=$S3_ENDPOINT
             S3_PUBLIC_BASE_URL=$S3_PUBLIC_BASE_URL
             EOF
-
             docker compose --env-file .env.valmiki -f docker-compose.valmiki.yml up -d --build
             docker compose --env-file .env.valmiki -f docker-compose.valmiki.yml ps
