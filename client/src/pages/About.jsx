@@ -705,5 +705,3 @@ export default function About() {
     </PageFade>
   );
 }
-
-// demo code i am adding here
